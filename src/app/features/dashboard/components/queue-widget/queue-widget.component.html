@@ -1,0 +1,64 @@
+<div class="card">
+  <div class="card-header">
+    <div class="flex items-center justify-between">
+      <h3 class="card-title text-lg">Queue Overview</h3>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-robin-orange" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </div>
+    <p class="card-description">Email queue status and distribution</p>
+  </div>
+
+  <div class="card-content">
+    <!-- Queue Size Display -->
+    <div class="text-center p-6 rounded-lg bg-robin-orange/10 mb-4">
+      <div class="text-5xl font-bold text-robin-orange">{{ queueSize }}</div>
+      <div class="text-sm text-muted-foreground mt-1">Items in Queue</div>
+    </div>
+
+    <!-- Retry Distribution -->
+    @if (retryData.length > 0) {
+      <div class="pt-4 border-t">
+        <h4 class="text-sm font-semibold text-foreground mb-3">Retry Distribution</h4>
+        <div class="space-y-2">
+          @for (item of retryData; track item) {
+            <div
+              class="flex items-center justify-between p-2 rounded-md bg-muted/50"
+              >
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-medium px-2 py-0.5 rounded bg-muted text-muted-foreground">
+                  Retry {{ item.retry }}
+                </span>
+              </div>
+              <span class="text-sm font-semibold text-foreground">{{ item.count }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Empty State -->
+    @if (retryData.length === 0 && queueSize > 0) {
+      <div class="pt-4 border-t">
+        <div class="text-center text-sm text-muted-foreground py-4">
+          All items are on their first attempt
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="card-footer">
+    <a
+      routerLink="/email/queue"
+      class="btn-primary btn-md w-full justify-center"
+      >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+      View Queue
+    </a>
+  </div>
+</div>

@@ -1,0 +1,76 @@
+<div class="card">
+  <div class="card-header">
+    <div class="flex items-center justify-between">
+      <h3 class="card-title text-lg">Server Health</h3>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-robin-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+      </svg>
+    </div>
+    <p class="card-description">Real-time server status and metrics</p>
+  </div>
+
+  <div class="card-content">
+    @if (health) {
+      <div class="space-y-4">
+        <!-- Main Status -->
+        <div class="flex items-center justify-between p-3 rounded-md bg-muted/50">
+          <span class="text-sm font-medium text-muted-foreground">Status</span>
+          <app-status-badge [status]="health.status" [size]="'md'"></app-status-badge>
+        </div>
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="p-3 rounded-md bg-muted/50">
+            <div class="text-xs text-muted-foreground mb-1">Uptime</div>
+            <div class="text-sm font-semibold text-foreground">{{ health.uptime }}</div>
+          </div>
+          <div class="p-3 rounded-md bg-muted/50">
+            <div class="text-xs text-muted-foreground mb-1">Queue Size</div>
+            <div class="text-sm font-semibold text-foreground">{{ health.queue.size }}</div>
+          </div>
+        </div>
+        <!-- Listeners Section -->
+        <div class="pt-4 border-t">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-sm font-semibold text-foreground">Active Listeners</h4>
+            <span class="badge badge-secondary">{{ health.listeners.length }}</span>
+          </div>
+          <div class="space-y-2">
+            @for (listener of health.listeners; track listener) {
+              <div
+                class="flex items-center justify-between p-2 rounded-md hover:bg-muted/50 transition-colors"
+                >
+                <div class="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                    <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                    <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                  </svg>
+                  <span class="text-sm text-foreground">{{ listener.name }}</span>
+                  <span class="text-xs text-muted-foreground">:{{ listener.port }}</span>
+                </div>
+                <app-status-badge
+                  [status]="listener.active ? 'active' : 'inactive'"
+                  [size]="'sm'"
+                  [showDot]="true"
+                ></app-status-badge>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Loading State -->
+    @if (!health) {
+      <div class="space-y-3">
+        <div class="skeleton h-12 w-full"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="skeleton h-16 w-full"></div>
+          <div class="skeleton h-16 w-full"></div>
+        </div>
+        <div class="skeleton h-24 w-full"></div>
+      </div>
+    }
+  </div>
+</div>

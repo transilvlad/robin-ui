@@ -1,0 +1,354 @@
+/* Tailwind CSS imports */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Variables for shadcn/ui theming - Robin MTA color scheme */
+@layer base {
+  :root {
+    /* Robin Orange (#FE8502) converted to HSL: 31 99% 50% */
+    --background: 0 0% 100%;
+    --foreground: 240 10% 27%; /* Robin gray-700 */
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 27%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 27%;
+
+    /* Primary: Robin Orange */
+    --primary: 31 99% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: Robin Gray */
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 10% 27%;
+
+    /* Muted */
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+
+    /* Accent: Robin Green (#44A83A) converted to HSL: 114 49% 45% */
+    --accent: 114 49% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 31 99% 50%; /* Robin Orange */
+
+    --radius: 0.5rem;
+
+    /* Sidebar variables */
+    --sidebar-background: 240 10% 27%; /* Robin gray-700 */
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 31 99% 50%; /* Robin Orange */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 6% 20%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 240 6% 35%;
+    --sidebar-ring: 31 99% 50%;
+  }
+
+  .dark {
+    --background: 240 10% 10%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 31 99% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 6% 20%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 6% 20%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 114 49% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 25%;
+    --input: 240 6% 25%;
+    --ring: 31 99% 50%;
+
+    --sidebar-background: 240 10% 8%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 31 99% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 6% 15%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 240 6% 20%;
+    --sidebar-ring: 31 99% 50%;
+  }
+}
+
+/* Global base styles */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* shadcn/ui component base styles */
+@layer components {
+  /* Button variants */
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-primary-foreground hover:bg-robin-orange-600;
+  }
+
+  .btn-secondary {
+    @apply btn bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+
+  .btn-destructive {
+    @apply btn bg-destructive text-destructive-foreground hover:bg-destructive/90;
+  }
+
+  .btn-outline {
+    @apply btn border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+  }
+
+  .btn-ghost {
+    @apply btn hover:bg-accent hover:text-accent-foreground;
+  }
+
+  .btn-link {
+    @apply btn text-primary underline-offset-4 hover:underline;
+  }
+
+  /* Button sizes */
+  .btn-sm {
+    @apply h-9 rounded-md px-3;
+  }
+
+  .btn-md {
+    @apply h-10 px-4 py-2;
+  }
+
+  .btn-lg {
+    @apply h-11 rounded-md px-8;
+  }
+
+  .btn-icon {
+    @apply h-10 w-10;
+  }
+
+  /* Card component */
+  .card {
+    @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+  }
+
+  .card-header {
+    @apply flex flex-col space-y-1.5 p-6;
+  }
+
+  .card-title {
+    @apply text-2xl font-semibold leading-none tracking-tight;
+  }
+
+  .card-description {
+    @apply text-sm text-muted-foreground;
+  }
+
+  .card-content {
+    @apply p-6 pt-0;
+  }
+
+  .card-footer {
+    @apply flex items-center p-6 pt-0;
+  }
+
+  /* Input component */
+  .input {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Badge component */
+  .badge {
+    @apply inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+
+  .badge-default {
+    @apply badge border-transparent bg-primary text-primary-foreground hover:bg-primary/80;
+  }
+
+  .badge-secondary {
+    @apply badge border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  }
+
+  .badge-destructive {
+    @apply badge border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80;
+  }
+
+  .badge-outline {
+    @apply badge text-foreground;
+  }
+
+  .badge-success {
+    @apply badge border-transparent bg-success text-white;
+  }
+
+  .badge-warning {
+    @apply badge border-transparent bg-warning text-white;
+  }
+
+  .badge-error {
+    @apply badge border-transparent bg-error text-white;
+  }
+
+  /* Alert component */
+  .alert {
+    @apply relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground;
+  }
+
+  .alert-default {
+    @apply alert bg-background text-foreground;
+  }
+
+  .alert-destructive {
+    @apply alert border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive;
+  }
+
+  /* Table component */
+  .table {
+    @apply w-full caption-bottom text-sm;
+  }
+
+  .table-header {
+    @apply [&_tr]:border-b;
+  }
+
+  .table-body {
+    @apply [&_tr:last-child]:border-0;
+  }
+
+  .table-footer {
+    @apply border-t bg-muted/50 font-medium [&>tr]:last:border-b-0;
+  }
+
+  .table-row {
+    @apply border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted;
+  }
+
+  .table-head {
+    @apply h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0;
+  }
+
+  .table-cell {
+    @apply p-4 align-middle [&:has([role=checkbox])]:pr-0;
+  }
+
+  /* Progress component */
+  .progress {
+    @apply relative h-4 w-full overflow-hidden rounded-full bg-secondary;
+  }
+
+  .progress-indicator {
+    @apply h-full w-full flex-1 bg-primary transition-all;
+  }
+
+  /* Skeleton loader */
+  .skeleton {
+    @apply animate-pulse rounded-md bg-muted;
+  }
+
+  /* Separator */
+  .separator {
+    @apply shrink-0 bg-border;
+  }
+
+  .separator-horizontal {
+    @apply separator h-[1px] w-full;
+  }
+
+  .separator-vertical {
+    @apply separator h-full w-[1px];
+  }
+}
+
+/* Utility classes for Robin theme */
+@layer utilities {
+  .text-robin-orange {
+    color: #FE8502;
+  }
+
+  .bg-robin-orange {
+    background-color: #FE8502;
+  }
+
+  .border-robin-orange {
+    border-color: #FE8502;
+  }
+
+  .text-robin-green {
+    color: #44A83A;
+  }
+
+  .bg-robin-green {
+    background-color: #44A83A;
+  }
+
+  .text-robin-gray {
+    color: #424146;
+  }
+
+  .bg-robin-gray {
+    background-color: #424146;
+  }
+
+  /* Focus ring */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+
+  /* Scrollbar styling */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted)) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.3);
+    border-radius: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--muted-foreground) / 0.5);
+  }
+}

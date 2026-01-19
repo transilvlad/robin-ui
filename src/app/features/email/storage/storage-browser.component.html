@@ -1,0 +1,100 @@
+<div class="p-6">
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">Storage Browser</h1>
+    <p class="text-gray-600">Browse email storage directories</p>
+  </div>
+
+  <div class="bg-white shadow rounded-lg overflow-hidden">
+    <!-- Breadcrumbs -->
+    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <nav class="flex" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2">
+          @for (crumb of breadcrumbs; track crumb; let last = $last) {
+            <li>
+              <div class="flex items-center">
+                @if (!last) {
+                  <a
+                    (click)="navigateToBreadcrumb(crumb)"
+                    class="text-sm font-medium text-primary-600 hover:text-primary-700 cursor-pointer"
+                    >
+                    {{ crumb.name }}
+                  </a>
+                }
+                @if (last) {
+                  <span class="text-sm font-medium text-gray-500">
+                    {{ crumb.name }}
+                  </span>
+                }
+                @if (!last) {
+                  <span class="mx-2 text-gray-400">/</span>
+                }
+              </div>
+            </li>
+          }
+        </ol>
+      </nav>
+    </div>
+
+    @if (loading) {
+      <div class="text-center py-12">
+        <div class="text-gray-600">Loading...</div>
+      </div>
+    }
+
+    @if (!loading && items.length === 0) {
+      <div class="text-center py-12">
+        <div class="text-gray-600">Directory is empty</div>
+      </div>
+    }
+
+    @if (!loading && items.length > 0) {
+      <div>
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Name
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Type
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Size
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Modified
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            @for (item of items; track item) {
+              <tr
+                (click)="navigate(item)"
+                class="hover:bg-gray-50 cursor-pointer"
+                >
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                  @if (item.type === 'directory') {
+                    <span>📁</span>
+                  }
+                  @if (item.type === 'file') {
+                    <span>📄</span>
+                  }
+                  {{ item.name }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {{ item.type }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {{ item.type === 'file' ? (item.size | bytes) : '-' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {{ item.modified | relativeTime }}
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

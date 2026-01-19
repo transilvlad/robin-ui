@@ -1,0 +1,174 @@
+<aside
+  class="flex flex-col h-screen bg-robin-gray text-white transition-all duration-300"
+  [class.w-64]="!isCollapsed"
+  [class.w-16]="isCollapsed"
+  >
+  <!-- Sidebar Header -->
+  <div class="flex items-center justify-between h-16 px-4 border-b border-white/10">
+    @if (!isCollapsed) {
+      <div class="flex items-center gap-2">
+        <img src="assets/robin-logo.svg" alt="Robin" class="h-8 w-8" />
+        <span class="font-semibold text-lg">Robin</span>
+      </div>
+    }
+    <button
+      (click)="toggleCollapse()"
+      class="p-2 rounded-md hover:bg-white/10 transition-colors"
+      [attr.aria-label]="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+      >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-5 w-5 transition-transform"
+        [class.rotate-180]="isCollapsed"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        >
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="flex-1 overflow-y-auto py-4 scrollbar-thin">
+    <ul class="space-y-1 px-2">
+      @for (item of menuItems; track item) {
+        <li>
+          <!-- Menu item without children -->
+          @if (!item.children) {
+            <a
+              [routerLink]="item.route"
+              routerLinkActive="bg-robin-orange text-white"
+              class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+              [title]="isCollapsed ? item.label : ''"
+              >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 flex-shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                >
+                <path [attr.d]="getIconPath(item.icon)"></path>
+              </svg>
+              @if (!isCollapsed) {
+                <span class="truncate">{{ item.label }}</span>
+              }
+            </a>
+          }
+          <!-- Menu item with children -->
+          @if (item.children) {
+            <div>
+              <button
+                (click)="toggleExpand(item)"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-colors"
+                [title]="isCollapsed ? item.label : ''"
+                >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5 flex-shrink-0"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  >
+                  <path [attr.d]="getIconPath(item.icon)"></path>
+                </svg>
+                @if (!isCollapsed) {
+                  <span class="flex-1 text-left truncate">{{ item.label }}</span>
+                }
+                @if (!isCollapsed) {
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 transition-transform duration-200"
+                    [class.rotate-90]="isExpanded(item)"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    >
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                }
+              </button>
+              <!-- Submenu -->
+              @if (isExpanded(item) && !isCollapsed) {
+                <ul
+                  class="mt-1 space-y-1 animate-fade-in"
+                  >
+                  @for (child of item.children; track child) {
+                    <li>
+                      <a
+                        [routerLink]="child.route"
+                        routerLinkActive="bg-robin-orange/80 text-white"
+                        class="flex items-center gap-3 pl-11 pr-3 py-2 rounded-md text-sm text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                        >
+                        {{ child.label }}
+                      </a>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <!-- Sidebar Footer -->
+  <div class="px-4 py-3 border-t border-white/10">
+    @if (!isCollapsed) {
+      <div class="flex items-center gap-3">
+        <div class="flex-shrink-0 h-8 w-8 rounded-full bg-robin-orange flex items-center justify-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-medium text-white truncate">Admin</p>
+          <p class="text-xs text-white/60 truncate">admin&#64;localhost</p>
+        </div>
+      </div>
+    }
+    @if (isCollapsed) {
+      <div class="flex justify-center">
+        <div class="h-8 w-8 rounded-full bg-robin-orange flex items-center justify-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            >
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+      </div>
+    }
+  </div>
+</aside>

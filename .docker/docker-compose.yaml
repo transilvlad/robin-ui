@@ -1,0 +1,32 @@
+# Docker Compose for Robin UI
+# Angular management interface for Robin MTA
+#
+# Usage:
+#   docker-compose up -d
+#
+# Environment variables:
+#   API_URL         - Robin MTA client API (default: http://suite-robin:8090)
+#   SERVICE_API_URL - Robin MTA service API (default: http://suite-robin:8080)
+
+services:
+  robin-ui:
+    container_name: robin-ui
+    build:
+      context: ../
+      dockerfile: .docker/Dockerfile
+    ports:
+      - "4200:80"
+    environment:
+      - API_URL=${API_URL:-http://suite-robin:8090}
+      - SERVICE_API_URL=${SERVICE_API_URL:-http://suite-robin:8080}
+    networks:
+      - suite_suite
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:80/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  suite_suite:
+    external: true

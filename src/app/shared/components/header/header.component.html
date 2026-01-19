@@ -1,0 +1,54 @@
+<header class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+  <div class="container flex h-16 items-center justify-between px-4">
+    <!-- Logo and Title -->
+    <div class="flex items-center gap-4">
+      <a routerLink="/" class="flex items-center gap-3 hover:opacity-90 transition-opacity">
+        <img src="assets/robin-logo.svg" alt="Robin" class="h-10 w-10" />
+        <div class="flex flex-col">
+          <span class="font-bold text-lg text-foreground">Robin MTA</span>
+          <span class="text-xs text-muted-foreground">Management Console</span>
+        </div>
+      </a>
+    </div>
+
+    <!-- Right side controls -->
+    <div class="flex items-center gap-6">
+      <!-- Server Status -->
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-muted-foreground">Server:</span>
+          <app-status-badge [status]="serverStatus"></app-status-badge>
+        </div>
+
+        @if (uptime) {
+          <div class="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>{{ uptime }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Theme Toggle (placeholder for future) -->
+      <button
+        class="btn-ghost btn-icon rounded-md"
+        aria-label="Toggle theme"
+        title="Toggle theme (coming soon)"
+        >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2"></path>
+          <path d="M12 20v2"></path>
+          <path d="m4.93 4.93 1.41 1.41"></path>
+          <path d="m17.66 17.66 1.41 1.41"></path>
+          <path d="M2 12h2"></path>
+          <path d="M20 12h2"></path>
+          <path d="m6.34 17.66-1.41 1.41"></path>
+          <path d="m19.07 4.93-1.41 1.41"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
