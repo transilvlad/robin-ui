@@ -4,8 +4,7 @@
 # Usage:
 #   docker-compose -f docker-compose.dev.yaml up -d
 #
-# Note: Requires Robin MTA backend running separately.
-# Configure API URLs in src/environments/environment.ts
+# Environment variables are loaded from ../.env
 
 services:
   robin-ui-dev:
@@ -18,5 +17,7 @@ services:
       - /app/node_modules
     ports:
       - "4200:4200"
+    env_file:
+      - ../.env
     environment:
       - NODE_ENV=development

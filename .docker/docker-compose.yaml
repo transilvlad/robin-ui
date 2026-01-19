@@ -4,9 +4,7 @@
 # Usage:
 #   docker-compose up -d
 #
-# Environment variables:
-#   API_URL         - Robin MTA client API (default: http://suite-robin:8090)
-#   SERVICE_API_URL - Robin MTA service API (default: http://suite-robin:8080)
+# Environment variables are loaded from ../.env
 
 services:
   robin-ui:
@@ -16,9 +14,8 @@ services:
       dockerfile: .docker/Dockerfile
     ports:
       - "4200:80"
-    environment:
-      - API_URL=${API_URL:-http://suite-robin:8090}
-      - SERVICE_API_URL=${SERVICE_API_URL:-http://suite-robin:8080}
+    env_file:
+      - ../.env
     networks:
       - suite_suite
     healthcheck:
