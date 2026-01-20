@@ -1,0 +1,50 @@
+{
+  "/api": {
+    "target": "http://host.docker.internal:28090",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/client": {
+    "target": "http://host.docker.internal:28090",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/health": {
+    "target": "http://host.docker.internal:28080",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/config": {
+    "target": "http://host.docker.internal:28080",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/metrics": {
+    "target": "http://host.docker.internal:28080",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/system": {
+    "target": "http://host.docker.internal:28080",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/logs": {
+    "target": "http://host.docker.internal:28090",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/store": {
+    "target": "http://host.docker.internal:28090",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}
