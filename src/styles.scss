@@ -43,13 +43,13 @@
     --radius: 0.5rem;
 
     /* Sidebar variables */
-    --sidebar-background: 240 10% 27%; /* Robin gray-700 */
+    --sidebar-background: 200 18% 46%; /* Robin gray (#607d8b) */
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 31 99% 50%; /* Robin Orange */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 6% 20%;
+    --sidebar-accent: 200 18% 36%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 240 6% 35%;
+    --sidebar-border: 200 18% 56%;
     --sidebar-ring: 31 99% 50%;
   }
 
@@ -82,13 +82,13 @@
     --input: 240 6% 25%;
     --ring: 31 99% 50%;
 
-    --sidebar-background: 240 10% 8%;
+    --sidebar-background: 200 18% 26%; /* Darker robin gray for dark mode */
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 31 99% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 6% 15%;
+    --sidebar-accent: 200 18% 20%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 240 6% 20%;
+    --sidebar-border: 200 18% 30%;
     --sidebar-ring: 31 99% 50%;
   }
 }
@@ -316,11 +316,11 @@
   }
 
   .text-robin-gray {
-    color: #424146;
+    color: #607d8b;
   }
 
   .bg-robin-gray {
-    background-color: #424146;
+    background-color: #607d8b;
   }
 
   /* Focus ring */

@@ -46,7 +46,7 @@ module.exports = {
             900: '#064E3B',
           },
           gray: {
-            DEFAULT: '#424146',
+            DEFAULT: '#607d8b',
             50: '#FAFAFA',
             100: '#F4F4F5',
             200: '#E4E4E7',
