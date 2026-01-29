@@ -1,21 +1,26 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { AuthGuard } from '@core/guards/auth.guard';
+import { authGuard } from '@core/guards/auth.guard';
 
 const routes: Routes = [
+  {
+    path: 'auth',
+    loadChildren: () =>
+      import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
+  },
   {
     path: 'dashboard',
     loadChildren: () =>
       import('./features/dashboard/dashboard.module').then(
         (m) => m.DashboardModule
       ),
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
   },
   {
     path: 'email',
     loadChildren: () =>
       import('./features/email/email.module').then((m) => m.EmailModule),
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
   },
   {
     path: 'security',
@@ -23,13 +28,13 @@ const routes: Routes = [
       import('./features/security/security.module').then(
         (m) => m.SecurityModule
       ),
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
   },
   {
     path: 'routing',
     loadChildren: () =>
       import('./features/routing/routing.module').then((m) => m.RoutingModule),
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
   },
   {
     path: 'monitoring',
@@ -37,7 +42,7 @@ const routes: Routes = [
       import('./features/monitoring/monitoring.module').then(
         (m) => m.MonitoringModule
       ),
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
   },
   {
     path: 'settings',
@@ -45,7 +50,7 @@ const routes: Routes = [
       import('./features/settings/settings.module').then(
         (m) => m.SettingsModule
       ),
-    canActivate: [AuthGuard],
+    canActivate: [authGuard],
   },
   {
     path: '',

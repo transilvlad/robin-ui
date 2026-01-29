@@ -1,0 +1,85 @@
+# Robin Gateway Docker Compose Configuration
+#
+# PREREQUISITES:
+# 1. Robin MTA suite must be running first (provides PostgreSQL and Robin MTA services)
+#    cd ~/development/workspace/open-source/transilvlad-robin/.suite
+#    docker-compose up -d
+#
+# 2. This compose file uses the Robin MTA's external network 'suite_suite'
+#    and connects to the shared PostgreSQL instance 'suite-postgres'
+#
+# SERVICES IN THIS FILE:
+# - redis: Rate limiting and caching for the gateway
+# - gateway: Robin Gateway API with JWT authentication
+#
+# EXTERNAL DEPENDENCIES (from Robin MTA suite):
+# - suite-postgres: PostgreSQL database (container name: suite-postgres, port 5433:5432)
+# - suite-robin: Robin MTA service (container name: suite-robin, ports 28080:8080, 28090:8090)
+# - suite_suite: Docker network (external)
+#
+# STARTUP ORDER:
+# 1. Start Robin MTA suite first (includes PostgreSQL)
+# 2. Start this gateway compose file
+# 3. Gateway will connect to existing PostgreSQL and Robin MTA containers
+#
+# DATABASE CONFIGURATION:
+# - Gateway uses the same 'robin' database as Robin MTA
+# - No separate database instance needed
+# - Connection: suite-postgres:5432/robin (user: robin, password: robin)
+
+services:
+  # Redis (for rate limiting and caching)
+  redis:
+    image: redis:7-alpine
+    container_name: robin-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - suite_suite
+
+  # Robin Gateway (API Gateway with Authentication)
+  gateway:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: robin-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      # Connect to Robin MTA's PostgreSQL (suite-postgres container)
+      - DB_HOST=suite-postgres
+      - DB_PORT=5432  # Internal container port
+      - DB_NAME=robin
+      - DB_USER=robin
+      - DB_PASSWORD=robin
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      # Connect to Robin MTA service (suite-robin container)
+      - ROBIN_CLIENT_URL=http://suite-robin:8090
+      - ROBIN_SERVICE_URL=http://suite-robin:8080
+      - ROBIN_CONFIG_PATH=/app/cfg/
+      # Use a secure secret in production!
+      - JWT_SECRET=dev-secret-key-must-be-at-least-64-bytes-long-for-hs512-algorithm-security
+    volumes:
+      - ../../cfg:/app/cfg:rw  # Mount shared config from project root
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    networks:
+      - suite_suite
+
+networks:
+  suite_suite:
+    external: true

@@ -1,0 +1,57 @@
+spring:
+  # Production profile - uses environment variables (no defaults for sensitive data)
+  # All configuration must be provided via environment variables
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:suite-postgres}:${DB_PORT:5432}/${DB_NAME:robin}
+    username: ${DB_USER:robin}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    show-sql: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+
+  cloud:
+    gateway:
+      routes:
+        # Production routes - use environment variables
+        - id: queue_route
+          uri: ${ROBIN_CLIENT_URL:http://suite-robin:8090}
+          predicates:
+            - Path=/api/v1/queue/**
+          filters:
+            - RewritePath=/api/v1/queue/(?<segment>.*), /client/queue/${segment}
+        - id: storage_route
+          uri: ${ROBIN_CLIENT_URL:http://suite-robin:8090}
+          predicates:
+            - Path=/api/v1/storage/**
+          filters:
+            - RewritePath=/api/v1/storage/(?<segment>.*), /store/${segment}
+        - id: logs_route
+          uri: ${ROBIN_CLIENT_URL:http://suite-robin:8090}
+          predicates:
+            - Path=/api/v1/logs/**
+          filters:
+            - RewritePath=/api/v1/logs/(?<segment>.*), /logs/${segment}
+        - id: config_route
+          uri: ${ROBIN_SERVICE_URL:http://suite-robin:8080}
+          predicates:
+            - Path=/api/v1/config/**
+          filters:
+            - RewritePath=/api/v1/config/(?<segment>.*), /config/${segment}
+        - id: metrics_route
+          uri: ${ROBIN_SERVICE_URL:http://suite-robin:8080}
+          predicates:
+            - Path=/api/v1/metrics/**
+          filters:
+            - RewritePath=/api/v1/metrics/(?<segment>.*), /metrics/${segment}
+
+logging:
+  level:
+    root: INFO
+    com.robin.gateway: INFO
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security: WARN

@@ -1,0 +1,71 @@
+package com.robin.gateway.service;
+
+import com.robin.gateway.model.User;
+import com.robin.gateway.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class UserService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public Flux<User> getAllUsers() {
+        return Mono.fromCallable(userRepository::findAll)
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMapMany(Flux::fromIterable);
+    }
+
+    public Mono<User> getUser(String username) {
+        return Mono.fromCallable(() -> userRepository.findByUsername(username))
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(opt -> opt.map(Mono::just).orElseGet(Mono::empty));
+    }
+
+    public Mono<User> createUser(User user) {
+        return Mono.fromCallable(() -> {
+            if (userRepository.existsByUsername(user.getUsername())) {
+                throw new IllegalArgumentException("Username already exists");
+            }
+            user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+            return userRepository.save(user);
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    public Mono<User> updateUser(String username, User updated) {
+        return Mono.fromCallable(() -> {
+            User existing = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            
+            // Update fields
+            if (updated.getPasswordHash() != null && !updated.getPasswordHash().isEmpty()) {
+                existing.setPasswordHash(passwordEncoder.encode(updated.getPasswordHash()));
+            }
+            if (updated.getQuotaBytes() != null) {
+                existing.setQuotaBytes(updated.getQuotaBytes());
+            }
+            if (updated.getEnabled() != null) {
+                existing.setEnabled(updated.getEnabled());
+            }
+            // Add other fields as needed
+            
+            return userRepository.save(existing);
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    public Mono<Void> deleteUser(String username) {
+        return Mono.fromRunnable(() -> {
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+            userRepository.delete(user);
+        }).subscribeOn(Schedulers.boundedElastic()).then();
+    }
+}

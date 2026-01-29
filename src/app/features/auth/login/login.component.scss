@@ -1,0 +1,160 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 450px;
+  padding: 2rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+
+  mat-card-header {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+  }
+
+  mat-card-title {
+    text-align: center;
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      color: #333;
+    }
+
+    .subtitle {
+      font-size: 0.875rem;
+      color: #666;
+      margin: 0;
+      font-weight: 400;
+    }
+  }
+
+  mat-card-content {
+    padding: 0;
+  }
+
+  mat-card-footer {
+    margin-top: 1.5rem;
+    text-align: center;
+
+    .footer-text {
+      font-size: 0.75rem;
+      color: #999;
+      margin: 0;
+    }
+  }
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.remember-me {
+  margin: 0.5rem 0;
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: #ffebee;
+  color: #c62828;
+  border-radius: 4px;
+  font-size: 0.875rem;
+
+  mat-icon {
+    font-size: 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+.login-button {
+  margin-top: 1rem;
+  height: 48px;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  .button-spinner {
+    display: inline-block;
+  }
+}
+
+.forgot-password {
+  margin-top: 1rem;
+  text-align: center;
+
+  a {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.2s;
+
+    &:hover {
+      color: #764ba2;
+      text-decoration: underline;
+    }
+
+    &.link-disabled {
+      color: #999;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 600px) {
+  .login-card {
+    padding: 1.5rem;
+
+    mat-card-title {
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .subtitle {
+        font-size: 0.75rem;
+      }
+    }
+  }
+}
+
+// Angular Material overrides
+::ng-deep {
+  .login-card {
+    .mat-mdc-form-field {
+      .mat-mdc-text-field-wrapper {
+        background-color: #fafafa;
+      }
+    }
+
+    .mat-mdc-button.mat-primary {
+      background-color: #667eea;
+
+      &:hover:not([disabled]) {
+        background-color: #764ba2;
+      }
+    }
+  }
+}

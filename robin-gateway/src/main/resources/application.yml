@@ -1,0 +1,203 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: robin-gateway
+
+  profiles:
+    active: dev
+
+  # Database Configuration
+  # NOTE: Gateway shares the same PostgreSQL instance as Robin MTA
+  # - In Docker: DB_HOST=suite-postgres (from Robin MTA suite)
+  # - In Local: DB_HOST=localhost, DB_PORT=5433 (Robin MTA's exposed port)
+  # - Database 'robin' contains tables for both Robin MTA and Gateway
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:robin}
+    username: ${DB_USER:robin}
+    password: ${DB_PASSWORD:changeme}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      # Use 'none' to avoid schema validation errors with existing Robin MTA tables
+      # Gateway tables are managed by Flyway migrations
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+
+  cloud:
+    gateway:
+      routes:
+        # Health check route (no auth required)
+        - id: health_public
+          uri: ${ROBIN_CLIENT_URL:http://localhost:8090}
+          predicates:
+            - Path=/api/v1/health/public
+          filters:
+            - RewritePath=/api/v1/health/public, /health
+
+        # Queue management routes (Robin Client API - port 8090)
+        - id: queue_route
+          uri: ${ROBIN_CLIENT_URL:http://localhost:8090}
+          predicates:
+            - Path=/api/v1/queue/**
+          filters:
+            - RewritePath=/api/v1/queue/(?<segment>.*), /client/queue/${segment}
+            - name: CircuitBreaker
+              args:
+                name: robinClientCircuitBreaker
+                fallbackUri: forward:/fallback/queue
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter:
+                  replenishRate: 100
+                  burstCapacity: 150
+
+        # Storage routes
+        - id: storage_route
+          uri: ${ROBIN_CLIENT_URL:http://localhost:8090}
+          predicates:
+            - Path=/api/v1/storage/**
+          filters:
+            - RewritePath=/api/v1/storage/(?<segment>.*), /store/${segment}
+            - name: CircuitBreaker
+              args:
+                name: robinClientCircuitBreaker
+
+        # Logs routes
+        - id: logs_route
+          uri: ${ROBIN_CLIENT_URL:http://localhost:8090}
+          predicates:
+            - Path=/api/v1/logs/**
+          filters:
+            - RewritePath=/api/v1/logs/(?<segment>.*), /logs/${segment}
+
+        # Metrics routes
+        - id: metrics_route
+          uri: ${ROBIN_SERVICE_URL:http://localhost:8080}
+          predicates:
+            - Path=/api/v1/metrics/**
+          filters:
+            - RewritePath=/api/v1/metrics/(?<segment>.*), /metrics/${segment}
+
+        # Configuration routes (proxied to Robin Service API)
+        - id: config_route
+          uri: ${ROBIN_SERVICE_URL:http://localhost:8080}
+          predicates:
+            - Path=/api/v1/config/**
+          filters:
+            - RewritePath=/api/v1/config/(?<segment>.*), /config/${segment}
+            - name: CircuitBreaker
+              args:
+                name: robinServiceCircuitBreaker
+                fallbackUri: forward:/fallback/config
+
+      # Global filters
+      default-filters:
+        - name: AddRequestHeader
+          args:
+            name: X-Gateway-Request
+            value: RobinGateway
+        - name: AddResponseHeader
+          args:
+            name: X-Gateway-Response
+            value: RobinGateway
+
+robin:
+  config-path: ${ROBIN_CONFIG_PATH:cfg/}
+  service-url: ${ROBIN_SERVICE_URL:http://localhost:8080}
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:change-this-to-a-very-long-and-secure-random-secret-key}
+  expiration:
+    access: 1800000  # 30 minutes in milliseconds
+    refresh: 604800000  # 7 days in milliseconds
+
+# Resilience4j Configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      robinClientCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 30s
+        failureRateThreshold: 50
+        eventConsumerBufferSize: 10
+        recordExceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - java.io.IOException
+
+      robinServiceCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        waitDurationInOpenState: 30s
+        failureRateThreshold: 50
+
+  ratelimiter:
+    instances:
+      default:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1s
+        timeoutDuration: 5s
+
+  retry:
+    instances:
+      default:
+        maxAttempts: 3
+        waitDuration: 100ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - java.io.IOException
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.robin.gateway: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
