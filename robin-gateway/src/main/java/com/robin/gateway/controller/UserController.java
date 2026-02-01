@@ -47,7 +47,9 @@ public class UserController {
     }
 
     private User sanitizeUser(User user) {
-        user.setPasswordHash(null); // Don't return hash
+        // Don't return password hashes in API responses
+        user.setPasswordHash(null);
+        user.setDovecotPasswordHash(null);
         return user;
     }
 }

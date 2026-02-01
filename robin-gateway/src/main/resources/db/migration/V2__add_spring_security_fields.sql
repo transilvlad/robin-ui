@@ -3,7 +3,15 @@
 
 -- Add username column (copy from email if doesn't exist)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(255);
-UPDATE users SET username = email WHERE username IS NULL;
+
+-- Check if email column exists before trying to update username from it
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'email') THEN
+        EXECUTE 'UPDATE users SET username = email WHERE username IS NULL';
+    END IF;
+END $$;
+
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username ON users(username);
 
 -- Add Spring Security fields
@@ -53,32 +61,28 @@ CREATE INDEX IF NOT EXISTS idx_session_user_id ON sessions(user_id);
 -- First check if admin@robin.local exists
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT 1 FROM users WHERE email = 'admin@robin.local' OR username = 'admin@robin.local') THEN
-        -- Insert admin user with BCrypt password for 'admin123'
-        INSERT INTO users (email, username, password, is_active, account_non_expired, account_non_locked, credentials_non_expired, created_at, updated_at, uid, gid)
+    IF NOT EXISTS (SELECT 1 FROM users WHERE username = 'admin@robin.local') THEN
+        -- Insert admin user with placeholder password (will be set in V3 migration)
+        INSERT INTO users (username, password, is_active, account_non_expired, account_non_locked, credentials_non_expired, created_at, updated_at)
         VALUES (
             'admin@robin.local',
-            'admin@robin.local',
-            '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN96E7VQnI.DK7ow3zPvu', -- admin123
+            '{SHA512-CRYPT}$6$placeholder', -- Placeholder, V3 will add BCrypt
             TRUE,
             TRUE,
             TRUE,
             TRUE,
             NOW(),
-            NOW(),
-            5000,
-            5000
+            NOW()
         );
     ELSE
-        -- Update existing admin user
+        -- Update existing admin user Spring Security fields only
+        -- DO NOT update password here - V3 migration handles dual-hash strategy
         UPDATE users
-        SET username = 'admin@robin.local',
-            password = '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN96E7VQnI.DK7ow3zPvu',
-            is_active = TRUE,
+        SET is_active = TRUE,
             account_non_expired = TRUE,
             account_non_locked = TRUE,
             credentials_non_expired = TRUE
-        WHERE email = 'admin@robin.local' OR username = 'admin@robin.local';
+        WHERE username = 'admin@robin.local';
     END IF;
 END $$;
 

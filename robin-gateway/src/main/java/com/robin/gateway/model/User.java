@@ -31,9 +31,25 @@ public class User {
     @Column(nullable = false, unique = true, length = 255)
     private String username;
 
+    /**
+     * BCrypt password hash used for Spring Security authentication in robin-gateway.
+     * This field is mapped to the 'password_bcrypt' database column.
+     * Stored format: BCrypt hash (e.g., $2a$12$...)
+     */
     @NotBlank(message = "Password is required")
-    @Column(name = "password", nullable = false, length = 255)
+    @Column(name = "password_bcrypt", nullable = false, length = 255)
     private String passwordHash;
+
+    /**
+     * SHA512-CRYPT password hash used for Dovecot/Robin MTA IMAP authentication.
+     * This field is mapped to the 'password' database column.
+     * Stored format: {SHA512-CRYPT}$6$rounds=5000$...
+     * <p>
+     * Note: This field should be updated via PasswordSyncService to maintain
+     * synchronization between Gateway (BCrypt) and MTA (SHA512-CRYPT) authentication.
+     */
+    @Column(name = "password", length = 255)
+    private String dovecotPasswordHash;
 
     @Column(name = "quota_bytes")
     @Builder.Default

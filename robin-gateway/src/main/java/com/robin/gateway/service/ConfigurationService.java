@@ -6,20 +6,20 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Service for managing Robin MTA configuration files.
  * Reads/Writes JSON5 files from the shared configuration volume.
+ * Reactive implementation.
  */
 @Service
 @Slf4j
@@ -33,7 +33,6 @@ public class ConfigurationService {
 
     private final ObjectMapper objectMapper;
     private final WebClient.Builder webClientBuilder;
-    private final Map<String, Map<String, Object>> configCache = new ConcurrentHashMap<>();
 
     public ConfigurationService(WebClient.Builder webClientBuilder) {
         this.webClientBuilder = webClientBuilder;
@@ -63,10 +62,9 @@ public class ConfigurationService {
      * @param section the configuration section name (filename without extension)
      * @return the configuration map
      */
-    public Map<String, Object> getConfig(String section) {
-        // Always read from disk to ensure freshness, or use cache with invalidation.
-        // For admin UI, reading from disk is acceptable performance-wise.
-        return readConfigFromFile(section);
+    public Mono<Map<String, Object>> getConfig(String section) {
+        return Mono.fromCallable(() -> readConfigFromFile(section))
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
@@ -75,8 +73,10 @@ public class ConfigurationService {
      * @param section the configuration section name
      * @param newConfig the new configuration map
      */
-    public void updateConfig(String section, Map<String, Object> newConfig) {
-        writeConfigToFile(section, newConfig);
+    public Mono<Void> updateConfig(String section, Map<String, Object> newConfig) {
+        return Mono.fromRunnable(() -> writeConfigToFile(section, newConfig))
+                .subscribeOn(Schedulers.boundedElastic())
+                .then(triggerReload());
     }
 
     private Map<String, Object> readConfigFromFile(String section) {
@@ -91,7 +91,7 @@ public class ConfigurationService {
 
         try {
             return objectMapper.readValue(file, Map.class);
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Failed to read config file: {}", file.getAbsolutePath(), e);
             throw new RuntimeException("Failed to read configuration", e);
         }
@@ -104,27 +104,20 @@ public class ConfigurationService {
         try {
             objectMapper.writeValue(file, content);
             log.info("Updated configuration file: {}", file.getAbsolutePath());
-            
-            triggerReload();
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("Failed to write config file: {}", file.getAbsolutePath(), e);
             throw new RuntimeException("Failed to write configuration", e);
         }
     }
 
-    private void triggerReload() {
-        try {
-            webClientBuilder.build()
-                    .post()
-                    .uri(robinServiceUrl + "/config/reload")
-                    .retrieve()
-                    .toBodilessEntity()
-                    .subscribe(
-                            v -> log.info("Triggered config reload on Robin Server"),
-                            e -> log.error("Failed to trigger config reload: {}", e.getMessage())
-                    );
-        } catch (Exception e) {
-            log.error("Error calling config reload endpoint", e);
-        }
+    private Mono<Void> triggerReload() {
+        return webClientBuilder.build()
+                .post()
+                .uri(robinServiceUrl + "/config/reload")
+                .retrieve()
+                .toBodilessEntity()
+                .doOnSuccess(v -> log.info("Triggered config reload on Robin Server"))
+                .doOnError(e -> log.error("Failed to trigger config reload: {}", e.getMessage()))
+                .then();
     }
 }

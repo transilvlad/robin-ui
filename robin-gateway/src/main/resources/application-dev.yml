@@ -3,9 +3,9 @@ spring:
   # Docker: Environment variables are set in docker-compose.yml
   # Local: Uses defaults (localhost:5433 for suite-postgres, localhost:6379 for Redis)
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:robin}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:robin}
     username: ${DB_USER:robin}
-    password: ${DB_PASSWORD:robin}
+    password: ${DB_PASSWORD:robin123}
 
   jpa:
     show-sql: true
@@ -29,32 +29,25 @@ spring:
           predicates:
             - Path=/api/v1/queue/**
           filters:
-            - RewritePath=/api/v1/queue/(?<segment>.*), /client/queue/${segment}
+            - RewritePath=/api/v1/queue(?<segment>/?.*), /client/queue${segment}
         - id: storage_route
           uri: ${ROBIN_CLIENT_URL:http://localhost:28090}
           predicates:
             - Path=/api/v1/storage/**
           filters:
-            - RewritePath=/api/v1/storage/(?<segment>.*), /store/${segment}
-        - id: logs_route
-          uri: ${ROBIN_CLIENT_URL:http://localhost:28090}
-          predicates:
-            - Path=/api/v1/logs/**
-          filters:
-            - RewritePath=/api/v1/logs/(?<segment>.*), /logs/${segment}
-        - id: config_route
+            - RewritePath=/api/v1/storage(?<segment>/?.*), /store${segment}
+        - id: blocklist_route
           uri: ${ROBIN_SERVICE_URL:http://localhost:28080}
           predicates:
-            - Path=/api/v1/config/**
+            - Path=/api/v1/blocklist/**
           filters:
-            - RewritePath=/api/v1/config/(?<segment>.*), /config/${segment}
-        - id: metrics_route
+            - RewritePath=/api/v1/blocklist(?<segment>/?.*), /blocklist${segment}
+        - id: scanners_route
           uri: ${ROBIN_SERVICE_URL:http://localhost:28080}
           predicates:
-            - Path=/api/v1/metrics/**
+            - Path=/api/v1/scanners/**
           filters:
-            - RewritePath=/api/v1/metrics/(?<segment>.*), /metrics/${segment}
-
+            - RewritePath=/api/v1/scanners(?<segment>/?.*), /scanners${segment}
 logging:
   level:
     root: INFO

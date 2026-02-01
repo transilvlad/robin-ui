@@ -58,7 +58,7 @@ spring:
           predicates:
             - Path=/api/v1/queue/**
           filters:
-            - RewritePath=/api/v1/queue/(?<segment>.*), /client/queue/${segment}
+            - RewritePath=/api/v1/queue(?<segment>/?.*), /client/queue${segment}
             - name: CircuitBreaker
               args:
                 name: robinClientCircuitBreaker
@@ -75,38 +75,37 @@ spring:
           predicates:
             - Path=/api/v1/storage/**
           filters:
-            - RewritePath=/api/v1/storage/(?<segment>.*), /store/${segment}
+            - RewritePath=/api/v1/storage(?<segment>/?.*), /store${segment}
             - name: CircuitBreaker
               args:
                 name: robinClientCircuitBreaker
 
-        # Logs routes
-        - id: logs_route
-          uri: ${ROBIN_CLIENT_URL:http://localhost:8090}
-          predicates:
-            - Path=/api/v1/logs/**
-          filters:
-            - RewritePath=/api/v1/logs/(?<segment>.*), /logs/${segment}
-
-        # Metrics routes
-        - id: metrics_route
-          uri: ${ROBIN_SERVICE_URL:http://localhost:8080}
-          predicates:
-            - Path=/api/v1/metrics/**
-          filters:
-            - RewritePath=/api/v1/metrics/(?<segment>.*), /metrics/${segment}
-
         # Configuration routes (proxied to Robin Service API)
-        - id: config_route
+        # REMOVED: Handled by ConfigurationController for JSON support
+
+        # Blocklist routes (proxied to Robin Service API)
+        - id: blocklist_route
           uri: ${ROBIN_SERVICE_URL:http://localhost:8080}
           predicates:
-            - Path=/api/v1/config/**
+            - Path=/api/v1/blocklist/**
           filters:
-            - RewritePath=/api/v1/config/(?<segment>.*), /config/${segment}
+            - RewritePath=/api/v1/blocklist(?<segment>/?.*), /blocklist${segment}
             - name: CircuitBreaker
               args:
                 name: robinServiceCircuitBreaker
-                fallbackUri: forward:/fallback/config
+                fallbackUri: forward:/fallback/blocklist
+
+        # Scanners routes (proxied to Robin Service API)
+        - id: scanners_route
+          uri: ${ROBIN_SERVICE_URL:http://localhost:8080}
+          predicates:
+            - Path=/api/v1/scanners/**
+          filters:
+            - RewritePath=/api/v1/scanners(?<segment>/?.*), /scanners${segment}
+            - name: CircuitBreaker
+              args:
+                name: robinServiceCircuitBreaker
+                fallbackUri: forward:/fallback/scanners
 
       # Global filters
       default-filters:
@@ -125,7 +124,7 @@ robin:
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:change-this-to-a-very-long-and-secure-random-secret-key}
+  secret: ${JWT_SECRET:change-this-to-a-very-long-and-secure-random-secret-key-that-is-at-least-64-bytes-long}
   expiration:
     access: 1800000  # 30 minutes in milliseconds
     refresh: 604800000  # 7 days in milliseconds

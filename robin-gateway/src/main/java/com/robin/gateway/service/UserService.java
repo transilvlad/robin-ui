@@ -4,7 +4,6 @@ import com.robin.gateway.model.User;
 import com.robin.gateway.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -16,7 +15,7 @@ import reactor.core.scheduler.Schedulers;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordSyncService passwordSyncService;
 
     public Flux<User> getAllUsers() {
         return Mono.fromCallable(userRepository::findAll)
@@ -35,8 +34,21 @@ public class UserService {
             if (userRepository.existsByUsername(user.getUsername())) {
                 throw new IllegalArgumentException("Username already exists");
             }
-            user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
-            return userRepository.save(user);
+
+            // Extract plain password before saving
+            String plainPassword = user.getPasswordHash();
+
+            // Save user first (password fields will be null initially)
+            user.setPasswordHash(null);
+            user.setDovecotPasswordHash(null);
+            User savedUser = userRepository.save(user);
+
+            // Use PasswordSyncService to set both BCrypt and SHA512-CRYPT hashes
+            passwordSyncService.updatePassword(savedUser.getId(), plainPassword);
+
+            // Reload user with updated password hashes
+            return userRepository.findById(savedUser.getId())
+                    .orElseThrow(() -> new IllegalStateException("User not found after creation"));
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
@@ -44,19 +56,29 @@ public class UserService {
         return Mono.fromCallable(() -> {
             User existing = userRepository.findByUsername(username)
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
-            
-            // Update fields
+
+            // Update password using PasswordSyncService for dual-hash strategy
             if (updated.getPasswordHash() != null && !updated.getPasswordHash().isEmpty()) {
-                existing.setPasswordHash(passwordEncoder.encode(updated.getPasswordHash()));
+                passwordSyncService.updatePassword(existing.getId(), updated.getPasswordHash());
+                // Reload to get updated password hashes
+                existing = userRepository.findById(existing.getId())
+                        .orElseThrow(() -> new IllegalStateException("User not found after password update"));
             }
+
+            // Update other fields
             if (updated.getQuotaBytes() != null) {
                 existing.setQuotaBytes(updated.getQuotaBytes());
             }
             if (updated.getEnabled() != null) {
                 existing.setEnabled(updated.getEnabled());
             }
-            // Add other fields as needed
-            
+            if (updated.getRoles() != null && !updated.getRoles().isEmpty()) {
+                existing.setRoles(updated.getRoles());
+            }
+            if (updated.getPermissions() != null && !updated.getPermissions().isEmpty()) {
+                existing.setPermissions(updated.getPermissions());
+            }
+
             return userRepository.save(existing);
         }).subscribeOn(Schedulers.boundedElastic());
     }
