@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "host": "clamav",
+  "port": 3310,
+  "timeout": 30000,
+  "maxFileSize": 26214400,
+  "scanArchives": true
+}

@@ -1,0 +1,10 @@
+{
+  "enabled": true,
+  "host": "rspamd",
+  "port": 11333,
+  "apiKey": "",
+  "rejectScore": 15.0,
+  "addHeaderScore": 6.0,
+  "greylistScore": 4.0,
+  "timeout": 30000
+}

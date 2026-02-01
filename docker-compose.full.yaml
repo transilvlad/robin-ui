@@ -1,0 +1,266 @@
+# =============================================================================
+# Robin MTA Complete Suite - Docker Compose
+# =============================================================================
+# This docker-compose file orchestrates:
+#   - Robin MTA (Mail Transfer Agent)
+#   - Robin Gateway (API Gateway with authentication)
+#   - Robin UI (Angular frontend)
+#   - PostgreSQL (shared database)
+#   - Redis (rate limiting and caching)
+#   - ClamAV (virus scanning)
+#   - Rspamd (spam detection)
+#
+# Architecture:
+#   Robin UI (http://localhost) → Robin Gateway (:8080) → Robin MTA (:8080, :8090)
+#                                        ↓
+#                                  PostgreSQL + Redis
+#                                        ↓
+#                                   Robin MTA (SMTP)
+#                                        ↓
+#                                  ClamAV + Rspamd
+#
+# Usage:
+#   docker-compose -f docker-compose.full.yaml up -d
+#   docker-compose -f docker-compose.full.yaml logs -f
+#   docker-compose -f docker-compose.full.yaml down
+#
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # PostgreSQL - Shared database for Robin MTA and Robin Gateway
+  # ===========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: robin-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: robin
+      POSTGRES_USER: robin
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-robin123}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - postgres-logs:/var/log/postgresql
+    ports:
+      - "5432:5432"
+    networks:
+      - robin-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U robin -d robin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ===========================================================================
+  # Redis - Rate limiting and caching for Robin Gateway
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: robin-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - robin-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # ClamAV - Virus scanning for Robin MTA
+  # ===========================================================================
+  clamav:
+    image: clamav/clamav:latest
+    container_name: robin-clamav
+    restart: unless-stopped
+    platform: linux/amd64
+    volumes:
+      - clamav-data:/var/lib/clamav
+      - clamav-logs:/var/log/clamav
+    ports:
+      - "3310:3310"
+    networks:
+      - robin-network
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/clamdcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s  # ClamAV needs time to download virus definitions
+
+  # ===========================================================================
+  # Rspamd - Spam detection for Robin MTA
+  # ===========================================================================
+  rspamd:
+    image: rspamd/rspamd:latest
+    container_name: robin-rspamd
+    restart: unless-stopped
+    platform: linux/amd64
+    volumes:
+      - rspamd-data:/var/lib/rspamd
+      - rspamd-logs:/var/log/rspamd
+    ports:
+      - "11333:11333"  # Rspamd worker
+      - "11334:11334"  # Rspamd web UI
+    networks:
+      - robin-network
+    healthcheck:
+      test: ["CMD", "rspamadm", "configtest"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ===========================================================================
+  # Robin MTA - Mail Transfer Agent
+  # ===========================================================================
+  robin-mta:
+    container_name: robin-mta
+    restart: unless-stopped
+    platform: linux/amd64
+    build:
+      context: ../transilvlad-robin
+      dockerfile: Dockerfile
+      args:
+        INCLUDE_CFG: "false"
+    environment:
+      - JAVA_TOOL_OPTIONS=-Xms256m -Xmx1024m -Dnetworkaddress.cache.negative.ttl=300
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=robin
+      - POSTGRES_USER=robin
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-robin123}
+      - CLAMAV_HOST=clamav
+      - CLAMAV_PORT=3310
+      - RSPAMD_HOST=rspamd
+      - RSPAMD_PORT=11333
+    volumes:
+      - ../transilvlad-robin/cfg:/usr/local/robin/cfg
+      - robin-logs:/var/log/robin
+      - robin-store:/usr/local/robin/store
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+      rspamd:
+        condition: service_healthy
+    ports:
+      - "25:25"       # SMTP
+      - "587:587"     # SUBMISSION
+      - "465:465"     # SMTPS
+      - "8080:8080"   # Service API
+      - "8090:8090"   # Client API
+    networks:
+      - robin-network
+    healthcheck:
+      test: ["CMD", "sh", "-c", "nc -z localhost 25 && nc -z localhost 8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ===========================================================================
+  # Robin Gateway - API Gateway with authentication and rate limiting
+  # ===========================================================================
+  robin-gateway:
+    container_name: robin-gateway
+    restart: unless-stopped
+    build:
+      context: ./robin-gateway
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=robin
+      - DB_USER=robin
+      - DB_PASSWORD=${DB_PASSWORD:-robin123}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ROBIN_SERVICE_URL=http://robin-mta:8080
+      - ROBIN_CLIENT_URL=http://robin-mta:8090
+      - JWT_SECRET=${JWT_SECRET:-change-this-to-a-very-long-and-secure-random-secret-key-in-production}
+    volumes:
+      - ./cfg:/app/cfg
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      robin-mta:
+        condition: service_healthy
+    ports:
+      - "8888:8080"  # Gateway API (using 8888 to avoid conflict with Robin MTA's 8080)
+    networks:
+      - robin-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  # ===========================================================================
+  # Robin UI - Angular frontend
+  # ===========================================================================
+  robin-ui:
+    container_name: robin-ui
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: .docker/Dockerfile
+      args:
+        API_URL: http://localhost:8888
+    environment:
+      - API_URL=/api/v1
+      - SERVICE_API_URL=http://robin-gateway:8080
+    depends_on:
+      robin-gateway:
+        condition: service_healthy
+    ports:
+      - "80:80"      # Web UI (production)
+    networks:
+      - robin-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  robin-network:
+    driver: bridge
+    name: robin-network
+
+# =============================================================================
+# Volumes - Persistent storage
+# =============================================================================
+volumes:
+  postgres-data:
+    name: robin-postgres-data
+  postgres-logs:
+    name: robin-postgres-logs
+  redis-data:
+    name: robin-redis-data
+  clamav-data:
+    name: robin-clamav-data
+  clamav-logs:
+    name: robin-clamav-logs
+  rspamd-data:
+    name: robin-rspamd-data
+  rspamd-logs:
+    name: robin-rspamd-logs
+  robin-logs:
+    name: robin-mta-logs
+  robin-store:
+    name: robin-mta-store

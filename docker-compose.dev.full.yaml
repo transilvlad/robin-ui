@@ -1,0 +1,210 @@
+# =============================================================================
+# Robin MTA Complete Suite - Development Setup
+# =============================================================================
+# This is the development version with hot reload and debugging enabled.
+# Use docker-compose.full.yaml for production.
+#
+# Usage:
+#   docker-compose -f docker-compose.dev.full.yaml up -d
+#
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # PostgreSQL - Shared database
+  # ===========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: robin-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: robin
+      POSTGRES_USER: robin
+      POSTGRES_PASSWORD: robin123
+    ports:
+      - "5432:5432"
+    networks:
+      - robin-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U robin -d robin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # Redis - Rate limiting
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: robin-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    networks:
+      - robin-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # ClamAV - Virus scanning
+  # ===========================================================================
+  clamav:
+    image: clamav/clamav:latest
+    container_name: robin-clamav-dev
+    restart: unless-stopped
+    platform: linux/amd64
+    ports:
+      - "3310:3310"
+    networks:
+      - robin-network
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/clamdcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+
+  # ===========================================================================
+  # Rspamd - Spam detection
+  # ===========================================================================
+  rspamd:
+    image: rspamd/rspamd:latest
+    container_name: robin-rspamd-dev
+    restart: unless-stopped
+    platform: linux/amd64
+    ports:
+      - "11333:11333"
+      - "11334:11334"
+    networks:
+      - robin-network
+    healthcheck:
+      test: ["CMD", "rspamadm", "configtest"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ===========================================================================
+  # Robin MTA - Mail Transfer Agent
+  # ===========================================================================
+  robin-mta:
+    container_name: robin-mta-dev
+    restart: unless-stopped
+    platform: linux/amd64
+    build:
+      context: ../transilvlad-robin
+      dockerfile: Dockerfile
+      args:
+        INCLUDE_CFG: "false"
+    environment:
+      - JAVA_TOOL_OPTIONS=-Xms256m -Xmx1024m -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=robin
+      - POSTGRES_USER=robin
+      - POSTGRES_PASSWORD=robin123
+      - CLAMAV_HOST=clamav
+      - CLAMAV_PORT=3310
+      - RSPAMD_HOST=rspamd
+      - RSPAMD_PORT=11333
+    volumes:
+      - ../transilvlad-robin/cfg:/usr/local/robin/cfg
+      - ../transilvlad-robin/log:/var/log/robin
+      - ../transilvlad-robin/store:/usr/local/robin/store
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+      rspamd:
+        condition: service_healthy
+    ports:
+      - "25:25"
+      - "587:587"
+      - "465:465"
+      - "8080:8080"
+      - "8090:8090"
+      - "5005:5005"  # Debug port
+    networks:
+      - robin-network
+    healthcheck:
+      test: ["CMD", "sh", "-c", "nc -z localhost 25 && nc -z localhost 8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ===========================================================================
+  # Robin Gateway - API Gateway
+  # ===========================================================================
+  robin-gateway:
+    container_name: robin-gateway-dev
+    restart: unless-stopped
+    build:
+      context: ./robin-gateway
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=robin
+      - DB_USER=robin
+      - DB_PASSWORD=robin123
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ROBIN_SERVICE_URL=http://robin-mta:8080
+      - ROBIN_CLIENT_URL=http://robin-mta:8090
+      - JWT_SECRET=dev-secret-key-not-for-production-but-must-be-at-least-64-bytes-long-for-hs512-security-requirements
+    volumes:
+      - ./cfg:/app/cfg
+      - ./robin-gateway/src/main/resources/application.yml:/app/config/application.yml
+      - ./robin-gateway/src/main/resources/application-dev.yml:/app/config/application-dev.yml
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      robin-mta:
+        condition: service_healthy
+    ports:
+      - "8888:8080"
+      - "5006:5006"  # Debug port
+    networks:
+      - robin-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  # ===========================================================================
+  # Robin UI - Development server with hot reload
+  # ===========================================================================
+  robin-ui:
+    container_name: robin-ui-dev
+    restart: unless-stopped
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      robin-gateway:
+        condition: service_healthy
+    ports:
+      - "4200:4200"
+    networks:
+      - robin-network
+
+networks:
+  robin-network:
+    driver: bridge
+    name: robin-network-dev

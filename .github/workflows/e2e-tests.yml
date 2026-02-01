@@ -1,0 +1,128 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        browser: [chrome, firefox]
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: robin
+          POSTGRES_USER: robin
+          POSTGRES_PASSWORD: robin
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Robin Gateway
+        run: |
+          cd robin-gateway
+          ./mvnw clean package -DskipTests
+
+      - name: Start Robin Gateway
+        run: |
+          cd robin-gateway
+          java -jar target/robin-gateway-*.jar &
+          echo $! > gateway.pid
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5433
+          DB_NAME: robin
+          DB_USER: robin
+          DB_PASSWORD: robin
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_SECRET: test-secret-key-for-ci-environment-min-64-chars-long-required
+
+      - name: Wait for Robin Gateway
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:8080/actuator/health; do sleep 2; done'
+
+      - name: Start Robin UI
+        run: |
+          npm run dev &
+          echo $! > ui.pid
+
+      - name: Wait for Robin UI
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:4200; do sleep 2; done'
+
+      - name: Run E2E tests
+        run: npm run test:e2e:headless -- --browser ${{ matrix.browser }}
+        env:
+          CYPRESS_baseUrl: http://localhost:4200
+          CYPRESS_apiUrl: http://localhost:8080/api/v1
+
+      - name: Upload test videos
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-videos-${{ matrix.browser }}
+          path: cypress/videos
+          retention-days: 7
+
+      - name: Upload test screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots-${{ matrix.browser }}
+          path: cypress/screenshots
+          retention-days: 7
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-results-${{ matrix.browser }}
+          path: cypress/results
+          retention-days: 30
+
+      - name: Stop services
+        if: always()
+        run: |
+          [ -f ui.pid ] && kill $(cat ui.pid) || true
+          [ -f gateway.pid ] && kill $(cat gateway.pid) || true

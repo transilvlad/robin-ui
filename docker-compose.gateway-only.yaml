@@ -1,0 +1,131 @@
+# =============================================================================
+# Robin UI + Gateway Only - Docker Compose
+# =============================================================================
+# This setup runs Robin UI and Gateway without Robin MTA.
+# Use this when Robin MTA is running separately or has build issues.
+#
+# Usage:
+#   docker-compose -f docker-compose.gateway-only.yaml up -d
+#
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # PostgreSQL - Database for Gateway
+  # ===========================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: robin-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: robin
+      POSTGRES_USER: robin
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-robin123}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - robin-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U robin -d robin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # Redis - Rate limiting for Gateway
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: robin-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - robin-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # Robin Gateway - API Gateway
+  # ===========================================================================
+  robin-gateway:
+    container_name: robin-gateway
+    restart: unless-stopped
+    build:
+      context: ./robin-gateway
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=robin
+      - DB_USER=robin
+      - DB_PASSWORD=${DB_PASSWORD:-robin123}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      # Point to externally running Robin MTA or mock
+      - ROBIN_SERVICE_URL=${ROBIN_SERVICE_URL:-http://host.docker.internal:8080}
+      - ROBIN_CLIENT_URL=${ROBIN_CLIENT_URL:-http://host.docker.internal:8090}
+      - JWT_SECRET=${JWT_SECRET:-dev-secret-key-not-for-production}
+    volumes:
+      - ./cfg:/app/cfg
+      - ./robin-gateway/src/main/resources/application.yml:/app/config/application.yml
+      - ./robin-gateway/src/main/resources/application-dev.yml:/app/config/application-dev.yml
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8888:8080"
+    networks:
+      - robin-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  # ===========================================================================
+  # Robin UI - Angular frontend (development mode)
+  # ===========================================================================
+  robin-ui:
+    container_name: robin-ui-dev
+    restart: unless-stopped
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      robin-gateway:
+        condition: service_healthy
+    ports:
+      - "4200:4200"
+    networks:
+      - robin-network
+
+networks:
+  robin-network:
+    driver: bridge
+    name: robin-network
+
+volumes:
+  postgres-data:
+    name: robin-postgres-data
+  redis-data:
+    name: robin-redis-data
