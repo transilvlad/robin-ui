@@ -8,30 +8,29 @@ import { environment } from '@environments/environment';
 })
 export class ApiService {
   private readonly apiUrl = environment.apiUrl;
-  private readonly serviceUrl = environment.serviceUrl;
 
   constructor(private http: HttpClient) {}
 
-  // Service endpoint methods (port 8080)
+  // Service endpoint methods (routed through gateway)
   getHealth(): Observable<any> {
-    return this.http.get(`${this.serviceUrl}${environment.endpoints.health}`);
+    return this.http.get(`${this.apiUrl}${environment.endpoints.health}`);
   }
 
   getConfig(): Observable<any> {
-    return this.http.get(`${this.serviceUrl}${environment.endpoints.config}`);
+    return this.http.get(`${this.apiUrl}${environment.endpoints.config}`);
   }
 
   getMetrics(metricName?: string): Observable<any> {
     const url = metricName
-      ? `${this.serviceUrl}${environment.endpoints.metrics}/${metricName}`
-      : `${this.serviceUrl}${environment.endpoints.metrics}`;
+      ? `${this.apiUrl}${environment.endpoints.metrics}/${metricName}`
+      : `${this.apiUrl}${environment.endpoints.metrics}`;
     return this.http.get(url);
   }
 
   // API endpoint methods (port 8090)
   getQueue(page = 0, size = 50): Observable<any> {
     const params = new HttpParams().set('page', page).set('size', size);
-    return this.http.get(`${this.apiUrl}${environment.endpoints.queue}`, {
+    return this.http.get(`${this.apiUrl}${environment.endpoints.queue}/json`, {
       params,
     });
   }
@@ -51,7 +50,7 @@ export class ApiService {
 
   getStorageItems(path = '/'): Observable<any> {
     const params = new HttpParams().set('path', path);
-    return this.http.get(`${this.apiUrl}${environment.endpoints.store}`, {
+    return this.http.get(`${this.apiUrl}${environment.endpoints.store}/`, {
       params,
     });
   }

@@ -5,12 +5,12 @@ export type AccessToken = string & { readonly __brand: 'AccessToken' };
 export type RefreshToken = string & { readonly __brand: 'RefreshToken' };
 export type UserId = string & { readonly __brand: 'UserId' };
 
-// Role enum
+// Role enum - matches gateway ROLE_* format
 export enum UserRole {
-  ADMIN = 'ADMIN',
-  USER = 'USER',
-  READ_ONLY = 'READ_ONLY',
-  OPERATOR = 'OPERATOR'
+  ADMIN = 'ROLE_ADMIN',
+  USER = 'ROLE_USER',
+  READONLY = 'ROLE_READONLY',
+  OPERATOR = 'ROLE_OPERATOR'
 }
 
 // Permission enum (feature-based)
@@ -51,36 +51,49 @@ export enum Permission {
 
 // Zod schemas for runtime validation
 export const UserSchema = z.object({
-  // Server sends numeric ID, client uses string
-  id: z.number().or(z.string()).transform(id => String(id) as UserId),
-  username: z.string().min(3).max(50),
+  id: z.union([z.string().uuid(), z.number()]).transform(id => String(id)),
+  username: z.string().min(1),
   email: z.string().email(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
-  // Server sends "ROLE_ADMIN", client expects "ADMIN"
-  roles: z.array(z.string()).transform(roles => 
-    roles.map(r => r.replace('ROLE_', '') as UserRole)
-  ),
-  // Server might not send permissions in user object
-  permissions: z.array(z.string()).optional().default([]).transform(perms => 
-    perms.map(p => p as Permission)
-  ),
-  createdAt: z.coerce.date().optional(),
-  lastLoginAt: z.coerce.date().optional(),
+  roles: z.array(z.nativeEnum(UserRole)),
+  permissions: z.array(z.nativeEnum(Permission)).optional().default([]),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+  lastLoginAt: z.string().optional(),
 });
 
 export const AuthTokensSchema = z.object({
   accessToken: z.string().transform(t => t as AccessToken),
-  // Server sends null for refresh token (HttpOnly cookie)
+  // Server sends refresh token in HttpOnly cookie, not in response
   refreshToken: z.string().nullable().optional().transform(t => t as RefreshToken | null),
-  expiresIn: z.number().positive(),
-  tokenType: z.literal('Bearer'),
+  expiresIn: z.number().positive()
 });
 
+// Gateway AuthResponse structure (nested tokens format)
 export const AuthResponseSchema = z.object({
   user: UserSchema,
-  tokens: AuthTokensSchema,
-  permissions: z.array(z.nativeEnum(Permission)),
+  tokens: z.object({
+    accessToken: z.string(),
+    refreshToken: z.string().nullable().optional(),
+    tokenType: z.string().optional(),
+    expiresIn: z.number().positive(),
+  }),
+  permissions: z.array(z.nativeEnum(Permission)).optional().default([]),
+}).transform(data => ({
+  accessToken: data.tokens.accessToken as AccessToken,
+  refreshToken: data.tokens.refreshToken as RefreshToken | null,
+  expiresIn: data.tokens.expiresIn,
+  user: {
+    ...data.user,
+    permissions: data.permissions || data.user.permissions || []
+  }
+}));
+
+// Token refresh response
+export const TokenResponseSchema = z.object({
+  accessToken: z.string().transform(t => t as AccessToken),
+  expiresIn: z.number().positive()
 });
 
 export const LoginRequestSchema = z.object({
@@ -93,6 +106,7 @@ export const LoginRequestSchema = z.object({
 export type User = z.infer<typeof UserSchema>;
 export type AuthTokens = z.infer<typeof AuthTokensSchema>;
 export type AuthResponse = z.infer<typeof AuthResponseSchema>;
+export type TokenResponse = z.infer<typeof TokenResponseSchema>;
 export type LoginRequest = z.infer<typeof LoginRequestSchema>;
 
 // Token payload (decoded JWT)
@@ -134,4 +148,112 @@ export interface AuthError {
 // Helper function to create auth errors
 export function createAuthError(code: AuthErrorCode, message: string, details?: unknown): AuthError {
   return { code, message, details };
+}
+
+// ===== Helper Functions =====
+
+/**
+ * Validate and parse data using a Zod schema.
+ * Returns a Result type for explicit error handling.
+ */
+export function validateWithSchema<T>(
+  schema: z.ZodSchema<T>,
+  data: unknown
+): Result<T, AuthError> {
+  try {
+    const parsed = schema.parse(data);
+    return Ok(parsed);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return Err(createAuthError(
+        AuthErrorCode.INVALID_TOKEN,
+        'Validation failed',
+        error.errors
+      ));
+    }
+    return Err(createAuthError(
+      AuthErrorCode.NETWORK_ERROR,
+      'Unknown validation error',
+      error
+    ));
+  }
+}
+
+/**
+ * Check if user has a specific role.
+ */
+export function hasRole(user: User | null, role: UserRole): boolean {
+  return user?.roles?.includes(role) ?? false;
+}
+
+/**
+ * Check if user has a specific permission.
+ */
+export function hasPermission(user: User | null, permission: Permission): boolean {
+  return user?.permissions?.includes(permission) ?? false;
+}
+
+/**
+ * Check if user has any of the specified roles.
+ */
+export function hasAnyRole(user: User | null, roles: UserRole[]): boolean {
+  return roles.some(r => hasRole(user, r));
+}
+
+/**
+ * Check if user has all of the specified permissions.
+ */
+export function hasAllPermissions(user: User | null, permissions: Permission[]): boolean {
+  return permissions.every(p => hasPermission(user, p));
+}
+
+/**
+ * Check if user has any of the specified permissions.
+ */
+export function hasAnyPermission(user: User | null, permissions: Permission[]): boolean {
+  return permissions.some(p => hasPermission(user, p));
+}
+
+/**
+ * Check if access token is expired based on expiration timestamp.
+ */
+export function isTokenExpired(expiresAt: number): boolean {
+  return Date.now() >= expiresAt;
+}
+
+/**
+ * Calculate token expiration timestamp from expiresIn (milliseconds).
+ */
+export function calculateExpiresAt(expiresIn: number): number {
+  return Date.now() + expiresIn;
+}
+
+/**
+ * Get user display name (email or username).
+ */
+export function getUserDisplayName(user: User): string {
+  if (user.firstName && user.lastName) {
+    return `${user.firstName} ${user.lastName}`;
+  }
+  return user.email || user.username;
+}
+
+/**
+ * Check if user is admin.
+ */
+export function isAdmin(user: User | null): boolean {
+  return hasRole(user, UserRole.ADMIN);
+}
+
+/**
+ * Get human-readable role name.
+ */
+export function getRoleName(role: UserRole): string {
+  const roleNames: Record<UserRole, string> = {
+    [UserRole.ADMIN]: 'Administrator',
+    [UserRole.USER]: 'User',
+    [UserRole.READONLY]: 'Read Only',
+    [UserRole.OPERATOR]: 'Operator'
+  };
+  return roleNames[role] || role;
 }

@@ -1,3 +1,23 @@
+/* Angular Material Theme */
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+/* Use built-in palettes close to Robin colors and customize */
+$robin-primary: mat.m2-define-palette(mat.$m2-orange-palette, 500);
+$robin-accent: mat.m2-define-palette(mat.$m2-green-palette, 500);
+$robin-warn: mat.m2-define-palette(mat.$m2-red-palette);
+
+$robin-theme: mat.m2-define-light-theme((
+  color: (
+    primary: $robin-primary,
+    accent: $robin-accent,
+    warn: $robin-warn,
+  ),
+));
+
+@include mat.all-component-themes($robin-theme);
+
 /* Tailwind CSS imports */
 @tailwind base;
 @tailwind components;
@@ -7,14 +27,17 @@
 @layer base {
   :root {
     /* Robin Orange (#FE8502) converted to HSL: 31 99% 50% */
-    --background: 0 0% 100%;
-    --foreground: 240 10% 27%; /* Robin gray-700 */
+    /* Light Theme - Mockup: #F8FAFC */
+    --background: 210 40% 96%; 
+    /* Light Text - Mockup: #424146 */
+    --foreground: 250 3% 27%;
 
+    /* Light Card - Mockup: #FFFFFF */
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 27%;
+    --card-foreground: 250 3% 27%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 27%;
+    --popover-foreground: 250 3% 27%;
 
     /* Primary: Robin Orange */
     --primary: 31 99% 50%;
@@ -22,7 +45,7 @@
 
     /* Secondary: Robin Gray */
     --secondary: 240 5% 96%;
-    --secondary-foreground: 240 10% 27%;
+    --secondary-foreground: 250 3% 27%;
 
     /* Muted */
     --muted: 240 5% 96%;
@@ -36,40 +59,45 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 6% 90%;
-    --input: 240 6% 90%;
+    /* Light Border - Mockup: #E2E8F0 */
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
     --ring: 31 99% 50%; /* Robin Orange */
 
     --radius: 0.5rem;
 
-    /* Sidebar variables */
-    --sidebar-background: 200 18% 46%; /* Robin gray (#607d8b) */
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 31 99% 50%; /* Robin Orange */
+    /* Sidebar variables - Light Theme */
+    /* Sidebar Background - Mockup: #FFFFFF */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 250 3% 27%;
+    --sidebar-primary: 31 99% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 200 18% 36%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 200 18% 56%;
+    --sidebar-accent: 210 40% 96%; /* F1F5F9 */
+    --sidebar-accent-foreground: 222 47% 11%; /* 0F172A */
+    --sidebar-border: 214 32% 91%;
     --sidebar-ring: 31 99% 50%;
   }
 
   .dark {
-    --background: 240 10% 10%;
-    --foreground: 0 0% 98%;
+    /* Dark Theme - Mockup: #0F0F10 */
+    --background: 240 3% 6%;
+    /* Dark Text - Mockup: #F9F6F3 */
+    --foreground: 30 18% 96%;
 
-    --card: 240 10% 12%;
-    --card-foreground: 0 0% 98%;
+    /* Dark Card - Mockup: #1C1C1E */
+    --card: 240 3% 11%;
+    --card-foreground: 30 18% 96%;
 
-    --popover: 240 10% 12%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 240 3% 11%;
+    --popover-foreground: 30 18% 96%;
 
     --primary: 31 99% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 6% 20%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 30 18% 96%;
 
-    --muted: 240 6% 20%;
+    --muted: 240 4% 16%;
     --muted-foreground: 240 5% 65%;
 
     --accent: 114 49% 45%;
@@ -78,17 +106,20 @@
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 240 6% 25%;
-    --input: 240 6% 25%;
+    /* Dark Border - Mockup: #262626 */
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
     --ring: 31 99% 50%;
 
-    --sidebar-background: 200 18% 26%; /* Darker robin gray for dark mode */
-    --sidebar-foreground: 0 0% 98%;
+    /* Sidebar variables - Dark Theme */
+    /* Sidebar Background - Mockup: #161618 */
+    --sidebar-background: 240 4% 9%;
+    --sidebar-foreground: 30 18% 96%;
     --sidebar-primary: 31 99% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 200 18% 20%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 200 18% 30%;
+    --sidebar-accent: 0 0% 15%; /* #262626 hover */
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 15%;
     --sidebar-ring: 31 99% 50%;
   }
 }

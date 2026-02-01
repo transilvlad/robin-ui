@@ -1,25 +1,16 @@
-import { Component, OnInit, inject, signal, effect } from '@angular/core';
+import { Component, OnInit, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthStore } from '../../../core/state/auth.store';
 import { LoginRequest } from '../../../core/models/auth.model';
 
 /**
  * Login Component
  *
- * Standalone component for user authentication with Angular Material UI.
+ * Standalone component for user authentication.
  * Features:
  * - Reactive form with validation
- * - Remember me functionality
- * - Password visibility toggle
  * - Loading states
  * - Error display
  * - Responsive design
@@ -29,14 +20,7 @@ import { LoginRequest } from '../../../core/models/auth.model';
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatCheckboxModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
+    ReactiveFormsModule
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
@@ -47,7 +31,6 @@ export class LoginComponent implements OnInit {
   protected authStore = inject(AuthStore);
 
   loginForm!: FormGroup;
-  hidePassword = signal(true);
 
   constructor() {
     // Watch loading state and enable/disable form
@@ -74,13 +57,8 @@ export class LoginComponent implements OnInit {
   private initializeForm(): void {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
-      password: ['', [Validators.required, Validators.minLength(8)]],
-      rememberMe: [false]
+      password: ['', [Validators.required, Validators.minLength(4)]]
     });
-  }
-
-  togglePasswordVisibility(): void {
-    this.hidePassword.update(value => !value);
   }
 
   async onSubmit(): Promise<void> {
@@ -91,8 +69,9 @@ export class LoginComponent implements OnInit {
 
     const formValue = this.loginForm.value;
     const credentials: LoginRequest = {
-      ...formValue,
-      username: formValue.username.trim()
+      username: formValue.username.trim(),
+      password: formValue.password,
+      rememberMe: false // Default to false as checkbox was removed
     };
     await this.authStore.login(credentials);
   }
@@ -128,7 +107,7 @@ export class LoginComponent implements OnInit {
 
   private getFieldLabel(fieldName: string): string {
     const labels: Record<string, string> = {
-      username: 'Username',
+      username: 'Email Address',
       password: 'Password',
     };
     return labels[fieldName] || fieldName;

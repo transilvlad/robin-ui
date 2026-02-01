@@ -43,7 +43,7 @@ export class AuthService {
    * @returns Observable of Result containing auth response or error
    */
   login(credentials: LoginRequest): Observable<Result<AuthResponse, AuthError>> {
-    return this.http.post<any>(`${this.baseUrl}/api/v1/auth/login`, credentials, {
+    return this.http.post<any>(`${this.baseUrl}${environment.endpoints.auth.login}`, credentials, {
       withCredentials: true, // Required for HttpOnly cookies
     }).pipe(
       map(response => {
@@ -71,7 +71,7 @@ export class AuthService {
    * @returns Observable of Result containing void or error
    */
   logout(): Observable<Result<void, AuthError>> {
-    return this.http.post<void>(`${this.baseUrl}/api/v1/auth/logout`, {}, {
+    return this.http.post<void>(`${this.baseUrl}${environment.endpoints.auth.logout}`, {}, {
       withCredentials: true, // Required to send HttpOnly cookie
     }).pipe(
       map(() => Ok(undefined)),
@@ -88,7 +88,7 @@ export class AuthService {
    * @returns Observable of Result containing new tokens or error
    */
   refreshToken(): Observable<Result<AuthTokens, AuthError>> {
-    return this.http.post<any>(`${this.baseUrl}/api/v1/auth/refresh`, {}, {
+    return this.http.post<any>(`${this.baseUrl}${environment.endpoints.auth.refresh}`, {}, {
       withCredentials: true, // Required to send HttpOnly cookie
     }).pipe(
       map(response => {
@@ -114,7 +114,7 @@ export class AuthService {
    * @returns Observable of boolean indicating token validity
    */
   verifyToken(): Observable<boolean> {
-    return this.http.get<{ valid: boolean }>(`${this.baseUrl}/api/v1/auth/verify`).pipe(
+    return this.http.get<{ valid: boolean }>(`${this.baseUrl}${environment.endpoints.auth.verify}`).pipe(
       map(response => response.valid),
       catchError(() => of(false))
     );
@@ -125,7 +125,7 @@ export class AuthService {
    * @returns Observable of Result containing user or error
    */
   getCurrentUser(): Observable<Result<User, AuthError>> {
-    return this.http.get<any>(`${this.baseUrl}/api/v1/auth/me`).pipe(
+    return this.http.get<any>(`${this.baseUrl}${environment.endpoints.auth.me}`).pipe(
       map(response => {
         try {
           const validated = UserSchema.parse(response);

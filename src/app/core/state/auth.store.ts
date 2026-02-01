@@ -89,17 +89,17 @@ export const AuthStore = signalStore(
           const response = result.value;
 
           // Store tokens (HttpOnly cookie strategy)
-          tokenStorage.setAccessToken(response.tokens.accessToken);
+          tokenStorage.setAccessToken(response.accessToken);
           tokenStorage.setUser(response.user);
 
           patchState(store, {
             user: response.user,
-            accessToken: response.tokens.accessToken,
-            permissions: response.permissions,
+            accessToken: response.accessToken,
+            permissions: response.user.permissions || [],
             isAuthenticated: true,
             loading: false,
             error: null,
-            sessionExpiresAt: new Date(Date.now() + response.tokens.expiresIn * 1000),
+            sessionExpiresAt: new Date(Date.now() + response.expiresIn * 1000),
             lastActivity: new Date(),
           });
 

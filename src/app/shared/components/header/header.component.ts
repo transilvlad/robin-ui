@@ -1,5 +1,6 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { ApiService } from '@core/services/api.service';
+import { AuthStore } from '@core/state/auth.store';
 import { interval, of, Subscription } from 'rxjs';
 import { switchMap, startWith, catchError } from 'rxjs/operators';
 
@@ -12,7 +13,11 @@ import { switchMap, startWith, catchError } from 'rxjs/operators';
 export class HeaderComponent implements OnInit, OnDestroy {
   serverStatus: 'UP' | 'DOWN' | 'UNKNOWN' = 'UNKNOWN';
   uptime = '';
+  showUserMenu = false;
   private healthSubscription?: Subscription;
+  protected authStore = inject(AuthStore);
+  private elementRef = inject(ElementRef);
+  private cdr = inject(ChangeDetectorRef);
 
   constructor(private apiService: ApiService) {}
 
@@ -37,5 +42,29 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.healthSubscription?.unsubscribe();
+  }
+
+  toggleUserMenu(event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.showUserMenu = !this.showUserMenu;
+    this.cdr.markForCheck();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.elementRef.nativeElement.contains(event.target)) {
+      if (this.showUserMenu) {
+        this.showUserMenu = false;
+        this.cdr.markForCheck();
+      }
+    }
+  }
+
+  async logout(): Promise<void> {
+    this.showUserMenu = false;
+    this.cdr.markForCheck();
+    await this.authStore.logout();
   }
 }

@@ -1,7 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: '',
-  serviceUrl: '',
+  apiUrl: '', // Empty in production - uses relative paths (served by same origin)
 
   // Auth configuration (HttpOnly cookie strategy)
   auth: {
@@ -16,8 +15,8 @@ export const environment = {
     health: '/health/aggregate',
     config: '/config',
     metrics: '/metrics',
-    queue: '/client/queue',
-    store: '/store',
+    queue: '/queue',
+    store: '/storage',
     logs: '/logs',
 
     // Auth endpoints (Robin Gateway)

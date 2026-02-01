@@ -1,93 +1,116 @@
-<div class="p-6">
-  <div class="mb-6">
-    <h1 class="text-3xl font-bold text-gray-900">Storage Browser</h1>
-    <p class="text-gray-600">Browse email storage directories</p>
+<div class="p-10 min-h-screen bg-background">
+  <div class="max-w-[1400px] mx-auto">
+    <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight text-foreground">Storage Browser</h1>
+      <p class="text-muted-foreground mt-1">Browse and manage email storage directories</p>
+    </div>
+    <button (click)="loadPath(currentPath)" class="btn-outline btn-sm flex items-center gap-2" [disabled]="loading">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" [class.animate-spin]="loading">
+        <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+        <path d="M21 3v5h-5"/>
+      </svg>
+      Refresh
+    </button>
   </div>
 
-  <div class="bg-white shadow rounded-lg overflow-hidden">
+  <div class="card overflow-hidden">
     <!-- Breadcrumbs -->
-    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+    <div class="px-6 py-3 border-b border-border bg-muted/30">
       <nav class="flex" aria-label="Breadcrumb">
         <ol class="flex items-center space-x-2">
           @for (crumb of breadcrumbs; track crumb; let last = $last) {
-            <li>
-              <div class="flex items-center">
-                @if (!last) {
-                  <a
-                    (click)="navigateToBreadcrumb(crumb)"
-                    class="text-sm font-medium text-primary-600 hover:text-primary-700 cursor-pointer"
-                    >
-                    {{ crumb.name }}
-                  </a>
-                }
-                @if (last) {
-                  <span class="text-sm font-medium text-gray-500">
-                    {{ crumb.name }}
-                  </span>
-                }
-                @if (!last) {
-                  <span class="mx-2 text-gray-400">/</span>
-                }
-              </div>
+            <li class="flex items-center">
+              @if (!last) {
+                <button
+                  (click)="navigateToBreadcrumb(crumb)"
+                  class="text-xs font-semibold text-muted-foreground hover:text-primary transition-colors uppercase tracking-wider"
+                >
+                  {{ crumb.name }}
+                </button>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mx-2 text-muted-foreground/40">
+                  <path d="m9 18 6-6-6-6"/>
+                </svg>
+              }
+              @if (last) {
+                <span class="text-xs font-semibold text-foreground uppercase tracking-wider">
+                  {{ crumb.name }}
+                </span>
+              }
             </li>
           }
         </ol>
       </nav>
     </div>
 
-    @if (loading) {
-      <div class="text-center py-12">
-        <div class="text-gray-600">Loading...</div>
+    @if (loading && items.length === 0) {
+      <div class="p-12 space-y-4">
+        @for (i of [1,2,3,4,5]; track i) {
+          <div class="skeleton h-12 w-full"></div>
+        }
       </div>
     }
 
     @if (!loading && items.length === 0) {
-      <div class="text-center py-12">
-        <div class="text-gray-600">Directory is empty</div>
+      <div class="text-center py-20 bg-muted/10">
+        <div class="flex justify-center mb-4 text-muted-foreground/50">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-foreground">Directory is empty</h3>
+        <p class="text-muted-foreground">No files or subdirectories found in this path.</p>
       </div>
     }
 
-    @if (!loading && items.length > 0) {
-      <div>
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+    @if (items.length > 0) {
+      <div class="overflow-x-auto">
+        <table class="table">
+          <thead class="table-header">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Type
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Size
-              </th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Modified
-              </th>
+              <th class="table-head">Name</th>
+              <th class="table-head w-[120px]">Type</th>
+              <th class="table-head w-[120px]">Size</th>
+              <th class="table-head w-[180px]">Modified</th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
-            @for (item of items; track item) {
+          <tbody class="table-body">
+            @for (item of items; track item.name) {
               <tr
                 (click)="navigate(item)"
-                class="hover:bg-gray-50 cursor-pointer"
-                >
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  @if (item.type === 'directory') {
-                    <span>📁</span>
-                  }
-                  @if (item.type === 'file') {
-                    <span>📄</span>
-                  }
-                  {{ item.name }}
+                class="table-row cursor-pointer group"
+              >
+                <td class="table-cell">
+                  <div class="flex items-center gap-3">
+                    @if (item.type === 'directory') {
+                      <div class="p-2 rounded-md bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/>
+                        </svg>
+                      </div>
+                    }
+                    @if (item.type === 'file') {
+                      <div class="p-2 rounded-md bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                          <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                      </div>
+                    }
+                    <span class="font-medium text-foreground group-hover:text-primary transition-colors">
+                      {{ item.name }}
+                    </span>
+                  </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ item.type }}
+                <td class="table-cell">
+                  <span class="badge-outline text-[10px] uppercase tracking-wider">
+                    {{ item.type }}
+                  </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td class="table-cell text-muted-foreground">
                   {{ item.type === 'file' ? (item.size | bytes) : '-' }}
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td class="table-cell text-muted-foreground">
                   {{ item.modified | relativeTime }}
                 </td>
               </tr>
@@ -98,3 +121,5 @@
     }
   </div>
 </div>
+
+

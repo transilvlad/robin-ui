@@ -25,17 +25,17 @@
           </div>
           <div class="p-3 rounded-md bg-muted/50">
             <div class="text-xs text-muted-foreground mb-1">Queue Size</div>
-            <div class="text-sm font-semibold text-foreground">{{ health.queue.size }}</div>
+            <div class="text-sm font-semibold text-foreground">{{ health.queue?.size || 0 }}</div>
           </div>
         </div>
         <!-- Listeners Section -->
         <div class="pt-4 border-t">
           <div class="flex items-center justify-between mb-3">
             <h4 class="text-sm font-semibold text-foreground">Active Listeners</h4>
-            <span class="badge badge-secondary">{{ health.listeners.length }}</span>
+            <span class="badge badge-secondary">{{ health.listeners?.length || 0 }}</span>
           </div>
           <div class="space-y-2">
-            @for (listener of health.listeners; track listener) {
+            @for (listener of health.listeners || []; track listener) {
               <div
                 class="flex items-center justify-between p-2 rounded-md hover:bg-muted/50 transition-colors"
                 >
@@ -46,11 +46,11 @@
                     <line x1="6" y1="6" x2="6.01" y2="6"></line>
                     <line x1="6" y1="18" x2="6.01" y2="18"></line>
                   </svg>
-                  <span class="text-sm text-foreground">{{ listener.name }}</span>
-                  <span class="text-xs text-muted-foreground">:{{ listener.port }}</span>
+                  <span class="text-sm text-foreground">Port {{ listener.port }}</span>
+                  <span class="text-xs text-muted-foreground">Active: {{ listener.threadPool.active }}/{{ listener.threadPool.size }}</span>
                 </div>
                 <app-status-badge
-                  [status]="listener.active ? 'active' : 'inactive'"
+                  [status]="listener.threadPool.size > 0 ? 'active' : 'inactive'"
                   [size]="'sm'"
                   [showDot]="true"
                 ></app-status-badge>

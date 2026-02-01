@@ -1,42 +1,70 @@
 export interface HealthResponse {
   status: 'UP' | 'DOWN';
-  uptime: string;
-  listeners: ListenerStats[];
-  queue: QueueStats;
-  scheduler: SchedulerConfig;
-  metricsCron: MetricsCronConfig;
-  botPool: PoolStats;
-  lmtpPool: PoolStats;
+  uptime?: string;
+  listeners?: ListenerStats[];
+  queue?: QueueStats;
+  scheduler?: SchedulerInfo;
+  metricsCron?: MetricsCronConfig;
+  botPool?: PoolStats;
+  lmtpPool?: PoolStats;
 }
 
 export interface ListenerStats {
-  name: string;
   port: number;
-  protocol: string;
-  active: boolean;
-  connections: number;
+  threadPool: ThreadPoolStats;
+}
+
+export interface ThreadPoolStats {
+  core: number;
+  max: number;
+  size: number;
+  largest: number;
+  active: number;
+  queue: number;
+  taskCount: number;
+  completed: number;
+  keepAliveSeconds: number;
 }
 
 export interface QueueStats {
   size: number;
-  retryHistogram: Record<number, number>;
+  retryHistogram: Record<string, number>;
+}
+
+export interface SchedulerInfo {
+  config: SchedulerConfig;
+  cron: CronInfo;
 }
 
 export interface SchedulerConfig {
-  threadPoolSize: number;
-  activeThreads: number;
-  queuedTasks: number;
+  totalRetries: number;
+  firstWaitMinutes: number;
+  growthFactor: number;
+}
+
+export interface CronInfo {
+  initialDelaySeconds: number;
+  periodSeconds: number;
+  lastExecutionEpochSeconds: number;
+  nextExecutionEpochSeconds: number;
 }
 
 export interface MetricsCronConfig {
-  enabled: boolean;
-  schedule: string;
-  lastRun?: string;
+  intervalSeconds: number;
+  lastExecutionEpochSeconds: number;
+  nextExecutionEpochSeconds: number;
 }
 
 export interface PoolStats {
-  poolSize: number;
-  activeCount: number;
-  queueSize: number;
-  completedTasks: number;
+  enabled: boolean;
+  type?: string;
+  maxSize?: number;
+  total?: number;
+  poolSize?: number;
+  idle?: number;
+  borrowed?: number;
+  activeThreads?: number;
+  queueSize?: number;
+  taskCount?: number;
+  completedTaskCount?: number;
 }

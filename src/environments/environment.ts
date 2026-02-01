@@ -1,7 +1,7 @@
 export const environment = {
   production: false,
-  apiUrl: '', // Proxy handles routing to localhost:28090 (Gateway)
-  serviceUrl: '', // Proxy handles routing to localhost:28080 (Direct service for legacy routes)
+  apiUrl: '/api/v1', // All requests go through gateway at localhost:8080
+  // serviceUrl removed - gateway handles all routing
 
   // Auth configuration (HttpOnly cookie strategy)
   auth: {
@@ -17,17 +17,17 @@ export const environment = {
     health: '/health/aggregate',
     config: '/config',
     metrics: '/metrics',
-    queue: '/client/queue',
-    store: '/store',
+    queue: '/queue',
+    store: '/storage',
     logs: '/logs',
 
     // Auth endpoints (Robin Gateway)
     auth: {
-      login: '/api/v1/auth/login',
-      logout: '/api/v1/auth/logout',
-      refresh: '/api/v1/auth/refresh',
-      verify: '/api/v1/auth/verify',
-      me: '/api/v1/auth/me',
+      login: '/auth/login',
+      logout: '/auth/logout',
+      refresh: '/auth/refresh',
+      verify: '/auth/verify',
+      me: '/auth/me',
     }
   },
 };

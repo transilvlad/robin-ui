@@ -1,14 +1,8 @@
-<header class="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-  <div class="container flex h-16 items-center justify-between px-4">
-    <!-- Logo and Title -->
+<header class="sticky top-0 z-50 w-full border-b border-sidebar-border bg-sidebar transition-colors duration-300">
+  <div class="flex h-16 items-center justify-between px-6">
+    <!-- Page Title -->
     <div class="flex items-center gap-4">
-      <a routerLink="/" class="flex items-center gap-3 hover:opacity-90 transition-opacity">
-        <img src="assets/robin-logo.svg" alt="Robin" class="h-10 w-10" />
-        <div class="flex flex-col">
-          <span class="font-bold text-lg text-foreground">Robin MTA</span>
-          <span class="text-xs text-muted-foreground">Management Console</span>
-        </div>
-      </a>
+      <h1 class="text-lg font-semibold text-sidebar-foreground">System Dashboard</h1>
     </div>
 
     <!-- Right side controls -->
@@ -16,26 +10,15 @@
       <!-- Server Status -->
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-2">
-          <span class="text-sm text-muted-foreground">Server:</span>
+          <span class="text-sm text-sidebar-foreground/70">Server:</span>
           <app-status-badge [status]="serverStatus"></app-status-badge>
         </div>
-
-        @if (uptime) {
-          <div class="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <span>{{ uptime }}</span>
-          </div>
-        }
       </div>
 
-      <!-- Theme Toggle (placeholder for future) -->
+      <!-- Theme Toggle -->
       <button
-        class="btn-ghost btn-icon rounded-md"
+        class="p-2 rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
         aria-label="Toggle theme"
-        title="Toggle theme (coming soon)"
         >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="4"></circle>
@@ -49,6 +32,51 @@
           <path d="m19.07 4.93-1.41 1.41"></path>
         </svg>
       </button>
+
+      <!-- User Menu -->
+      @if (authStore.isAuthenticated()) {
+        <div class="relative">
+          <button
+            (click)="toggleUserMenu($event)"
+            class="flex items-center gap-3 text-sm font-medium focus:outline-none"
+            aria-label="User menu"
+          >
+            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-foreground/10 text-sidebar-foreground">
+              @if (authStore.username()) {
+                <span class="text-xs font-bold">{{ authStore.username().charAt(0).toUpperCase() }}</span>
+              } @else {
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              }
+            </div>
+          </button>
+
+          <!-- Dropdown Menu -->
+          @if (showUserMenu) {
+            <div class="absolute right-0 mt-2 w-56 rounded-md border border-border bg-popover shadow-lg z-50 animate-fade-in">
+              <div class="px-4 py-3 border-b border-border">
+                <p class="text-sm font-medium text-foreground">{{ authStore.username() }}</p>
+                <p class="text-xs text-muted-foreground">{{ authStore.userEmail() }}</p>
+              </div>
+              <div class="py-1">
+                <button
+                  (click)="logout()"
+                  class="flex w-full items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                  </svg>
+                  Logout
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
     </div>
   </div>
 </header>

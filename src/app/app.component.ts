@@ -1,11 +1,11 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { AuthStore } from './core/state/auth.store';
+import { Component } from '@angular/core';
 
 /**
  * Root Application Component
  *
- * Initializes authentication on app startup by attempting auto-login
- * from stored session or refresh token.
+ * Note: Authentication initialization is handled by APP_INITIALIZER in CoreModule,
+ * which ensures auth state is restored before routing begins. This prevents race
+ * conditions where guards run before auth state is ready.
  */
 @Component({
     selector: 'app-root',
@@ -13,13 +13,6 @@ import { AuthStore } from './core/state/auth.store';
     styleUrls: ['./app.component.scss'],
     standalone: false
 })
-export class AppComponent implements OnInit {
+export class AppComponent {
   title = 'Robin MTA Management';
-  private authStore = inject(AuthStore);
-
-  ngOnInit(): void {
-    // Attempt auto-login on app initialization
-    // This will restore session from sessionStorage or refresh token cookie
-    this.authStore.autoLogin();
-  }
 }

@@ -35,4 +35,23 @@ export class DashboardComponent implements OnInit {
   refresh(): void {
     this.loadHealth();
   }
+
+  hasRetries(): boolean {
+    const histogram = this.health?.queue?.retryHistogram;
+    return histogram ? Object.keys(histogram).length > 0 : false;
+  }
+
+  getRetryEntries(): Array<{key: string, value: number}> {
+    const histogram = this.health?.queue?.retryHistogram;
+    if (!histogram) return [];
+    return Object.entries(histogram)
+      .map(([key, value]) => ({ key, value }))
+      .sort((a, b) => parseInt(a.key) - parseInt(b.key));
+  }
+
+  getRetryPercentage(value: number): number {
+    const size = this.health?.queue?.size;
+    if (!size || size === 0) return 0;
+    return (value / size) * 100;
+  }
 }

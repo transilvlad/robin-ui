@@ -77,6 +77,7 @@ function isPublicEndpoint(url: string): boolean {
     '/api/v1/auth/refresh',
     '/api/v1/auth/register',
     '/health/aggregate',
+    '/api/v1/health/aggregate',
     '/health/public',
     '/actuator/health',
   ];
@@ -191,6 +192,7 @@ export class AuthInterceptor {
       '/api/v1/auth/refresh',
       '/api/v1/auth/register',
       '/health/aggregate',
+      '/api/v1/health/aggregate',
       '/health/public',
       '/actuator/health',
     ];
