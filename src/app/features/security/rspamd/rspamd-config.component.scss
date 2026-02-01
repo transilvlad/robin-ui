@@ -1,0 +1,57 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+mat-card {
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+  &:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transition: box-shadow 0.3s ease;
+  }
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+code {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.875rem;
+}
+
+.prose {
+  h4 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    margin-bottom: 0.5rem;
+  }
+
+  ol, ul {
+    margin-top: 0.5rem;
+  }
+}
+
+mat-expansion-panel {
+  box-shadow: none;
+  border: 1px solid #e5e7eb;
+}
+
+// Custom snackbar styles
+::ng-deep {
+  .success-snackbar {
+    background-color: #10b981 !important;
+    color: white !important;
+  }
+
+  .error-snackbar {
+    background-color: #ef4444 !important;
+    color: white !important;
+  }
+}
