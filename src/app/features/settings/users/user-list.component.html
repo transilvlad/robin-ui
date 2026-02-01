@@ -1,0 +1,106 @@
+<div class="p-10 min-h-screen bg-background">
+  <div class="max-w-[1400px] mx-auto space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-foreground">User Management</h1>
+        <p class="text-muted-foreground mt-1">Manage user access, roles, and permissions</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="btn-primary btn-md flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+          Add User
+        </button>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="flex items-center gap-4">
+      <div class="relative flex-1 max-w-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="absolute left-2.5 top-2.5 text-muted-foreground"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <input type="text" placeholder="Search users..." class="input pl-9" aria-label="Search users">
+      </div>
+      <select class="input w-40" aria-label="Filter by role">
+        <option>All Roles</option>
+        <option>Admin</option>
+        <option>User</option>
+        <option>Viewer</option>
+      </select>
+      <select class="input w-40" aria-label="Filter by status">
+        <option>All Status</option>
+        <option>Active</option>
+        <option>Inactive</option>
+        <option>Suspended</option>
+      </select>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card overflow-hidden">
+      <div class="relative w-full overflow-auto">
+        <table class="table w-full">
+          <thead>
+            <tr class="border-b bg-muted/50 transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+              <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">User</th>
+              <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Role</th>
+              <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Status</th>
+              <th class="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Last Login</th>
+              <th class="h-12 px-4 text-right align-middle font-medium text-muted-foreground">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of users; track user.id) {
+              <tr class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                <td class="p-4 align-middle">
+                  <div class="flex items-center gap-3">
+                    <div class="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full bg-muted items-center justify-center text-muted-foreground font-semibold">
+                      {{ user.initials }}
+                    </div>
+                    <div>
+                      <div class="font-medium text-foreground">{{ user.name }}</div>
+                      <div class="text-sm text-muted-foreground">{{ user.email }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="p-4 align-middle">
+                  <span class="badge badge-outline bg-muted/50 gap-1 pr-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted-foreground"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    {{ user.role }}
+                  </span>
+                </td>
+                <td class="p-4 align-middle">
+                  @if (user.status === 'Active') {
+                    <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-green-500/15 text-green-700 hover:bg-green-500/25">Active</span>
+                  } @else if (user.status === 'Inactive') {
+                     <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-gray-500/15 text-gray-700 hover:bg-gray-500/25">Inactive</span>
+                  }
+                </td>
+                <td class="p-4 align-middle text-muted-foreground text-sm">
+                  {{ user.lastLogin }}
+                </td>
+                <td class="p-4 align-middle text-right">
+                  <div class="flex justify-end gap-2">
+                    <button class="btn-ghost btn-icon h-8 w-8" aria-label="Edit user">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path><path d="m15 5 4 4"></path></svg>
+                    </button>
+                    <button class="btn-ghost btn-icon h-8 w-8 text-destructive hover:text-destructive" aria-label="Delete user">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="flex items-center justify-between px-4 py-4 border-t">
+        <div class="text-sm text-muted-foreground">
+          Showing <strong>1-5</strong> of <strong>12</strong> users
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="btn-outline btn-sm" disabled>Previous</button>
+          <button class="btn-outline btn-sm">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

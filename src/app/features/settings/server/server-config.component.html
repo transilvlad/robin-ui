@@ -1,0 +1,112 @@
+<div class="p-10 min-h-screen bg-background">
+  <div class="max-w-[1400px] mx-auto space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-foreground">Server Configuration</h1>
+        <p class="text-muted-foreground mt-1">Manage core server settings, listeners, and network configurations</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="btn-primary btn-md">Save Changes</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- General Settings -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Network Listeners</h2>
+            <p class="card-description">Configure the ports and interfaces the server listens on</p>
+          </div>
+          <div class="card-content space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label for="http-port" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">HTTP Port</label>
+                <input id="http-port" type="number" class="input" placeholder="8080" value="8080">
+              </div>
+              <div class="space-y-2">
+                <label for="https-port" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">HTTPS Port</label>
+                <input id="https-port" type="number" class="input" placeholder="8443" value="8443">
+              </div>
+              <div class="space-y-2">
+                <label for="bind-address" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Bind Address</label>
+                <input id="bind-address" type="text" class="input" placeholder="0.0.0.0" value="0.0.0.0">
+              </div>
+              <div class="space-y-2">
+                <label for="domain-name" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Domain Name</label>
+                <input id="domain-name" type="text" class="input" placeholder="example.com" value="robin-mta.local">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Performance Tuning</h2>
+            <p class="card-description">Adjust thread pools and buffer sizes</p>
+          </div>
+          <div class="card-content space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label for="worker-threads" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Worker Threads</label>
+                <input id="worker-threads" type="number" class="input" placeholder="Auto" value="8">
+              </div>
+              <div class="space-y-2">
+                <label for="max-connections" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Max Connections</label>
+                <input id="max-connections" type="number" class="input" placeholder="10000" value="10000">
+              </div>
+              <div class="space-y-2">
+                <label for="socket-timeout" class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Socket Timeout (ms)</label>
+                <input id="socket-timeout" type="number" class="input" placeholder="30000" value="30000">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Side Settings -->
+      <div class="space-y-6">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Security</h2>
+            <p class="card-description">TLS and encryption settings</p>
+          </div>
+          <div class="card-content space-y-4">
+            <div class="flex items-center justify-between p-3 border rounded-lg">
+              <div class="space-y-0.5">
+                <label for="enable-tls" class="text-sm font-medium">Enable TLS</label>
+                <p class="text-xs text-muted-foreground">Require secure connections</p>
+              </div>
+              <div class="relative inline-flex h-6 w-11 items-center rounded-full bg-primary">
+                <input id="enable-tls" type="checkbox" class="sr-only" checked>
+                <span class="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-white transition"></span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between p-3 border rounded-lg">
+              <div class="space-y-0.5">
+                <label for="force-redirect" class="text-sm font-medium">Force Redirect</label>
+                <p class="text-xs text-muted-foreground">Redirect HTTP to HTTPS</p>
+              </div>
+              <div class="relative inline-flex h-6 w-11 items-center rounded-full bg-muted">
+                <input id="force-redirect" type="checkbox" class="sr-only">
+                <span class="translate-x-1 inline-block h-4 w-4 transform rounded-full bg-white transition"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card bg-destructive/10 border-destructive/20">
+          <div class="card-header">
+            <h2 class="card-title text-destructive">Danger Zone</h2>
+          </div>
+          <div class="card-content space-y-4">
+            <button class="btn-destructive w-full">Restart Server</button>
+            <button class="btn-outline w-full text-destructive border-destructive/50 hover:bg-destructive/10">Reset Configuration</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
