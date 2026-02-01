@@ -21,3 +21,9 @@ services:
       - ../.env
     environment:
       - NODE_ENV=development
+    networks:
+      - suite_suite
+
+networks:
+  suite_suite:
+    external: true

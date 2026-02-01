@@ -1,56 +1,11 @@
 {
-  "/v1": {
-    "target": "http://robin-gateway:8080",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  },
   "/api": {
     "target": "http://robin-gateway:8080",
     "secure": false,
     "changeOrigin": true,
-    "logLevel": "debug"
-  },
-  "/client": {
-    "target": "http://suite-robin:8090",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  },
-  "/health": {
-    "target": "http://suite-robin:8080",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  },
-  "/config": {
-    "target": "http://suite-robin:8080",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  },
-  "/metrics": {
-    "target": "http://suite-robin:8080",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  },
-  "/system": {
-    "target": "http://suite-robin:8080",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  },
-  "/logs": {
-    "target": "http://suite-robin:8090",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  },
-  "/store": {
-    "target": "http://suite-robin:8090",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/api": "/api"
+    }
   }
 }

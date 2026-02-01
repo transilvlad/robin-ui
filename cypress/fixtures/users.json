@@ -1,0 +1,59 @@
+{
+  "admin": {
+    "id": "admin-123",
+    "username": "admin",
+    "email": "admin@robin.local",
+    "firstName": "Admin",
+    "lastName": "User",
+    "roles": ["ADMIN"],
+    "permissions": [
+      "VIEW_DASHBOARD",
+      "VIEW_QUEUE",
+      "MANAGE_QUEUE",
+      "DELETE_QUEUE",
+      "VIEW_STORAGE",
+      "MANAGE_STORAGE",
+      "VIEW_LOGS",
+      "VIEW_METRICS",
+      "MANAGE_SECURITY",
+      "MANAGE_ROUTING",
+      "MANAGE_WEBHOOKS",
+      "MANAGE_SERVER_CONFIG",
+      "MANAGE_USERS"
+    ],
+    "createdAt": "2024-01-01T00:00:00Z",
+    "lastLoginAt": "2024-01-26T10:00:00Z"
+  },
+  "user": {
+    "id": "user-456",
+    "username": "user",
+    "email": "user@robin.local",
+    "firstName": "Regular",
+    "lastName": "User",
+    "roles": ["USER"],
+    "permissions": [
+      "VIEW_DASHBOARD",
+      "VIEW_QUEUE",
+      "VIEW_STORAGE",
+      "VIEW_LOGS",
+      "VIEW_METRICS"
+    ],
+    "createdAt": "2024-01-15T00:00:00Z",
+    "lastLoginAt": "2024-01-26T09:00:00Z"
+  },
+  "readonly": {
+    "id": "readonly-789",
+    "username": "readonly",
+    "email": "readonly@robin.local",
+    "firstName": "Read",
+    "lastName": "Only",
+    "roles": ["READ_ONLY"],
+    "permissions": [
+      "VIEW_DASHBOARD",
+      "VIEW_QUEUE",
+      "VIEW_LOGS"
+    ],
+    "createdAt": "2024-01-20T00:00:00Z",
+    "lastLoginAt": "2024-01-26T08:00:00Z"
+  }
+}
