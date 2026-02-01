@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robin UI - Color Palette & Mockups</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .color-card {
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .color-swatch {
+            height: 100px;
+            width: 100%;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+        }
+        .mockup-section {
+            margin-bottom: 40px;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .mockup-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        .mockup-content {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .logo-container {
+            width: 150px;
+        }
+        .logo-container svg {
+            width: 100%;
+            height: auto;
+        }
+        .mockup-text {
+            max-width: 500px;
+        }
+        .button {
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            margin-top: 10px;
+        }
+
+        /* Mockup 1: Dark Theme */
+        .theme-dark {
+            background-color: #121212;
+            color: #F9F6F3;
+        }
+        .theme-dark .mockup-header { border-bottom-color: #424146; }
+        .theme-dark .button.primary { background-color: #FE8502; color: white; }
+        .theme-dark .button.secondary { background-color: #44A83A; color: white; }
+
+        /* Mockup 2: Light Theme */
+        .theme-light {
+            background-color: #FFFFFF;
+            color: #424146;
+            border: 1px solid #ddd;
+        }
+        .theme-light .mockup-header { border-bottom-color: #eee; }
+        .theme-light .button.primary { background-color: #FE8502; color: white; }
+        .theme-light .button.secondary { background-color: #424146; color: white; }
+
+        /* Mockup 3: Deep Blue (Complementary) */
+        .theme-blue {
+            background-color: #0F172A; /* Slate 900 / Deep Navy */
+            color: #F1F5F9;
+        }
+        .theme-blue .mockup-header { border-bottom-color: #334155; }
+        .theme-blue .button.primary { background-color: #FE8502; color: white; }
+        .theme-blue .button.secondary { background-color: #44A83A; color: white; }
+
+        /* Mockup 4: Warm Beige (Harmonious/Earthy) */
+        .theme-beige {
+            background-color: #F5E6D3; /* Warm Beige */
+            color: #424146;
+        }
+        .theme-beige .mockup-header { border-bottom-color: #D4C5B0; }
+        .theme-beige .button.primary { background-color: #FE8502; color: white; }
+        .theme-beige .button.secondary { background-color: #424146; color: white; }
+
+        /* Mockup 5: Teal/Cyan Dark (Split Complementary) */
+        .theme-teal {
+            background-color: #004D40; /* Dark Teal */
+            color: #E0F2F1;
+        }
+        .theme-teal .mockup-header { border-bottom-color: #00695C; }
+        .theme-teal .button.primary { background-color: #FE8502; color: white; }
+        .theme-teal .button.secondary { background-color: #4DB6AC; color: #004D40; }
+
+        /* Mockup 6: Deep Purple (Triadic/Contrast) */
+        .theme-purple {
+            background-color: #311B92; /* Deep Indigo/Purple */
+            color: #EDE7F6;
+        }
+        .theme-purple .mockup-header { border-bottom-color: #4527A0; }
+        .theme-purple .button.primary { background-color: #FE8502; color: white; }
+        .theme-purple .button.secondary { background-color: #44A83A; color: white; }
+
+        /* Variants */
+        .theme-blue-light {
+            background-color: #E2E8F0; /* Slate 200 */
+            color: #0F172A;
+            border: 1px solid #CBD5E1;
+        }
+        .theme-blue-light .mockup-header { border-bottom-color: #CBD5E1; }
+        .theme-blue-light .button.primary { background-color: #FE8502; color: white; }
+        .theme-blue-light .button.secondary { background-color: #0F172A; color: white; }
+
+        .theme-beige-dark {
+            background-color: #3E2723; /* Dark Brown */
+            color: #F5E6D3;
+        }
+        .theme-beige-dark .mockup-header { border-bottom-color: #5D4037; }
+        .theme-beige-dark .button.primary { background-color: #FE8502; color: white; }
+        .theme-beige-dark .button.secondary { background-color: #D4C5B0; color: #3E2723; }
+
+        .theme-teal-light {
+            background-color: #E0F2F1; /* Teal 50 */
+            color: #004D40;
+            border: 1px solid #B2DFDB;
+        }
+        .theme-teal-light .mockup-header { border-bottom-color: #B2DFDB; }
+        .theme-teal-light .button.primary { background-color: #FE8502; color: white; }
+        .theme-teal-light .button.secondary { background-color: #004D40; color: white; }
+
+        .theme-purple-light {
+            background-color: #EDE7F6; /* Deep Purple 50 */
+            color: #311B92;
+            border: 1px solid #D1C4E9;
+        }
+        .theme-purple-light .mockup-header { border-bottom-color: #D1C4E9; }
+        .theme-purple-light .button.primary { background-color: #FE8502; color: white; }
+        .theme-purple-light .button.secondary { background-color: #311B92; color: white; }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Robin UI Design System</h1>
+
+        <h2>Base Colors (Extracted from Logo)</h2>
+        <div class="color-grid">
+            <div class="color-card">
+                <div class="color-swatch" style="background-color: #FE8502;"></div>
+                <strong>Robin Orange</strong><br>#FE8502
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background-color: #44A83A;"></div>
+                <strong>Leaf Green</strong><br>#44A83A
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background-color: #424146;"></div>
+                <strong>Charcoal</strong><br>#424146
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background-color: #F9F6F3; border: 1px solid #eee;"></div>
+                <strong>Off White</strong><br>#F9F6F3
+            </div>
+        </div>
+
+        <h2>Palette Mockups</h2>
+
+        <!-- THEME GROUP: STANDARD -->
+        <!-- Mockup 1: Dark Theme -->
+        <div class="mockup-section theme-dark">
+            <div class="mockup-header">
+                <h3>1. Dark Theme (High Contrast)</h3>
+                <span>Dashboard</span>
+            </div>
+            <div class="mockup-content">
+                <div class="logo-container">
+                    <!-- Inline SVG Logo -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                        <path fill="#424146" d="m433 51 11 14c2 3 3 6 6 8l9 1c25 2 46 16 63 34l1 4-1 2 1 2-1 6c-7 6-16 7-25 6l-16-2c-18-4-18-4-36 0l-15 14-2 2a56 56 0 0 0-16 43c0 11 6 20 14 27 4 3 8 4 12 5 10 2 16 6 22 14 4 7 4 17 3 25l-3 8-1 4a174 174 0 0 1-41 66l-7 7c-2 4-5 6-9 9l-6 6a260 260 0 0 1-26 21c-15 12-31 22-48 32l-37 24-2 2-33 22-16 9 4-16 1-2c7-15 16-29 27-42l3-5h-2l-9-2c-3-3-3-7-3-11l-2 1-3 1-3 2c-11 4-24 2-35 1-23-4-46-1-69 5l-16 4-14 4-3 1-45 12-3 1-7 2-3 1-9 3-7 1c0-7 6-11 10-15l-5-2 1-4a1497 1497 0 0 1 75-17l3-1a563 563 0 0 0 42-11c64-18 64-18 114-59a361 361 0 0 1 27-35 697 697 0 0 1 25-31c7-11 16-21 24-31l1-2c16-18 16-18 25-25l7-10 1-2 8-17c8-20 18-38 36-51l-1-2c-3-5-5-10-4-16l2-2h3v-3c0-6 0-11 3-17l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#FE8502" d="M525 121c5 3 7 7 9 12v9h-12l-6 6c-4 3-7 5-12 6v1c14 1 14 1 27-3l7-1-2-3-2-5 4 1c8 3 16 5 25 6l-3 3h-2l-2 1-3 1-3 1-15 4v17c0 9 0 17 5 25a100 100 0 0 1 14 40c5 43-11 93-37 126a154 154 0 0 1-118 57h-3l-10 1a3658 3658 0 0 0-22 1 1964753589 1964753589 0 0 1 40 52l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 42 81l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9h8l4 1 3 1a191 191 0 0 0 37 5c12 1 21-2 31-7l3-1a189 189 0 0 0 84-74c15-26 25-62 17-92l-4-9-1-3c-10-20-30-32-49-42-7-4-11-9-14-16l-1-11v-2c0-8 1-14 6-20l2-1 1 3c1 5 2 6 6 8 4 1 8 1 12-1 3-3 4-4 4-8 0-5-3-7-6-10h13l14 1c10 1 18 0 28-2l2-1c3-1 5-2 7-5l1-4v-4Z"/>
+                        <path fill="#49484D" d="m317 414 15 3c16 4 32 5 49 6-3 3-6 3-10 3h-2l-5 1 2 2a6588 6588 0 0 1 38 50l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 31 65c4 9 4 9 11 16l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9v-1Z"/>
+                        <path fill="#444447" d="m433 51 11 14c2 3 3 6 6 8l9 1c21 1 39 12 55 26l4 5-5-1-3-1a649 649 0 0 1-29-7h-2l-35-3a10183 10183 0 0 1-14 0v-9c0-4 1-6 3-10l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#44A83A" d="M436 93h10a223 223 0 0 1 66 10c5 1 8 3 11 7v3h-9l-24-2h-3a2395 2395 0 0 0-58 2c-3-6-4-11-4-17 4-3 7-3 11-3Z"/>
+                        <path fill="#4D4A4D" d="m534 143 4 1c8 3 16 5 25 6-1 2-1 2-5 3l-5 2-2 1c-19 5-36 8-54-1h7c9 1 19 1 27-3l7-1-2-3-2-5Z"/>
+                        <path fill="#F78A12" d="M433 51c4 4 8 8 11 14l7 9 4 8-2-1-5 1-6-2-4-6h-3l-6-6-2-2-4-5 9-1 1-9Z"/>
+                        <path fill="#F9F6F3" d="M531 141c3 1 3 1 5 4l2 6-9 3-3 1-13 1h-7l-5-2 2-1c7-2 12-5 17-10 4-4 6-3 11-2Z"/>
+                        <path fill="#4D4D51" d="M457 139c4 0 5 2 7 5 0 3 0 5-2 8-3 2-5 1-9 1l-5-2c-1-3-2-4-1-8 3-4 5-5 10-4Z"/>
+                        <path fill="#555458" d="m525 144 3 1-1 3-5 2h-2l-2 1c1-5 2-7 7-7Z"/>
+                        <path fill="#F3F3F4" d="M453 144h6l-1 5-5-1v-4Z"/>
+                        <path fill="#6D6D70" d="M461 507c4 0 7 2 10 4h-7l-3-1-2-1 2-2Z"/>
+                        <path fill="#C6C5C7" d="M434 498h9l1 3-11-1 1-2Z"/>
+                    </svg>
+                </div>
+                <div class="mockup-text">
+                    <h3>Dark Mode / Night Theme</h3>
+                    <p>Using a deep charcoal background (#121212) allows the orange and green accents of the logo to pop vividly. This theme is easy on the eyes in low-light environments.</p>
+                    <button class="button primary">Primary Action</button>
+                    <button class="button secondary">Secondary Action</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mockup 2: Light Mode -->
+        <div class="mockup-section theme-light">
+            <div class="mockup-header">
+                <h3>2. Light Theme (Clean & Standard)</h3>
+                <span>Dashboard</span>
+            </div>
+            <div class="mockup-content">
+                <div class="logo-container">
+                    <!-- Inline SVG Logo -->
+                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                        <path fill="#424146" d="m433 51 11 14c2 3 3 6 6 8l9 1c25 2 46 16 63 34l1 4-1 2 1 2-1 6c-7 6-16 7-25 6l-16-2c-18-4-18-4-36 0l-15 14-2 2a56 56 0 0 0-16 43c0 11 6 20 14 27 4 3 8 4 12 5 10 2 16 6 22 14 4 7 4 17 3 25l-3 8-1 4a174 174 0 0 1-41 66l-7 7c-2 4-5 6-9 9l-6 6a260 260 0 0 1-26 21c-15 12-31 22-48 32l-37 24-2 2-33 22-16 9 4-16 1-2c7-15 16-29 27-42l3-5h-2l-9-2c-3-3-3-7-3-11l-2 1-3 1-3 2c-11 4-24 2-35 1-23-4-46-1-69 5l-16 4-14 4-3 1-45 12-3 1-7 2-3 1-9 3-7 1c0-7 6-11 10-15l-5-2 1-4a1497 1497 0 0 1 75-17l3-1a563 563 0 0 0 42-11c64-18 64-18 114-59a361 361 0 0 1 27-35 697 697 0 0 1 25-31c7-11 16-21 24-31l1-2c16-18 16-18 25-25l7-10 1-2 8-17c8-20 18-38 36-51l-1-2c-3-5-5-10-4-16l2-2h3v-3c0-6 0-11 3-17l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#FE8502" d="M525 121c5 3 7 7 9 12v9h-12l-6 6c-4 3-7 5-12 6v1c14 1 14 1 27-3l7-1-2-3-2-5 4 1c8 3 16 5 25 6l-3 3h-2l-2 1-3 1-3 1-15 4v17c0 9 0 17 5 25a100 100 0 0 1 14 40c5 43-11 93-37 126a154 154 0 0 1-118 57h-3l-10 1a3658 3658 0 0 0-22 1 1964753589 1964753589 0 0 1 40 52l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 42 81l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9h8l4 1 3 1a191 191 0 0 0 37 5c12 1 21-2 31-7l3-1a189 189 0 0 0 84-74c15-26 25-62 17-92l-4-9-1-3c-10-20-30-32-49-42-7-4-11-9-14-16l-1-11v-2c0-8 1-14 6-20l2-1 1 3c1 5 2 6 6 8 4 1 8 1 12-1 3-3 4-4 4-8 0-5-3-7-6-10h13l14 1c10 1 18 0 28-2l2-1c3-1 5-2 7-5l1-4v-4Z"/>
+                        <path fill="#49484D" d="m317 414 15 3c16 4 32 5 49 6-3 3-6 3-10 3h-2l-5 1 2 2a6588 6588 0 0 1 38 50l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 31 65c4 9 4 9 11 16l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9v-1Z"/>
+                        <path fill="#444447" d="m433 51 11 14c2 3 3 6 6 8l9 1c21 1 39 12 55 26l4 5-5-1-3-1a649 649 0 0 1-29-7h-2l-35-3a10183 10183 0 0 1-14 0v-9c0-4 1-6 3-10l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#44A83A" d="M436 93h10a223 223 0 0 1 66 10c5 1 8 3 11 7v3h-9l-24-2h-3a2395 2395 0 0 0-58 2c-3-6-4-11-4-17 4-3 7-3 11-3Z"/>
+                        <path fill="#4D4A4D" d="m534 143 4 1c8 3 16 5 25 6-1 2-1 2-5 3l-5 2-2 1c-19 5-36 8-54-1h7c9 1 19 1 27-3l7-1-2-3-2-5Z"/>
+                        <path fill="#F78A12" d="M433 51c4 4 8 8 11 14l7 9 4 8-2-1-5 1-6-2-4-6h-3l-6-6-2-2-4-5 9-1 1-9Z"/>
+                        <path fill="#F9F6F3" d="M531 141c3 1 3 1 5 4l2 6-9 3-3 1-13 1h-7l-5-2 2-1c7-2 12-5 17-10 4-4 6-3 11-2Z"/>
+                        <path fill="#4D4D51" d="M457 139c4 0 5 2 7 5 0 3 0 5-2 8-3 2-5 1-9 1l-5-2c-1-3-2-4-1-8 3-4 5-5 10-4Z"/>
+                        <path fill="#555458" d="m525 144 3 1-1 3-5 2h-2l-2 1c1-5 2-7 7-7Z"/>
+                        <path fill="#F3F3F4" d="M453 144h6l-1 5-5-1v-4Z"/>
+                        <path fill="#6D6D70" d="M461 507c4 0 7 2 10 4h-7l-3-1-2-1 2-2Z"/>
+                        <path fill="#C6C5C7" d="M434 498h9l1 3-11-1 1-2Z"/>
+                    </svg>
+                </div>
+                <div class="mockup-text">
+                    <h3>Light Mode / Standard</h3>
+                    <p>A classic white background works perfectly with the dark grey body of the Robin logo, maintaining high readability and professionalism.</p>
+                    <button class="button primary">Primary Action</button>
+                    <button class="button secondary">Secondary Action</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- THEME GROUP: ACCENT (BLUE) -->
+        <!-- Mockup 3: Deep Blue (Complementary - Dark) -->
+        <div class="mockup-section theme-blue">
+            <div class="mockup-header">
+                <h3>3a. Accent Theme (Deep Navy/Slate)</h3>
+                <span>Dashboard</span>
+            </div>
+            <div class="mockup-content">
+                <div class="logo-container">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                        <path fill="#424146" d="m433 51 11 14c2 3 3 6 6 8l9 1c25 2 46 16 63 34l1 4-1 2 1 2-1 6c-7 6-16 7-25 6l-16-2c-18-4-18-4-36 0l-15 14-2 2a56 56 0 0 0-16 43c0 11 6 20 14 27 4 3 8 4 12 5 10 2 16 6 22 14 4 7 4 17 3 25l-3 8-1 4a174 174 0 0 1-41 66l-7 7c-2 4-5 6-9 9l-6 6a260 260 0 0 1-26 21c-15 12-31 22-48 32l-37 24-2 2-33 22-16 9 4-16 1-2c7-15 16-29 27-42l3-5h-2l-9-2c-3-3-3-7-3-11l-2 1-3 1-3 2c-11 4-24 2-35 1-23-4-46-1-69 5l-16 4-14 4-3 1-45 12-3 1-7 2-3 1-9 3-7 1c0-7 6-11 10-15l-5-2 1-4a1497 1497 0 0 1 75-17l3-1a563 563 0 0 0 42-11c64-18 64-18 114-59a361 361 0 0 1 27-35 697 697 0 0 1 25-31c7-11 16-21 24-31l1-2c16-18 16-18 25-25l7-10 1-2 8-17c8-20 18-38 36-51l-1-2c-3-5-5-10-4-16l2-2h3v-3c0-6 0-11 3-17l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#FE8502" d="M525 121c5 3 7 7 9 12v9h-12l-6 6c-4 3-7 5-12 6v1c14 1 14 1 27-3l7-1-2-3-2-5 4 1c8 3 16 5 25 6l-3 3h-2l-2 1-3 1-3 1-15 4v17c0 9 0 17 5 25a100 100 0 0 1 14 40c5 43-11 93-37 126a154 154 0 0 1-118 57h-3l-10 1a3658 3658 0 0 0-22 1 1964753589 1964753589 0 0 1 40 52l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 42 81l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9h8l4 1 3 1a191 191 0 0 0 37 5c12 1 21-2 31-7l3-1a189 189 0 0 0 84-74c15-26 25-62 17-92l-4-9-1-3c-10-20-30-32-49-42-7-4-11-9-14-16l-1-11v-2c0-8 1-14 6-20l2-1 1 3c1 5 2 6 6 8 4 1 8 1 12-1 3-3 4-4 4-8 0-5-3-7-6-10h13l14 1c10 1 18 0 28-2l2-1c3-1 5-2 7-5l1-4v-4Z"/>
+                        <path fill="#49484D" d="m317 414 15 3c16 4 32 5 49 6-3 3-6 3-10 3h-2l-5 1 2 2a6588 6588 0 0 1 38 50l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 31 65c4 9 4 9 11 16l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9v-1Z"/>
+                        <path fill="#444447" d="m433 51 11 14c2 3 3 6 6 8l9 1c21 1 39 12 55 26l4 5-5-1-3-1a649 649 0 0 1-29-7h-2l-35-3a10183 10183 0 0 1-14 0v-9c0-4 1-6 3-10l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#44A83A" d="M436 93h10a223 223 0 0 1 66 10c5 1 8 3 11 7v3h-9l-24-2h-3a2395 2395 0 0 0-58 2c-3-6-4-11-4-17 4-3 7-3 11-3Z"/>
+                        <path fill="#4D4A4D" d="m534 143 4 1c8 3 16 5 25 6-1 2-1 2-5 3l-5 2-2 1c-19 5-36 8-54-1h7c9 1 19 1 27-3l7-1-2-3-2-5Z"/>
+                        <path fill="#F78A12" d="M433 51c4 4 8 8 11 14l7 9 4 8-2-1-5 1-6-2-4-6h-3l-6-6-2-2-4-5 9-1 1-9Z"/>
+                        <path fill="#F9F6F3" d="M531 141c3 1 3 1 5 4l2 6-9 3-3 1-13 1h-7l-5-2 2-1c7-2 12-5 17-10 4-4 6-3 11-2Z"/>
+                        <path fill="#4D4D51" d="M457 139c4 0 5 2 7 5 0 3 0 5-2 8-3 2-5 1-9 1l-5-2c-1-3-2-4-1-8 3-4 5-5 10-4Z"/>
+                        <path fill="#555458" d="m525 144 3 1-1 3-5 2h-2l-2 1c1-5 2-7 7-7Z"/>
+                        <path fill="#F3F3F4" d="M453 144h6l-1 5-5-1v-4Z"/>
+                        <path fill="#6D6D70" d="M461 507c4 0 7 2 10 4h-7l-3-1-2-1 2-2Z"/>
+                        <path fill="#C6C5C7" d="M434 498h9l1 3-11-1 1-2Z"/>
+                    </svg>
+                </div>
+                <div class="mockup-text">
+                    <h3>Accent Theme (Deep Navy)</h3>
+                    <p>This complementary color scheme uses a deep navy blue which provides a strong, professional contrast to the orange highlights of the Robin logo.</p>
+                    <button class="button primary">Primary Action</button>
+                    <button class="button secondary">Secondary Action</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Variant: Blue Light -->
+        <div class="mockup-section theme-blue-light">
+            <div class="mockup-header">
+                <h3>3b. Accent Theme (Light Slate)</h3>
+                <span>Dashboard</span>
+            </div>
+            <div class="mockup-content">
+                <div class="logo-container">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                        <path fill="#424146" d="m433 51 11 14c2 3 3 6 6 8l9 1c25 2 46 16 63 34l1 4-1 2 1 2-1 6c-7 6-16 7-25 6l-16-2c-18-4-18-4-36 0l-15 14-2 2a56 56 0 0 0-16 43c0 11 6 20 14 27 4 3 8 4 12 5 10 2 16 6 22 14 4 7 4 17 3 25l-3 8-1 4a174 174 0 0 1-41 66l-7 7c-2 4-5 6-9 9l-6 6a260 260 0 0 1-26 21c-15 12-31 22-48 32l-37 24-2 2-33 22-16 9 4-16 1-2c7-15 16-29 27-42l3-5h-2l-9-2c-3-3-3-7-3-11l-2 1-3 1-3 2c-11 4-24 2-35 1-23-4-46-1-69 5l-16 4-14 4-3 1-45 12-3 1-7 2-3 1-9 3-7 1c0-7 6-11 10-15l-5-2 1-4a1497 1497 0 0 1 75-17l3-1a563 563 0 0 0 42-11c64-18 64-18 114-59a361 361 0 0 1 27-35 697 697 0 0 1 25-31c7-11 16-21 24-31l1-2c16-18 16-18 25-25l7-10 1-2 8-17c8-20 18-38 36-51l-1-2c-3-5-5-10-4-16l2-2h3v-3c0-6 0-11 3-17l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#FE8502" d="M525 121c5 3 7 7 9 12v9h-12l-6 6c-4 3-7 5-12 6v1c14 1 14 1 27-3l7-1-2-3-2-5 4 1c8 3 16 5 25 6l-3 3h-2l-2 1-3 1-3 1-15 4v17c0 9 0 17 5 25a100 100 0 0 1 14 40c5 43-11 93-37 126a154 154 0 0 1-118 57h-3l-10 1a3658 3658 0 0 0-22 1 1964753589 1964753589 0 0 1 40 52l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 42 81l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9h8l4 1 3 1a191 191 0 0 0 37 5c12 1 21-2 31-7l3-1a189 189 0 0 0 84-74c15-26 25-62 17-92l-4-9-1-3c-10-20-30-32-49-42-7-4-11-9-14-16l-1-11v-2c0-8 1-14 6-20l2-1 1 3c1 5 2 6 6 8 4 1 8 1 12-1 3-3 4-4 4-8 0-5-3-7-6-10h13l14 1c10 1 18 0 28-2l2-1c3-1 5-2 7-5l1-4v-4Z"/>
+                        <path fill="#49484D" d="m317 414 15 3c16 4 32 5 49 6-3 3-6 3-10 3h-2l-5 1 2 2a6588 6588 0 0 1 38 50l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 31 65c4 9 4 9 11 16l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9v-1Z"/>
+                        <path fill="#444447" d="m433 51 11 14c2 3 3 6 6 8l9 1c21 1 39 12 55 26l4 5-5-1-3-1a649 649 0 0 1-29-7h-2l-35-3a10183 10183 0 0 1-14 0v-9c0-4 1-6 3-10l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#44A83A" d="M436 93h10a223 223 0 0 1 66 10c5 1 8 3 11 7v3h-9l-24-2h-3a2395 2395 0 0 0-58 2c-3-6-4-11-4-17 4-3 7-3 11-3Z"/>
+                        <path fill="#4D4A4D" d="m534 143 4 1c8 3 16 5 25 6-1 2-1 2-5 3l-5 2-2 1c-19 5-36 8-54-1h7c9 1 19 1 27-3l7-1-2-3-2-5Z"/>
+                        <path fill="#F78A12" d="M433 51c4 4 8 8 11 14l7 9 4 8-2-1-5 1-6-2-4-6h-3l-6-6-2-2-4-5 9-1 1-9Z"/>
+                        <path fill="#F9F6F3" d="M531 141c3 1 3 1 5 4l2 6-9 3-3 1-13 1h-7l-5-2 2-1c7-2 12-5 17-10 4-4 6-3 11-2Z"/>
+                        <path fill="#4D4D51" d="M457 139c4 0 5 2 7 5 0 3 0 5-2 8-3 2-5 1-9 1l-5-2c-1-3-2-4-1-8 3-4 5-5 10-4Z"/>
+                        <path fill="#555458" d="m525 144 3 1-1 3-5 2h-2l-2 1c1-5 2-7 7-7Z"/>
+                        <path fill="#F3F3F4" d="M453 144h6l-1 5-5-1v-4Z"/>
+                        <path fill="#6D6D70" d="M461 507c4 0 7 2 10 4h-7l-3-1-2-1 2-2Z"/>
+                        <path fill="#C6C5C7" d="M434 498h9l1 3-11-1 1-2Z"/>
+                    </svg>
+                </div>
+                <div class="mockup-text">
+                    <h3>Accent Theme (Light Slate)</h3>
+                    <p>A light slate background provides a subtle, professional alternative to white, maintaining a clean look with a hint of color.</p>
+                    <button class="button primary">Primary Action</button>
+                    <button class="button secondary">Secondary Action</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- THEME GROUP: EARTH (BEIGE) -->
+        <!-- Variant: Earth Dark -->
+        <div class="mockup-section theme-beige-dark">
+            <div class="mockup-header">
+                <h3>4a. Earth Theme (Dark Coffee)</h3>
+                <span>Dashboard</span>
+            </div>
+            <div class="mockup-content">
+                <div class="logo-container">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                        <path fill="#424146" d="m433 51 11 14c2 3 3 6 6 8l9 1c25 2 46 16 63 34l1 4-1 2 1 2-1 6c-7 6-16 7-25 6l-16-2c-18-4-18-4-36 0l-15 14-2 2a56 56 0 0 0-16 43c0 11 6 20 14 27 4 3 8 4 12 5 10 2 16 6 22 14 4 7 4 17 3 25l-3 8-1 4a174 174 0 0 1-41 66l-7 7c-2 4-5 6-9 9l-6 6a260 260 0 0 1-26 21c-15 12-31 22-48 32l-37 24-2 2-33 22-16 9 4-16 1-2c7-15 16-29 27-42l3-5h-2l-9-2c-3-3-3-7-3-11l-2 1-3 1-3 2c-11 4-24 2-35 1-23-4-46-1-69 5l-16 4-14 4-3 1-45 12-3 1-7 2-3 1-9 3-7 1c0-7 6-11 10-15l-5-2 1-4a1497 1497 0 0 1 75-17l3-1a563 563 0 0 0 42-11c64-18 64-18 114-59a361 361 0 0 1 27-35 697 697 0 0 1 25-31c7-11 16-21 24-31l1-2c16-18 16-18 25-25l7-10 1-2 8-17c8-20 18-38 36-51l-1-2c-3-5-5-10-4-16l2-2h3v-3c0-6 0-11 3-17l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#FE8502" d="M525 121c5 3 7 7 9 12v9h-12l-6 6c-4 3-7 5-12 6v1c14 1 14 1 27-3l7-1-2-3-2-5 4 1c8 3 16 5 25 6l-3 3h-2l-2 1-3 1-3 1-15 4v17c0 9 0 17 5 25a100 100 0 0 1 14 40c5 43-11 93-37 126a154 154 0 0 1-118 57h-3l-10 1a3658 3658 0 0 0-22 1 1964753589 1964753589 0 0 1 40 52l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 42 81l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9h8l4 1 3 1a191 191 0 0 0 37 5c12 1 21-2 31-7l3-1a189 189 0 0 0 84-74c15-26 25-62 17-92l-4-9-1-3c-10-20-30-32-49-42-7-4-11-9-14-16l-1-11v-2c0-8 1-14 6-20l2-1 1 3c1 5 2 6 6 8 4 1 8 1 12-1 3-3 4-4 4-8 0-5-3-7-6-10h13l14 1c10 1 18 0 28-2l2-1c3-1 5-2 7-5l1-4v-4Z"/>
+                        <path fill="#49484D" d="m317 414 15 3c16 4 32 5 49 6-3 3-6 3-10 3h-2l-5 1 2 2a6588 6588 0 0 1 38 50l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 31 65c4 9 4 9 11 16l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9v-1Z"/>
+                        <path fill="#444447" d="m433 51 11 14c2 3 3 6 6 8l9 1c21 1 39 12 55 26l4 5-5-1-3-1a649 649 0 0 1-29-7h-2l-35-3a10183 10183 0 0 1-14 0v-9c0-4 1-6 3-10l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#44A83A" d="M436 93h10a223 223 0 0 1 66 10c5 1 8 3 11 7v3h-9l-24-2h-3a2395 2395 0 0 0-58 2c-3-6-4-11-4-17 4-3 7-3 11-3Z"/>
+                        <path fill="#4D4A4D" d="m534 143 4 1c8 3 16 5 25 6-1 2-1 2-5 3l-5 2-2 1c-19 5-36 8-54-1h7c9 1 19 1 27-3l7-1-2-3-2-5Z"/>
+                        <path fill="#F78A12" d="M433 51c4 4 8 8 11 14l7 9 4 8-2-1-5 1-6-2-4-6h-3l-6-6-2-2-4-5 9-1 1-9Z"/>
+                        <path fill="#F9F6F3" d="M531 141c3 1 3 1 5 4l2 6-9 3-3 1-13 1h-7l-5-2 2-1c7-2 12-5 17-10 4-4 6-3 11-2Z"/>
+                        <path fill="#4D4D51" d="M457 139c4 0 5 2 7 5 0 3 0 5-2 8-3 2-5 1-9 1l-5-2c-1-3-2-4-1-8 3-4 5-5 10-4Z"/>
+                        <path fill="#555458" d="m525 144 3 1-1 3-5 2h-2l-2 1c1-5 2-7 7-7Z"/>
+                        <path fill="#F3F3F4" d="M453 144h6l-1 5-5-1v-4Z"/>
+                        <path fill="#6D6D70" d="M461 507c4 0 7 2 10 4h-7l-3-1-2-1 2-2Z"/>
+                        <path fill="#C6C5C7" d="M434 498h9l1 3-11-1 1-2Z"/>
+                    </svg>
+                </div>
+                <div class="mockup-text">
+                    <h3>Earth Theme (Dark Coffee)</h3>
+                    <p>A rich, dark brown background gives a warm, grounded feel. It provides excellent contrast for the logo while avoiding the harshness of pure black.</p>
+                    <button class="button primary">Primary Action</button>
+                    <button class="button secondary">Secondary Action</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mockup 4: Warm Beige (Harmonious/Earthy - Light) -->
+        <div class="mockup-section theme-beige">
+            <div class="mockup-header">
+                <h3>4b. Earth Theme (Warm Beige)</h3>
+                <span>Dashboard</span>
+            </div>
+            <div class="mockup-content">
+                <div class="logo-container">
+                    <!-- Inline SVG Logo -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                        <path fill="#424146" d="m433 51 11 14c2 3 3 6 6 8l9 1c25 2 46 16 63 34l1 4-1 2 1 2-1 6c-7 6-16 7-25 6l-16-2c-18-4-18-4-36 0l-15 14-2 2a56 56 0 0 0-16 43c0 11 6 20 14 27 4 3 8 4 12 5 10 2 16 6 22 14 4 7 4 17 3 25l-3 8-1 4a174 174 0 0 1-41 66l-7 7c-2 4-5 6-9 9l-6 6a260 260 0 0 1-26 21c-15 12-31 22-48 32l-37 24-2 2-33 22-16 9 4-16 1-2c7-15 16-29 27-42l3-5h-2l-9-2c-3-3-3-7-3-11l-2 1-3 1-3 2c-11 4-24 2-35 1-23-4-46-1-69 5l-16 4-14 4-3 1-45 12-3 1-7 2-3 1-9 3-7 1c0-7 6-11 10-15l-5-2 1-4a1497 1497 0 0 1 75-17l3-1a563 563 0 0 0 42-11c64-18 64-18 114-59a361 361 0 0 1 27-35 697 697 0 0 1 25-31c7-11 16-21 24-31l1-2c16-18 16-18 25-25l7-10 1-2 8-17c8-20 18-38 36-51l-1-2c-3-5-5-10-4-16l2-2h3v-3c0-6 0-11 3-17l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#FE8502" d="M525 121c5 3 7 7 9 12v9h-12l-6 6c-4 3-7 5-12 6v1c14 1 14 1 27-3l7-1-2-3-2-5 4 1c8 3 16 5 25 6l-3 3h-2l-2 1-3 1-3 1-15 4v17c0 9 0 17 5 25a100 100 0 0 1 14 40c5 43-11 93-37 126a154 154 0 0 1-118 57h-3l-10 1a3658 3658 0 0 0-22 1 1964753589 1964753589 0 0 1 40 52l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 42 81l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9h8l4 1 3 1a191 191 0 0 0 37 5c12 1 21-2 31-7l3-1a189 189 0 0 0 84-74c15-26 25-62 17-92l-4-9-1-3c-10-20-30-32-49-42-7-4-11-9-14-16l-1-11v-2c0-8 1-14 6-20l2-1 1 3c1 5 2 6 6 8 4 1 8 1 12-1 3-3 4-4 4-8 0-5-3-7-6-10h13l14 1c10 1 18 0 28-2l2-1c3-1 5-2 7-5l1-4v-4Z"/>
+                        <path fill="#49484D" d="m317 414 15 3c16 4 32 5 49 6-3 3-6 3-10 3h-2l-5 1 2 2a6588 6588 0 0 1 38 50l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 31 65c4 9 4 9 11 16l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9v-1Z"/>
+                        <path fill="#444447" d="m433 51 11 14c2 3 3 6 6 8l9 1c21 1 39 12 55 26l4 5-5-1-3-1a649 649 0 0 1-29-7h-2l-35-3a10183 10183 0 0 1-14 0v-9c0-4 1-6 3-10l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#44A83A" d="M436 93h10a223 223 0 0 1 66 10c5 1 8 3 11 7v3h-9l-24-2h-3a2395 2395 0 0 0-58 2c-3-6-4-11-4-17 4-3 7-3 11-3Z"/>
+                        <path fill="#4D4A4D" d="m534 143 4 1c8 3 16 5 25 6-1 2-1 2-5 3l-5 2-2 1c-19 5-36 8-54-1h7c9 1 19 1 27-3l7-1-2-3-2-5Z"/>
+                        <path fill="#F78A12" d="M433 51c4 4 8 8 11 14l7 9 4 8-2-1-5 1-6-2-4-6h-3l-6-6-2-2-4-5 9-1 1-9Z"/>
+                        <path fill="#F9F6F3" d="M531 141c3 1 3 1 5 4l2 6-9 3-3 1-13 1h-7l-5-2 2-1c7-2 12-5 17-10 4-4 6-3 11-2Z"/>
+                        <path fill="#4D4D51" d="M457 139c4 0 5 2 7 5 0 3 0 5-2 8-3 2-5 1-9 1l-5-2c-1-3-2-4-1-8 3-4 5-5 10-4Z"/>
+                        <path fill="#555458" d="m525 144 3 1-1 3-5 2h-2l-2 1c1-5 2-7 7-7Z"/>
+                        <path fill="#F3F3F4" d="M453 144h6l-1 5-5-1v-4Z"/>
+                        <path fill="#6D6D70" d="M461 507c4 0 7 2 10 4h-7l-3-1-2-1 2-2Z"/>
+                        <path fill="#C6C5C7" d="M434 498h9l1 3-11-1 1-2Z"/>
+                    </svg>
+                </div>
+                <div class="mockup-text">
+                    <h3>Earth Theme (Warm Beige)</h3>
+                    <p>A harmonious, earthy palette using a warm beige background. It connects well with the orange and green of the logo, creating a natural and inviting feel.</p>
+                    <button class="button primary">Primary Action</button>
+                    <button class="button secondary">Secondary Action</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- THEME GROUP: FOREST (TEAL) -->
+        <!-- Mockup 5: Teal Theme (Split Complementary - Dark) -->
+        <div class="mockup-section theme-teal">
+            <div class="mockup-header">
+                <h3>5a. Forest Theme (Dark Teal)</h3>
+                <span>Dashboard</span>
+            </div>
+            <div class="mockup-content">
+                <div class="logo-container">
+                    <!-- Inline SVG Logo -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                        <path fill="#424146" d="m433 51 11 14c2 3 3 6 6 8l9 1c25 2 46 16 63 34l1 4-1 2 1 2-1 6c-7 6-16 7-25 6l-16-2c-18-4-18-4-36 0l-15 14-2 2a56 56 0 0 0-16 43c0 11 6 20 14 27 4 3 8 4 12 5 10 2 16 6 22 14 4 7 4 17 3 25l-3 8-1 4a174 174 0 0 1-41 66l-7 7c-2 4-5 6-9 9l-6 6a260 260 0 0 1-26 21c-15 12-31 22-48 32l-37 24-2 2-33 22-16 9 4-16 1-2c7-15 16-29 27-42l3-5h-2l-9-2c-3-3-3-7-3-11l-2 1-3 1-3 2c-11 4-24 2-35 1-23-4-46-1-69 5l-16 4-14 4-3 1-45 12-3 1-7 2-3 1-9 3-7 1c0-7 6-11 10-15l-5-2 1-4a1497 1497 0 0 1 75-17l3-1a563 563 0 0 0 42-11c64-18 64-18 114-59a361 361 0 0 1 27-35 697 697 0 0 1 25-31c7-11 16-21 24-31l1-2c16-18 16-18 25-25l7-10 1-2 8-17c8-20 18-38 36-51l-1-2c-3-5-5-10-4-16l2-2h3v-3c0-6 0-11 3-17l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#FE8502" d="M525 121c5 3 7 7 9 12v9h-12l-6 6c-4 3-7 5-12 6v1c14 1 14 1 27-3l7-1-2-3-2-5 4 1c8 3 16 5 25 6l-3 3h-2l-2 1-3 1-3 1-15 4v17c0 9 0 17 5 25a100 100 0 0 1 14 40c5 43-11 93-37 126a154 154 0 0 1-118 57h-3l-10 1a3658 3658 0 0 0-22 1 1964753589 1964753589 0 0 1 40 52l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 42 81l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9v-1Z"/>
+                        <path fill="#49484D" d="m317 414 15 3c16 4 32 5 49 6-3 3-6 3-10 3h-2l-5 1 2 2a6588 6588 0 0 1 38 50l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 31 65c4 9 4 9 11 16l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9v-1Z"/>
+                        <path fill="#444447" d="m433 51 11 14c2 3 3 6 6 8l9 1c21 1 39 12 55 26l4 5-5-1-3-1a649 649 0 0 1-29-7h-2l-35-3a10183 10183 0 0 1-14 0v-9c0-4 1-6 3-10l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#44A83A" d="M436 93h10a223 223 0 0 1 66 10c5 1 8 3 11 7v3h-9l-24-2h-3a2395 2395 0 0 0-58 2c-3-6-4-11-4-17 4-3 7-3 11-3Z"/>
+                        <path fill="#4D4A4D" d="m534 143 4 1c8 3 16 5 25 6-1 2-1 2-5 3l-5 2-2 1c-19 5-36 8-54-1h7c9 1 19 1 27-3l7-1-2-3-2-5Z"/>
+                        <path fill="#F78A12" d="M433 51c4 4 8 8 11 14l7 9 4 8-2-1-5 1-6-2-4-6h-3l-6-6-2-2-4-5 9-1 1-9Z"/>
+                        <path fill="#F9F6F3" d="M531 141c3 1 3 1 5 4l2 6-9 3-3 1-13 1h-7l-5-2 2-1c7-2 12-5 17-10 4-4 6-3 11-2Z"/>
+                        <path fill="#4D4D51" d="M457 139c4 0 5 2 7 5 0 3 0 5-2 8-3 2-5 1-9 1l-5-2c-1-3-2-4-1-8 3-4 5-5 10-4Z"/>
+                        <path fill="#555458" d="m525 144 3 1-1 3-5 2h-2l-2 1c1-5 2-7 7-7Z"/>
+                        <path fill="#F3F3F4" d="M453 144h6l-1 5-5-1v-4Z"/>
+                        <path fill="#6D6D70" d="M461 507c4 0 7 2 10 4h-7l-3-1-2-1 2-2Z"/>
+                        <path fill="#C6C5C7" d="M434 498h9l1 3-11-1 1-2Z"/>
+                    </svg>
+                </div>
+                <div class="mockup-text">
+                    <h3>Forest Theme (Dark Teal)</h3>
+                    <p>A dark teal background provides a sophisticated, split-complementary contrast to the orange in the logo, evoking a forest or deep water vibe.</p>
+                    <button class="button primary">Primary Action</button>
+                    <button class="button secondary">Secondary Action</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Variant: Teal Light -->
+        <div class="mockup-section theme-teal-light">
+            <div class="mockup-header">
+                <h3>5b. Forest Theme (Light Mint)</h3>
+                <span>Dashboard</span>
+            </div>
+            <div class="mockup-content">
+                <div class="logo-container">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                        <path fill="#424146" d="m433 51 11 14c2 3 3 6 6 8l9 1c25 2 46 16 63 34l1 4-1 2 1 2-1 6c-7 6-16 7-25 6l-16-2c-18-4-18-4-36 0l-15 14-2 2a56 56 0 0 0-16 43c0 11 6 20 14 27 4 3 8 4 12 5 10 2 16 6 22 14 4 7 4 17 3 25l-3 8-1 4a174 174 0 0 1-41 66l-7 7c-2 4-5 6-9 9l-6 6a260 260 0 0 1-26 21c-15 12-31 22-48 32l-37 24-2 2-33 22-16 9 4-16 1-2c7-15 16-29 27-42l3-5h-2l-9-2c-3-3-3-7-3-11l-2 1-3 1-3 2c-11 4-24 2-35 1-23-4-46-1-69 5l-16 4-14 4-3 1-45 12-3 1-7 2-3 1-9 3-7 1c0-7 6-11 10-15l-5-2 1-4a1497 1497 0 0 1 75-17l3-1a563 563 0 0 0 42-11c64-18 64-18 114-59a361 361 0 0 1 27-35 697 697 0 0 1 25-31c7-11 16-21 24-31l1-2c16-18 16-18 25-25l7-10 1-2 8-17c8-20 18-38 36-51l-1-2c-3-5-5-10-4-16l2-2h3v-3c0-6 0-11 3-17l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#FE8502" d="M525 121c5 3 7 7 9 12v9h-12l-6 6c-4 3-7 5-12 6v1c14 1 14 1 27-3l7-1-2-3-2-5 4 1c8 3 16 5 25 6l-3 3h-2l-2 1-3 1-3 1-15 4v17c0 9 0 17 5 25a100 100 0 0 1 14 40c5 43-11 93-37 126a154 154 0 0 1-118 57h-3l-10 1a3658 3658 0 0 0-22 1 1964753589 1964753589 0 0 1 40 52l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 42 81l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9h8l4 1 3 1a191 191 0 0 0 37 5c12 1 21-2 31-7l3-1a189 189 0 0 0 84-74c15-26 25-62 17-92l-4-9-1-3c-10-20-30-32-49-42-7-4-11-9-14-16l-1-11v-2c0-8 1-14 6-20l2-1 1 3c1 5 2 6 6 8 4 1 8 1 12-1 3-3 4-4 4-8 0-5-3-7-6-10h13l14 1c10 1 18 0 28-2l2-1c3-1 5-2 7-5l1-4v-4Z"/>
+                        <path fill="#49484D" d="m317 414 15 3c16 4 32 5 49 6-3 3-6 3-10 3h-2l-5 1 2 2a6588 6588 0 0 1 38 50l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 31 65c4 9 4 9 11 16l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9v-1Z"/>
+                        <path fill="#444447" d="m433 51 11 14c2 3 3 6 6 8l9 1c21 1 39 12 55 26l4 5-5-1-3-1a649 649 0 0 1-29-7h-2l-35-3a10183 10183 0 0 1-14 0v-9c0-4 1-6 3-10l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#44A83A" d="M436 93h10a223 223 0 0 1 66 10c5 1 8 3 11 7v3h-9l-24-2h-3a2395 2395 0 0 0-58 2c-3-6-4-11-4-17 4-3 7-3 11-3Z"/>
+                        <path fill="#4D4A4D" d="m534 143 4 1c8 3 16 5 25 6-1 2-1 2-5 3l-5 2-2 1c-19 5-36 8-54-1h7c9 1 19 1 27-3l7-1-2-3-2-5Z"/>
+                        <path fill="#F78A12" d="M433 51c4 4 8 8 11 14l7 9 4 8-2-1-5 1-6-2-4-6h-3l-6-6-2-2-4-5 9-1 1-9Z"/>
+                        <path fill="#F9F6F3" d="M531 141c3 1 3 1 5 4l2 6-9 3-3 1-13 1h-7l-5-2 2-1c7-2 12-5 17-10 4-4 6-3 11-2Z"/>
+                        <path fill="#4D4D51" d="M457 139c4 0 5 2 7 5 0 3 0 5-2 8-3 2-5 1-9 1l-5-2c-1-3-2-4-1-8 3-4 5-5 10-4Z"/>
+                        <path fill="#555458" d="m525 144 3 1-1 3-5 2h-2l-2 1c1-5 2-7 7-7Z"/>
+                        <path fill="#F3F3F4" d="M453 144h6l-1 5-5-1v-4Z"/>
+                        <path fill="#6D6D70" d="M461 507c4 0 7 2 10 4h-7l-3-1-2-1 2-2Z"/>
+                        <path fill="#C6C5C7" d="M434 498h9l1 3-11-1 1-2Z"/>
+                    </svg>
+                </div>
+                <div class="mockup-text">
+                    <h3>Forest Theme (Light Mint)</h3>
+                    <p>A fresh, minty teal background creates a calm, clean atmosphere, perfectly complementing the green in the logo.</p>
+                    <button class="button primary">Primary Action</button>
+                    <button class="button secondary">Secondary Action</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- THEME GROUP: ROYAL (PURPLE) -->
+        <!-- Mockup 6: Purple Theme (High Contrast - Dark) -->
+        <div class="mockup-section theme-purple">
+            <div class="mockup-header">
+                <h3>6a. Royal Theme (Deep Purple)</h3>
+                <span>Dashboard</span>
+            </div>
+            <div class="mockup-content">
+                <div class="logo-container">
+                    <!-- Inline SVG Logo -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                        <path fill="#424146" d="m433 51 11 14c2 3 3 6 6 8l9 1c25 2 46 16 63 34l1 4-1 2 1 2-1 6c-7 6-16 7-25 6l-16-2c-18-4-18-4-36 0l-15 14-2 2a56 56 0 0 0-16 43c0 11 6 20 14 27 4 3 8 4 12 5 10 2 16 6 22 14 4 7 4 17 3 25l-3 8-1 4a174 174 0 0 1-41 66l-7 7c-2 4-5 6-9 9l-6 6a260 260 0 0 1-26 21c-15 12-31 22-48 32l-37 24-2 2-33 22-16 9 4-16 1-2c7-15 16-29 27-42l3-5h-2l-9-2c-3-3-3-7-3-11l-2 1-3 1-3 2c-11 4-24 2-35 1-23-4-46-1-69 5l-16 4-14 4-3 1-45 12-3 1-7 2-3 1-9 3-7 1c0-7 6-11 10-15l-5-2 1-4a1497 1497 0 0 1 75-17l3-1a563 563 0 0 0 42-11c64-18 64-18 114-59a361 361 0 0 1 27-35 697 697 0 0 1 25-31c7-11 16-21 24-31l1-2c16-18 16-18 25-25l7-10 1-2 8-17c8-20 18-38 36-51l-1-2c-3-5-5-10-4-16l2-2h3v-3c0-6 0-11 3-17l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#FE8502" d="M525 121c5 3 7 7 9 12v9h-12l-6 6c-4 3-7 5-12 6v1c14 1 14 1 27-3l7-1-2-3-2-5 4 1c8 3 16 5 25 6l-3 3h-2l-2 1-3 1-3 1-15 4v17c0 9 0 17 5 25a100 100 0 0 1 14 40c5 43-11 93-37 126a154 154 0 0 1-118 57h-3l-10 1a3658 3658 0 0 0-22 1 1964753589 1964753589 0 0 1 40 52l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 42 81l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9v-1Z"/>
+                        <path fill="#49484D" d="m317 414 15 3c16 4 32 5 49 6-3 3-6 3-10 3h-2l-5 1 2 2a6588 6588 0 0 1 38 50l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 31 65c4 9 4 9 11 16l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9v-1Z"/>
+                        <path fill="#444447" d="m433 51 11 14c2 3 3 6 6 8l9 1c21 1 39 12 55 26l4 5-5-1-3-1a649 649 0 0 1-29-7h-2l-35-3a10183 10183 0 0 1-14 0v-9c0-4 1-6 3-10l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#44A83A" d="M436 93h10a223 223 0 0 1 66 10c5 1 8 3 11 7v3h-9l-24-2h-3a2395 2395 0 0 0-58 2c-3-6-4-11-4-17 4-3 7-3 11-3Z"/>
+                        <path fill="#4D4A4D" d="m534 143 4 1c8 3 16 5 25 6-1 2-1 2-5 3l-5 2-2 1c-19 5-36 8-54-1h7c9 1 19 1 27-3l7-1-2-3-2-5Z"/>
+                        <path fill="#F78A12" d="M433 51c4 4 8 8 11 14l7 9 4 8-2-1-5 1-6-2-4-6h-3l-6-6-2-2-4-5 9-1 1-9Z"/>
+                        <path fill="#F9F6F3" d="M531 141c3 1 3 1 5 4l2 6-9 3-3 1-13 1h-7l-5-2 2-1c7-2 12-5 17-10 4-4 6-3 11-2Z"/>
+                        <path fill="#4D4D51" d="M457 139c4 0 5 2 7 5 0 3 0 5-2 8-3 2-5 1-9 1l-5-2c-1-3-2-4-1-8 3-4 5-5 10-4Z"/>
+                        <path fill="#555458" d="m525 144 3 1-1 3-5 2h-2l-2 1c1-5 2-7 7-7Z"/>
+                        <path fill="#F3F3F4" d="M453 144h6l-1 5-5-1v-4Z"/>
+                        <path fill="#6D6D70" d="M461 507c4 0 7 2 10 4h-7l-3-1-2-1 2-2Z"/>
+                        <path fill="#C6C5C7" d="M434 498h9l1 3-11-1 1-2Z"/>
+                    </svg>
+                </div>
+                <div class="mockup-text">
+                    <h3>Royal Theme (Deep Purple)</h3>
+                    <p>A deep indigo/purple theme creates a bold, luxurious feel. The orange and green accents of the logo stand out vividly against this dark, rich background.</p>
+                    <button class="button primary">Primary Action</button>
+                    <button class="button secondary">Secondary Action</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Variant: Purple Light -->
+        <div class="mockup-section theme-purple-light">
+            <div class="mockup-header">
+                <h3>6b. Royal Theme (Soft Lavender)</h3>
+                <span>Dashboard</span>
+            </div>
+            <div class="mockup-content">
+                <div class="logo-container">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                        <path fill="#424146" d="m433 51 11 14c2 3 3 6 6 8l9 1c25 2 46 16 63 34l1 4-1 2 1 2-1 6c-7 6-16 7-25 6l-16-2c-18-4-18-4-36 0l-15 14-2 2a56 56 0 0 0-16 43c0 11 6 20 14 27 4 3 8 4 12 5 10 2 16 6 22 14 4 7 4 17 3 25l-3 8-1 4a174 174 0 0 1-41 66l-7 7c-2 4-5 6-9 9l-6 6a260 260 0 0 1-26 21c-15 12-31 22-48 32l-37 24-2 2-33 22-16 9 4-16 1-2c7-15 16-29 27-42l3-5h-2l-9-2c-3-3-3-7-3-11l-2 1-3 1-3 2c-11 4-24 2-35 1-23-4-46-1-69 5l-16 4-14 4-3 1-45 12-3 1-7 2-3 1-9 3-7 1c0-7 6-11 10-15l-5-2 1-4a1497 1497 0 0 1 75-17l3-1a563 563 0 0 0 42-11c64-18 64-18 114-59a361 361 0 0 1 27-35 697 697 0 0 1 25-31c7-11 16-21 24-31l1-2c16-18 16-18 25-25l7-10 1-2 8-17c8-20 18-38 36-51l-1-2c-3-5-5-10-4-16l2-2h3v-3c0-6 0-11 3-17l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#FE8502" d="M525 121c5 3 7 7 9 12v9h-12l-6 6c-4 3-7 5-12 6v1c14 1 14 1 27-3l7-1-2-3-2-5 4 1c8 3 16 5 25 6l-3 3h-2l-2 1-3 1-3 1-15 4v17c0 9 0 17 5 25a100 100 0 0 1 14 40c5 43-11 93-37 126a154 154 0 0 1-118 57h-3l-10 1a3658 3658 0 0 0-22 1 1964753589 1964753589 0 0 1 40 52l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 42 81l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9h8l4 1 3 1a191 191 0 0 0 37 5c12 1 21-2 31-7l3-1a189 189 0 0 0 84-74c15-26 25-62 17-92l-4-9-1-3c-10-20-30-32-49-42-7-4-11-9-14-16l-1-11v-2c0-8 1-14 6-20l2-1 1 3c1 5 2 6 6 8 4 1 8 1 12-1 3-3 4-4 4-8 0-5-3-7-6-10h13l14 1c10 1 18 0 28-2l2-1c3-1 5-2 7-5l1-4v-4Z"/>
+                        <path fill="#49484D" d="m317 414 15 3c16 4 32 5 49 6-3 3-6 3-10 3h-2l-5 1 2 2a6588 6588 0 0 1 38 50l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 31 65c4 9 4 9 11 16l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9v-1Z"/>
+                        <path fill="#444447" d="m433 51 11 14c2 3 3 6 6 8l9 1c21 1 39 12 55 26l4 5-5-1-3-1a649 649 0 0 1-29-7h-2l-35-3a10183 10183 0 0 1-14 0v-9c0-4 1-6 3-10l-2-4-3-3-5-5v-1l9-1 1-9Z"/>
+                        <path fill="#44A83A" d="M436 93h10a223 223 0 0 1 66 10c5 1 8 3 11 7v3h-9l-24-2h-3a2395 2395 0 0 0-58 2c-3-6-4-11-4-17 4-3 7-3 11-3Z"/>
+                        <path fill="#4D4A4D" d="m534 143 4 1c8 3 16 5 25 6-1 2-1 2-5 3l-5 2-2 1c-19 5-36 8-54-1h7c9 1 19 1 27-3l7-1-2-3-2-5Z"/>
+                        <path fill="#F78A12" d="M433 51c4 4 8 8 11 14l7 9 4 8-2-1-5 1-6-2-4-6h-3l-6-6-2-2-4-5 9-1 1-9Z"/>
+                        <path fill="#F9F6F3" d="M531 141c3 1 3 1 5 4l2 6-9 3-3 1-13 1h-7l-5-2 2-1c7-2 12-5 17-10 4-4 6-3 11-2Z"/>
+                        <path fill="#4D4D51" d="M457 139c4 0 5 2 7 5 0 3 0 5-2 8-3 2-5 1-9 1l-5-2c-1-3-2-4-1-8 3-4 5-5 10-4Z"/>
+                        <path fill="#555458" d="m525 144 3 1-1 3-5 2h-2l-2 1c1-5 2-7 7-7Z"/>
+                        <path fill="#F3F3F4" d="M453 144h6l-1 5-5-1v-4Z"/>
+                        <path fill="#6D6D70" d="M461 507c4 0 7 2 10 4h-7l-3-1-2-1 2-2Z"/>
+                        <path fill="#C6C5C7" d="M434 498h9l1 3-11-1 1-2Z"/>
+                    </svg>
+                </div>
+                <div class="mockup-text">
+                    <h3>Royal Theme (Soft Lavender)</h3>
+                    <p>A soft lavender background is gentle and creative. It pairs elegantly with the deep charcoal and vibrant orange of the logo.</p>
+                    <button class="button primary">Primary Action</button>
+                    <button class="button secondary">Secondary Action</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>

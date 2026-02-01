@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robin UI - Settings Mockup</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; }
+        .app-container { display: grid; grid-template-columns: 260px 1fr; grid-template-rows: 64px 1fr; height: 100vh; }
+        .header { grid-column: 2; grid-row: 1; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; border-bottom: 1px solid; }
+        .sidebar { grid-column: 1; grid-row: 1 / 3; padding: 0; border-right: 1px solid; display: flex; flex-direction: column; }
+        .brand { height: 64px; display: flex; align-items: center; padding: 0 20px; font-size: 20px; font-weight: 800; border-bottom: 1px solid transparent; }
+        .brand svg { width: 32px; height: 32px; margin-right: 12px; }
+        .nav-list { padding: 20px 10px; display: flex; flex-direction: column; gap: 4px; }
+        .nav-item { padding: 10px 15px; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 12px; font-weight: 500; }
+        .main-content { grid-column: 2; grid-row: 2; padding: 40px; overflow-y: auto; }
+        
+        .form-card { border-radius: 12px; padding: 30px; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
+        input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid; }
+        .btn-primary { padding: 10px 20px; border-radius: 6px; background: #FE8502; color: white; border: none; font-weight: 700; cursor: pointer; }
+
+        /* --- Dark Theme --- */
+        .theme-dark .app-container { background-color: #0F0F10; color: #F9F6F3; }
+        .theme-dark .sidebar, .theme-dark .header { background-color: #161618; border-color: #262626; }
+        .theme-dark .nav-item { color: #A0A0A5; }
+        .theme-dark .nav-item.active { background-color: rgba(254, 133, 2, 0.1); color: #FE8502; }
+        .theme-dark .form-card { background-color: #1C1C1E; border: 1px solid #262626; }
+        .theme-dark input { background-color: #262626; border-color: #333; color: white; }
+        .theme-dark .brand { border-bottom-color: #262626; }
+
+        /* --- Light Theme --- */
+        .theme-light .app-container { background-color: #F8FAFC; color: #424146; }
+        .theme-light .sidebar, .theme-light .header { background-color: #FFFFFF; border-color: #E2E8F0; }
+        .theme-light .nav-item { color: #64748B; }
+        .theme-light .nav-item.active { background-color: #FFF7ED; color: #FE8502; }
+        .theme-light .form-card { background-color: #FFFFFF; border: 1px solid #E2E8F0; }
+        .theme-light input { background-color: #FFFFFF; border-color: #E2E8F0; color: #333; }
+        .theme-light .brand { border-bottom-color: #E2E8F0; }
+    </style>
+</head>
+<body>
+
+    <!-- DARK -->
+    <div class="theme-dark">
+        <div class="app-container">
+            <div class="sidebar">
+                <div class="brand">
+                    <svg viewBox="0 0 600 600">
+                        <path fill="#FE8502" d="M525 121c5 3 7 7 9 12v9h-12l-6 6c-4 3-7 5-12 6v1c14 1 14 1 27-3l7-1-2-3-2-5 4 1c8 3 16 5 25 6l-3 3h-2l-2 1-3 1-3 1-15 4v17c0 9 0 17 5 25a100 100 0 0 1 14 40c5 43-11 93-37 126a154 154 0 0 1-118 57h-3l-10 1a3658 3658 0 0 0-22 1 1964753589 1964753589 0 0 1 40 52l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 42 81l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9h8l4 1 3 1a191 191 0 0 0 37 5c12 1 21-2 31-7l3-1a189 189 0 0 0 84-74c15-26 25-62 17-92l-4-9-1-3c-10-20-30-32-49-42-7-4-11-9-14-16l-1-11v-2c0-8 1-14 6-20l2-1 1 3c1 5 2 6 6 8 4 1 8 1 12-1 3-3 4-4 4-8 0-5-3-7-6-10h13l14 1c10 1 18 0 28-2l2-1c3-1 5-2 7-5l1-4v-4Z"/>
+                        <path fill="#44A83A" d="M436 93h10a223 223 0 0 1 66 10c5 1 8 3 11 7v3h-9l-24-2h-3a2395 2395 0 0 0-58 2c-3-6-4-11-4-17 4-3 7-3 11-3Z"/>
+                    </svg>
+                    Robin UI
+                </div>
+                <div class="nav-list">
+                    <div class="nav-item">Dashboard</div>
+                    <div class="nav-item active">Settings</div>
+                </div>
+            </div>
+            <div class="header"><h3>System Settings</h3></div>
+            <div class="main-content">
+                <div class="form-card">
+                    <div class="form-group"><label>Service Name</label><input type="text" value="Robin Gateway 01"></div>
+                    <button class="btn-primary">Update Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LIGHT -->
+    <div class="theme-light">
+        <div class="app-container">
+            <div class="sidebar">
+                <div class="brand">
+                    <svg viewBox="0 0 600 600">
+                        <path fill="#FE8502" d="M525 121c5 3 7 7 9 12v9h-12l-6 6c-4 3-7 5-12 6v1c14 1 14 1 27-3l7-1-2-3-2-5 4 1c8 3 16 5 25 6l-3 3h-2l-2 1-3 1-3 1-15 4v17c0 9 0 17 5 25a100 100 0 0 1 14 40c5 43-11 93-37 126a154 154 0 0 1-118 57h-3l-10 1a3658 3658 0 0 0-22 1 1964753589 1964753589 0 0 1 40 52l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 42 81l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9h8l4 1 3 1a191 191 0 0 0 37 5c12 1 21-2 31-7l3-1a189 189 0 0 0 84-74c15-26 25-62 17-92l-4-9-1-3c-10-20-30-32-49-42-7-4-11-9-14-16l-1-11v-2c0-8 1-14 6-20l2-1 1 3c1 5 2 6 6 8 4 1 8 1 12-1 3-3 4-4 4-8 0-5-3-7-6-10h13l14 1c10 1 18 0 28-2l2-1c3-1 5-2 7-5l1-4v-4Z"/>
+                        <path fill="#44A83A" d="M436 93h10a223 223 0 0 1 66 10c5 1 8 3 11 7v3h-9l-24-2h-3a2395 2395 0 0 0-58 2c-3-6-4-11-4-17 4-3 7-3 11-3Z"/>
+                    </svg>
+                    Robin UI
+                </div>
+                <div class="nav-list">
+                    <div class="nav-item">Dashboard</div>
+                    <div class="nav-item active">Settings</div>
+                </div>
+            </div>
+            <div class="header"><h3>System Settings</h3></div>
+            <div class="main-content">
+                <div class="form-card">
+                    <div class="form-group"><label>Service Name</label><input type="text" value="Robin Gateway 01"></div>
+                    <button class="btn-primary">Update Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robin UI - Login Mockup</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .mockup-container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+        }
+        h1 { margin-bottom: 30px; font-size: 24px; font-weight: 600; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; }
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 4px;
+            border: 1px solid;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+        .footer-links {
+            margin-top: 20px;
+            font-size: 13px;
+        }
+        .footer-links a { text-decoration: none; }
+
+        /* --- Dark Theme --- */
+        .theme-dark {
+            background-color: #121212;
+            color: #F9F6F3;
+        }
+        .theme-dark .login-card {
+            background-color: #1E1E1E;
+            border: 1px solid #333;
+        }
+        .theme-dark input {
+            background-color: #2C2C2C;
+            border-color: #444;
+            color: #fff;
+        }
+        .theme-dark input:focus { border-color: #FE8502; outline: none; }
+        .theme-dark button {
+            background-color: #FE8502;
+            color: white;
+        }
+        .theme-dark .footer-links a { color: #aaa; }
+        .theme-dark .divider { border-top: 1px solid #333; margin: 30px 0; }
+
+        /* --- Light Theme --- */
+        .theme-light {
+            background-color: #F0F2F5;
+            color: #424146;
+        }
+        .theme-light .login-card {
+            background-color: #FFFFFF;
+            border: 1px solid #E5E7EB;
+        }
+        .theme-light input {
+            background-color: #FFFFFF;
+            border-color: #D1D5DB;
+            color: #333;
+        }
+        .theme-light input:focus { border-color: #FE8502; outline: none; }
+        .theme-light button {
+            background-color: #FE8502;
+            color: white;
+        }
+        .theme-light .footer-links a { color: #666; }
+        .theme-light .divider { border-top: 1px solid #eee; margin: 30px 0; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Dark Theme Mockup -->
+    <div class="mockup-container theme-dark">
+        <div class="login-card">
+            <!-- Inline Logo (simplified for brevity) -->
+            <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                <circle cx="300" cy="300" r="280" fill="#FE8502"/>
+                <path fill="#424146" d="M150,300 L450,300 L300,100 Z" /> <!-- Placeholder shape -->
+            </svg>
+            <h1>Welcome Back</h1>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" placeholder="name@company.com" value="demo@robin-ui.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" value="password123">
+            </div>
+            <button>Sign In</button>
+            <div class="footer-links">
+                <a href="#">Forgot password?</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Light Theme Mockup -->
+    <div class="mockup-container theme-light">
+        <div class="login-card">
+            <!-- Inline Logo -->
+            <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
+                <circle cx="300" cy="300" r="280" fill="#FE8502"/>
+                <path fill="#424146" d="M150,300 L450,300 L300,100 Z" />
+            </svg>
+            <h1>Welcome Back</h1>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" placeholder="name@company.com" value="demo@robin-ui.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" value="password123">
+            </div>
+            <button>Sign In</button>
+            <div class="footer-links">
+                <a href="#">Forgot password?</a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
