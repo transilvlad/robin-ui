@@ -1,0 +1,27 @@
+{
+  // Dovecot Configuration
+  protocols: ['imap', 'pop3', 'lmtp'],
+  listen: '*, ::',
+  
+  // Authentication
+  authentication: {
+    mechanisms: ['plain', 'login'],
+    defaultRealm: 'robin-mta.local'
+  },
+  
+  // Mail Location (Maildir format)
+  mailLocation: 'maildir:~/Maildir',
+  
+  // SSL/TLS Configuration
+  ssl: {
+    enabled: true,
+    certFile: '/etc/ssl/certs/dovecot.pem',
+    keyFile: '/etc/ssl/private/dovecot.key'
+  },
+  
+  // Resource Limits
+  limits: {
+    maxConnections: 100,
+    maxUserConnections: 10
+  }
+}

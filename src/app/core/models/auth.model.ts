@@ -51,7 +51,7 @@ export enum Permission {
 
 // Zod schemas for runtime validation
 export const UserSchema = z.object({
-  id: z.union([z.string().uuid(), z.number()]).transform(id => String(id)),
+  id: z.union([z.string(), z.number()]).transform(id => String(id)),
   username: z.string().min(1),
   email: z.string().email(),
   firstName: z.string().optional(),
