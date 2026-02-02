@@ -1,0 +1,165 @@
+<div class="p-10 min-h-screen bg-background">
+  <div class="max-w-[1400px] mx-auto space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-foreground">Dovecot Configuration</h1>
+        <p class="text-muted-foreground mt-1">Manage IMAP/POP3 services, authentication, and SSL settings</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button 
+          (click)="saveConfiguration()" 
+          [disabled]="configForm.invalid || saving || loading"
+          class="btn-primary btn-md flex items-center gap-2">
+          @if (saving) {
+            <svg class="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          }
+          Save Changes
+        </button>
+      </div>
+    </div>
+
+    @if (loading) {
+      <div class="flex flex-col items-center justify-center py-24 space-y-4">
+        <svg class="animate-spin h-10 w-10 text-primary opacity-20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="text-sm font-bold uppercase tracking-widest text-muted-foreground">Loading configuration...</p>
+      </div>
+    } @else {
+      <form [formGroup]="configForm" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- General Settings -->
+        <div class="lg:col-span-2 space-y-6">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Services & Network</h2>
+              <p class="card-description">Configure enabled protocols and network binding</p>
+            </div>
+            <div class="card-content space-y-4">
+              <div class="space-y-4">
+                <label class="text-sm font-medium">Enabled Protocols</label>
+                <div class="flex flex-wrap gap-4">
+                  <label class="flex items-center gap-2 cursor-pointer border rounded-md p-3 hover:bg-muted/50 transition-colors" [class.bg-muted]="protocols.value.includes('imap')">
+                    <input type="checkbox" [checked]="protocols.value.includes('imap')" (change)="toggleProtocol('imap')" class="rounded border-gray-300 text-primary focus:ring-primary">
+                    <span class="font-medium">IMAP</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer border rounded-md p-3 hover:bg-muted/50 transition-colors" [class.bg-muted]="protocols.value.includes('pop3')">
+                    <input type="checkbox" [checked]="protocols.value.includes('pop3')" (change)="toggleProtocol('pop3')" class="rounded border-gray-300 text-primary focus:ring-primary">
+                    <span class="font-medium">POP3</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer border rounded-md p-3 hover:bg-muted/50 transition-colors" [class.bg-muted]="protocols.value.includes('lmtp')">
+                    <input type="checkbox" [checked]="protocols.value.includes('lmtp')" (change)="toggleProtocol('lmtp')" class="rounded border-gray-300 text-primary focus:ring-primary">
+                    <span class="font-medium">LMTP</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-2">
+                  <label for="listen" class="text-sm font-medium leading-none">Listen Address</label>
+                  <input id="listen" type="text" formControlName="listen" class="input font-mono" placeholder="*, ::">
+                  <p class="text-xs text-muted-foreground">Use * for all IPv4 interfaces</p>
+                </div>
+                <div class="space-y-2">
+                  <label for="mailLocation" class="text-sm font-medium leading-none">Mail Location</label>
+                  <input id="mailLocation" type="text" formControlName="mailLocation" class="input font-mono">
+                  <p class="text-xs text-muted-foreground">Format: maildir:/path/to/mail</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Authentication -->
+          <div class="card" formGroupName="authentication">
+            <div class="card-header">
+              <h2 class="card-title">Authentication</h2>
+              <p class="card-description">Configure SASL mechanisms and realms</p>
+            </div>
+            <div class="card-content space-y-4">
+              <div class="space-y-2">
+                <label for="defaultRealm" class="text-sm font-medium leading-none">Default Realm</label>
+                <input id="defaultRealm" type="text" formControlName="defaultRealm" class="input" placeholder="example.com">
+              </div>
+              
+              <div class="space-y-2">
+                <label class="text-sm font-medium">Mechanisms</label>
+                <div class="flex flex-wrap gap-2">
+                  @for (mech of ['plain', 'login', 'cram-md5']; track mech) {
+                    <label class="flex items-center gap-2 px-3 py-1.5 border rounded-full text-sm cursor-pointer hover:bg-muted/50" [class.bg-primary-100]="authMechanisms.value.includes(mech)">
+                      <input type="checkbox" [checked]="authMechanisms.value.includes(mech)" (change)="toggleAuthMech(mech)" class="rounded-full border-gray-300 text-primary focus:ring-primary">
+                      <span class="uppercase">{{ mech }}</span>
+                    </label>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Limits -->
+          <div class="card" formGroupName="limits">
+            <div class="card-header">
+              <h2 class="card-title">Resource Limits</h2>
+              <p class="card-description">Connection limits per user and global</p>
+            </div>
+            <div class="card-content grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label for="maxConnections" class="text-sm font-medium leading-none">Global Max Connections</label>
+                <input id="maxConnections" type="number" formControlName="maxConnections" class="input">
+              </div>
+              <div class="space-y-2">
+                <label for="maxUserConnections" class="text-sm font-medium leading-none">Max Connections per IP/User</label>
+                <input id="maxUserConnections" type="number" formControlName="maxUserConnections" class="input">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Side Settings (SSL) -->
+        <div class="space-y-6">
+          <div class="card" formGroupName="ssl">
+            <div class="card-header">
+              <h2 class="card-title">SSL/TLS</h2>
+              <p class="card-description">Security certificates</p>
+            </div>
+            <div class="card-content space-y-4">
+              <div class="flex items-center justify-between p-3 border rounded-lg">
+                <div class="space-y-0.5">
+                  <label for="sslEnabled" class="text-sm font-medium">Enable SSL</label>
+                  <p class="text-xs text-muted-foreground">Require secure connections</p>
+                </div>
+                <div class="relative inline-flex h-6 w-11 items-center rounded-full" [class.bg-primary]="sslEnabled.value" [class.bg-muted]="!sslEnabled.value">
+                  <input id="sslEnabled" type="checkbox" formControlName="enabled" class="sr-only">
+                  <span class="translate-x-1 inline-block h-4 w-4 transform rounded-full bg-white transition" [class.translate-x-6]="sslEnabled.value"></span>
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <label for="certFile" class="text-sm font-medium leading-none">Certificate File</label>
+                <input id="certFile" type="text" formControlName="certFile" class="input font-mono text-xs">
+              </div>
+
+              <div class="space-y-2">
+                <label for="keyFile" class="text-sm font-medium leading-none">Private Key File</label>
+                <input id="keyFile" type="text" formControlName="keyFile" class="input font-mono text-xs">
+              </div>
+            </div>
+          </div>
+
+          <div class="card bg-orange-50 border-orange-200">
+             <div class="card-header pb-2">
+                <h2 class="card-title text-orange-800 text-lg">Restart Required</h2>
+             </div>
+             <div class="card-content">
+                <p class="text-sm text-orange-700 mb-4">Changes to Dovecot configuration usually require a service restart to take full effect.</p>
+                <button class="btn-outline w-full border-orange-300 text-orange-800 hover:bg-orange-100">Restart Dovecot</button>
+             </div>
+          </div>
+        </div>
+      </form>
+    }
+  </div>
+</div>

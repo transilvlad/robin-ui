@@ -64,6 +64,7 @@ export class SidebarComponent {
       children: [
         { label: 'Server', icon: 'server', route: '/settings/server' },
         { label: 'Users', icon: 'people', route: '/settings/users' },
+        { label: 'Dovecot', icon: 'dovecot', route: '/settings/dovecot' },
       ],
     },
   ];
@@ -118,6 +119,8 @@ export class SidebarComponent {
         'M2 4h20v5H2z M2 14h20v5H2z M6 7h.01 M6 17h.01',
       people:
         'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75',
+      dovecot:
+        'M22 11.08V12a10 10 0 1 1-5.93-9.14 M22 4L12 14.01l-3-3',
     };
     return icons[icon] || icons['dashboard'];
   }

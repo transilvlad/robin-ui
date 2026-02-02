@@ -59,3 +59,26 @@ export interface RelayConfig {
   username?: string;
   tls: boolean;
 }
+
+export interface DovecotConfig {
+  protocols: ('imap' | 'pop3' | 'lmtp')[];
+  listen: string;
+  authentication: {
+    mechanisms: string[];
+    defaultRealm: string;
+  };
+  mailLocation: string;
+  ssl: DovecotSSL;
+  limits: DovecotLimits;
+}
+
+export interface DovecotSSL {
+  enabled: boolean;
+  certFile: string;
+  keyFile: string;
+}
+
+export interface DovecotLimits {
+  maxConnections: number;
+  maxUserConnections: number;
+}
