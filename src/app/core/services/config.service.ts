@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import JSON5 from 'json5';
+import * as JSON5 from 'json5';
 import { environment } from '../../../environments/environment';
 
 /**
