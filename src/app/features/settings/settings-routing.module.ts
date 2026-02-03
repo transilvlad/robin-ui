@@ -8,6 +8,11 @@ const routes: Routes = [
   { path: 'server', component: ServerConfigComponent },
   { path: 'users', component: UserListComponent },
   { path: 'dovecot', component: DovecotConfigComponent },
+  {
+    path: 'integrations',
+    loadChildren: () =>
+      import('./integrations/integrations.module').then((m) => m.IntegrationsModule),
+  },
   { path: '', redirectTo: 'server', pathMatch: 'full' },
 ];
 

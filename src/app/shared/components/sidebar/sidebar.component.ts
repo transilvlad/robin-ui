@@ -21,6 +21,11 @@ export class SidebarComponent {
       route: '/dashboard',
     },
     {
+      label: 'Domains',
+      icon: 'globe',
+      route: '/domains',
+    },
+    {
       label: 'Email',
       icon: 'mail',
       route: '/email',
@@ -65,6 +70,7 @@ export class SidebarComponent {
         { label: 'Server', icon: 'server', route: '/settings/server' },
         { label: 'Users', icon: 'people', route: '/settings/users' },
         { label: 'Dovecot', icon: 'dovecot', route: '/settings/dovecot' },
+        { label: 'Integrations', icon: 'webhook', route: '/settings/integrations/providers' },
       ],
     },
   ];
@@ -98,6 +104,8 @@ export class SidebarComponent {
         'M3 12h18 M3 6h18 M3 18h18',
       folder:
         'M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z',
+      globe:
+        'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M2 12h20 M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z',
       shield:
         'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
       security:
