@@ -121,6 +121,8 @@ spring:
 robin:
   config-path: ${ROBIN_CONFIG_PATH:cfg/}
   service-url: ${ROBIN_SERVICE_URL:http://localhost:8080}
+  security:
+    encryption-key: ${ROBIN_ENCRYPTION_KEY:default-encryption-key-32-chars!!}
 
 # JWT Configuration
 jwt:

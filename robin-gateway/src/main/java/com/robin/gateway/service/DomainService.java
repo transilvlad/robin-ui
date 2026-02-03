@@ -23,12 +23,16 @@ public class DomainService {
 
     private final DomainRepository domainRepository;
     private final AliasRepository aliasRepository;
+    private final com.robin.gateway.repository.ProviderConfigRepository providerConfigRepository;
 
     /**
      * Get all domains with pagination
      */
     public Mono<Page<Domain>> getAllDomains(Pageable pageable) {
-        return Mono.fromCallable(() -> domainRepository.findAll(pageable))
+        return Mono.fromCallable(() -> {
+            log.debug("Fetching domains with pageable: {}", pageable);
+            return domainRepository.findAll(pageable);
+        })
                 .subscribeOn(Schedulers.boundedElastic())
                 .doOnSuccess(domains -> log.debug("Retrieved {} domains", domains.getTotalElements()))
                 .doOnError(e -> log.error("Error retrieving domains", e));
@@ -61,22 +65,73 @@ public class DomainService {
      * Create a new domain
      */
     @Transactional
-    public Mono<Domain> createDomain(String domainName) {
+    public Mono<Domain> createDomain(String domainName, Long dnsProviderId, Long registrarProviderId) {
         return Mono.fromCallable(() -> {
             // Check if domain already exists
             if (domainRepository.existsByDomain(domainName)) {
                 throw new IllegalArgumentException("Domain already exists: " + domainName);
             }
 
-            Domain domain = Domain.builder()
-                    .domain(domainName)
-                    .build();
+            Domain.DomainBuilder builder = Domain.builder()
+                    .domain(domainName);
 
+            if (dnsProviderId != null) {
+                providerConfigRepository.findById(dnsProviderId).ifPresent(p -> {
+                    builder.dnsProvider(p);
+                    builder.dnsProviderType(Domain.DnsProviderType.valueOf(p.getType().name()));
+                });
+            }
+
+            if (registrarProviderId != null) {
+                providerConfigRepository.findById(registrarProviderId).ifPresent(p -> {
+                    builder.registrarProvider(p);
+                    builder.registrarProviderType(Domain.RegistrarProviderType.valueOf(p.getType().name()));
+                });
+            }
+
+            Domain domain = builder.build();
             return domainRepository.save(domain);
         })
                 .subscribeOn(Schedulers.boundedElastic())
                 .doOnSuccess(domain -> log.info("Created domain: {}", domain.getDomain()))
                 .doOnError(e -> log.error("Error creating domain: {}", domainName, e));
+    }
+
+    /**
+     * Update an existing domain
+     */
+    @Transactional
+    public Mono<Domain> updateDomain(Long id, Domain update) {
+        return Mono.fromCallable(() -> {
+            Domain domain = domainRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Domain not found: " + id));
+
+            if (update.getDnsProviderType() != null) domain.setDnsProviderType(update.getDnsProviderType());
+            if (update.getRegistrarProviderType() != null) domain.setRegistrarProviderType(update.getRegistrarProviderType());
+            
+            if (update.getDnsProvider() != null && update.getDnsProvider().getId() != null) {
+                providerConfigRepository.findById(update.getDnsProvider().getId()).ifPresent(domain::setDnsProvider);
+            } else if (update.getDnsProvider() == null) {
+                domain.setDnsProvider(null);
+            }
+
+            if (update.getRegistrarProvider() != null && update.getRegistrarProvider().getId() != null) {
+                providerConfigRepository.findById(update.getRegistrarProvider().getId()).ifPresent(domain::setRegistrarProvider);
+            } else if (update.getRegistrarProvider() == null) {
+                domain.setRegistrarProvider(null);
+            }
+
+            // Other fields
+            if (update.getDnssecEnabled() != null) domain.setDnssecEnabled(update.getDnssecEnabled());
+            if (update.getMtaStsEnabled() != null) domain.setMtaStsEnabled(update.getMtaStsEnabled());
+            if (update.getMtaStsMode() != null) domain.setMtaStsMode(update.getMtaStsMode());
+            if (update.getDaneEnabled() != null) domain.setDaneEnabled(update.getDaneEnabled());
+            if (update.getBimiSelector() != null) domain.setBimiSelector(update.getBimiSelector());
+            if (update.getBimiLogoUrl() != null) domain.setBimiLogoUrl(update.getBimiLogoUrl());
+
+            return domainRepository.save(domain);
+        })
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
