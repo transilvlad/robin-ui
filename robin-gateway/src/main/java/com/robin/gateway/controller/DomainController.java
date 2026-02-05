@@ -101,4 +101,19 @@ public class DomainController {
     public Mono<Void> syncDomain(@PathVariable Long id) {
         return domainSyncService.syncDomain(id);
     }
+
+    @GetMapping("/{id}/dnssec")
+    public Mono<List<com.robin.gateway.model.DnsRecord>> getDnssecStatus(@PathVariable Long id) {
+        return domainService.getDnssecStatus(id);
+    }
+
+    @PostMapping("/{id}/dnssec/enable")
+    public Mono<Void> enableDnssec(@PathVariable Long id) {
+        return domainService.enableDnssec(id);
+    }
+
+    @PostMapping("/{id}/dnssec/disable")
+    public Mono<Void> disableDnssec(@PathVariable Long id) {
+        return domainService.disableDnssec(id);
+    }
 }

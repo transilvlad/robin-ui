@@ -1,0 +1,60 @@
+<h2 mat-dialog-title>DNSSEC Configuration</h2>
+<mat-dialog-content class="space-y-4">
+  <p class="text-sm text-muted-foreground">
+    Domain Name System Security Extensions (DNSSEC) adds an extra layer of security to your domain by attaching a digital signature to your DNS records.
+  </p>
+
+  <div *ngIf="isLoading" class="flex justify-center py-4">
+    <mat-spinner diameter="30"></mat-spinner>
+  </div>
+
+  <div *ngIf="!isLoading">
+    <!-- Status -->
+    <div class="flex items-center gap-2 mb-4">
+      <span class="font-medium">Status:</span>
+      <span class="badge" [ngClass]="data.domain.dnssecEnabled ? 'bg-green-500/10 text-green-600' : 'bg-muted text-muted-foreground'">
+        {{ data.domain.dnssecEnabled ? 'Active' : 'Inactive' }}
+      </span>
+    </div>
+
+    <!-- Active State: Show DS Records -->
+    <div *ngIf="data.domain.dnssecEnabled">
+      <h3 class="font-semibold mb-2">DS Records</h3>
+      <p class="text-xs text-muted-foreground mb-4">Add these DS records to your domain registrar to complete the setup.</p>
+      
+      <div *ngIf="dsRecords.length === 0" class="p-4 bg-muted/20 rounded text-center text-sm">
+        No DS records found. Please verify your provider configuration.
+      </div>
+
+      <div *ngFor="let record of dsRecords" class="p-3 mb-2 border rounded bg-muted/10 text-xs font-mono break-all">
+        <div class="font-bold text-muted-foreground mb-1">{{ record.name }}</div>
+        <div>{{ record.content }}</div>
+      </div>
+    </div>
+
+    <!-- Inactive State -->
+    <div *ngIf="!data.domain.dnssecEnabled" class="p-4 bg-blue-500/5 border border-blue-500/20 rounded">
+      <p class="text-sm text-blue-600">
+        Enabling DNSSEC will generate DS records that you must add to your registrar.
+      </p>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="gap-2">
+  <button mat-button mat-dialog-close>Close</button>
+  
+  <button *ngIf="!data.domain.dnssecEnabled" 
+          mat-flat-button color="primary" 
+          (click)="enable()" 
+          [disabled]="isActionLoading || isLoading">
+    {{ isActionLoading ? 'Enabling...' : 'Enable DNSSEC' }}
+  </button>
+
+  <button *ngIf="data.domain.dnssecEnabled" 
+          mat-stroked-button color="warn" 
+          (click)="disable()" 
+          [disabled]="isActionLoading || isLoading">
+    {{ isActionLoading ? 'Disabling...' : 'Disable DNSSEC' }}
+  </button>
+</mat-dialog-actions>

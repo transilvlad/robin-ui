@@ -40,33 +40,58 @@ public class DnsDiscoveryService {
             if (dnsProviderId != null) {
                 // API based discovery
                 log.info("Starting API discovery for {} using provider ID: {}", domainName, dnsProviderId);
-                providerRepository.findById(dnsProviderId).ifPresent(p -> {
+                Optional<com.robin.gateway.model.ProviderConfig> providerOpt = providerRepository.findById(dnsProviderId);
+                
+                if (providerOpt.isPresent()) {
+                    com.robin.gateway.model.ProviderConfig p = providerOpt.get();
+                    log.info("Found provider: {} (Type: {})", p.getName(), p.getType());
                     partialConfig.setDnsProvider(p);
                     partialConfig.setDnsProviderType(Domain.DnsProviderType.valueOf(p.getType().name()));
                     try {
                         com.robin.gateway.service.dns.DnsProvider provider = dnsProviderFactory.getProvider(partialConfig.getDnsProviderType());
                         List<DnsRecord> records = provider.listRecords(partialConfig);
+                        log.info("Provider listRecords returned {} total records", records.size());
+                        
                         // Filter records for this specific domain (in case of Cloudflare account-wide listing)
                         records.stream()
-                                .filter(r -> r.getName().contains(domainName))
-                                .forEach(discovered::add);
-                        log.info("API discovery found {} records", discovered.size());
+                                .filter(r -> {
+                                    boolean match = r.getName().contains(domainName) || r.getName().equals("@");
+                                    if (match) log.debug("Matched API record: {} {} {}", r.getType(), r.getName(), r.getContent());
+                                    return match;
+                                })
+                                .forEach(r -> {
+                                    discovered.add(r);
+                                    // Also parse SPF/DMARC if found in API records
+                                    if (r.getType() == DnsRecord.RecordType.TXT) {
+                                        String val = r.getContent().replaceAll("^\"|\"$", "");
+                                        if (val.startsWith("v=spf1")) {
+                                            log.info("Detected SPF from API: {}", val);
+                                            parseSpf(val, partialConfig);
+                                        } else if (val.startsWith("v=DMARC1")) {
+                                            log.info("Detected DMARC from API: {}", val);
+                                            parseDmarc(val, partialConfig);
+                                        }
+                                    }
+                                });
+                        log.info("API discovery successfully filtered {} records for {}", discovered.size(), domainName);
                     } catch (Exception e) {
                         log.error("API discovery failed for {}", domainName, e);
                     }
-                });
+                } else {
+                    log.warn("Provider with ID {} not found in database", dnsProviderId);
+                }
+            } else {
+                log.info("No DNS provider ID provided for {}, falling back to public discovery only", domainName);
             }
 
-            // Always perform public lookup to supplement or as fallback
-            List<DnsRecord> publicRecords = performPublicLookup(domainName, partialConfig);
-            
-            // Merge results: prioritizing API records over public ones for same name/type
-            for (DnsRecord pub : publicRecords) {
-                boolean exists = discovered.stream().anyMatch(d -> 
-                    d.getType() == pub.getType() && d.getName().equals(pub.getName()));
-                if (!exists) {
-                    discovered.add(pub);
-                }
+            // Only perform public lookup if we didn't use a provider OR to supplement (if provider failed/returned nothing)
+            if (discovered.isEmpty()) {
+                log.info("No records found via API (or no API used), performing public lookup for {}", domainName);
+                List<DnsRecord> publicRecords = performPublicLookup(domainName, partialConfig);
+                discovered.addAll(publicRecords);
+                log.info("Public lookup found {} records", publicRecords.size());
+            } else {
+                log.info("Skipping public discovery as {} API records were found for {}", discovered.size(), domainName);
             }
 
             // Generate proposed records based on the detected (or default) configuration
@@ -115,7 +140,15 @@ public class DnsDiscoveryService {
                 parseDmarc(rec.getContent().replaceAll("^\"|\"$", ""), partialConfig);
             }
 
-            // 4. MTA-STS/SRV
+            // 4. DKIM (robin standard selectors)
+            String[] dkimSelectors = {"robin1", "robin2", "robin3"};
+            for (String selector : dkimSelectors) {
+                List<DnsRecord> dkimRecords = lookup(ctx, domainName, selector + "._domainkey." + domainName, "TXT");
+                dkimRecords.forEach(r -> r.setPurpose(DnsRecord.RecordPurpose.DKIM));
+                discovered.addAll(dkimRecords);
+            }
+
+            // 5. MTA-STS/SRV
             discovered.addAll(lookup(ctx, domainName, "_smtp._tls." + domainName, "TXT"));
             discovered.addAll(lookup(ctx, domainName, "_mta-sts." + domainName, "TXT"));
             discovered.addAll(lookup(ctx, domainName, "mta-sts." + domainName, "A"));

@@ -5,6 +5,7 @@ import { DomainListComponent } from './components/domain-list/domain-list.compon
 import { DomainWizardComponent } from './components/domain-wizard/domain-wizard.component';
 import { DomainDetailComponent } from './components/domain-detail/domain-detail.component';
 import { DnsRecordDialogComponent } from './components/dns-record-dialog/dns-record-dialog.component';
+import { DnssecDialogComponent } from './components/dnssec-dialog/dnssec-dialog.component';
 
 const routes: Routes = [
   { path: '', component: DomainListComponent },
@@ -17,7 +18,8 @@ const routes: Routes = [
     DomainListComponent,
     DomainWizardComponent,
     DomainDetailComponent,
-    DnsRecordDialogComponent
+    DnsRecordDialogComponent,
+    DnssecDialogComponent
   ],
   imports: [
     SharedModule,

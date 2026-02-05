@@ -74,14 +74,17 @@ public class DomainSyncService {
                         }
 
                         // B. Handle Deletions (Remove from remote if missing from local)
-                        // STRICT SYNC: Robin is the Source of Truth.
-                        // Any record in Cloudflare that is NOT in Robin will be deleted.
+                        // STRICT SYNC: Robin is the Source of Truth for MANAGED records.
                         for (DnsRecord remote : remoteRecords) {
+                            if (!isRobinManaged(remote, domain.getDomain())) {
+                                continue; // Don't touch records Robin doesn't care about
+                            }
+
                             boolean inLocal = localRecords.stream().anyMatch(l -> 
                                 findRemoteMatch(List.of(remote), l, domain.getDomain()).isPresent());
                             
                             if (!inLocal) {
-                                log.info("Deleting remote record not present in Robin: {} {}", remote.getType(), remote.getName());
+                                log.info("Deleting managed remote record not present in Robin: {} {}", remote.getType(), remote.getName());
                                 provider.deleteRecord(domain, remote.getExternalId());
                             }
                         }
@@ -124,7 +127,13 @@ public class DomainSyncService {
                     
                     if (!nameMatch) return false;
 
-                    // 3. If no External ID, check Content for exact match
+                    // 3. For Root A/AAAA records, we match by name+type only to handle proxied IPs
+                    if (("@".equals(lName) || domainName.equals(lName)) && 
+                        (local.getType() == DnsRecord.RecordType.A || local.getType() == DnsRecord.RecordType.AAAA)) {
+                        return true;
+                    }
+
+                    // 4. If no External ID, check Content for exact match
                     return needsUpdate(local, r) == false; // content match
                 })
                 .findFirst();

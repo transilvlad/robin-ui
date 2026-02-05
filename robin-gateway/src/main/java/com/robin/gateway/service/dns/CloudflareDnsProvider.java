@@ -90,8 +90,13 @@ public class CloudflareDnsProvider implements DnsProvider {
                     .block();
 
             if (response == null || !response.isSuccess()) {
+                log.warn("Cloudflare API returned failure for zone {}: {}", config.getZoneId(), 
+                    (response != null && response.getErrors() != null) ? response.getErrors() : "Unknown error");
                 return List.of();
             }
+
+            log.info("Cloudflare API returned {} raw records for zone {}", 
+                response.getResult() != null ? response.getResult().size() : 0, config.getZoneId());
 
             return response.getResult().stream().map(r -> {
                 DnsRecord.RecordType type;

@@ -10,6 +10,7 @@ import com.robin.gateway.repository.DomainRepository;
 import com.robin.gateway.service.DkimService;
 import com.robin.gateway.service.DnsRecordGenerator;
 import com.robin.gateway.service.ConfigurationService;
+import com.robin.gateway.service.dns.DnsProviderFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,6 +36,64 @@ public class DomainService {
     private final DnsRecordGenerator dnsRecordGenerator;
     private final ConfigurationService configService;
     private final org.springframework.transaction.support.TransactionTemplate transactionTemplate;
+
+    private final DnsProviderFactory dnsProviderFactory;
+
+    /**
+     * Get DNSSEC status and DS records
+     */
+    public Mono<List<DnsRecord>> getDnssecStatus(Long domainId) {
+        return Mono.fromCallable(() -> {
+            Domain domain = domainRepository.findById(domainId)
+                    .orElseThrow(() -> new RuntimeException("Domain not found: " + domainId));
+
+            if (domain.getDnsProviderType() == Domain.DnsProviderType.MANUAL) {
+                // For manual, we can only return what we have locally or nothing
+                return List.<DnsRecord>of();
+            }
+
+            com.robin.gateway.service.dns.DnsProvider provider = dnsProviderFactory.getProvider(domain.getDnsProviderType());
+            return provider.getDsRecords(domain);
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    /**
+     * Enable DNSSEC
+     */
+    public Mono<Void> enableDnssec(Long domainId) {
+        return Mono.fromCallable(() -> {
+            Domain domain = domainRepository.findById(domainId)
+                    .orElseThrow(() -> new RuntimeException("Domain not found: " + domainId));
+
+            if (domain.getDnsProviderType() != Domain.DnsProviderType.MANUAL) {
+                com.robin.gateway.service.dns.DnsProvider provider = dnsProviderFactory.getProvider(domain.getDnsProviderType());
+                provider.enableDnssec(domain);
+            }
+            
+            domain.setDnssecEnabled(true);
+            domainRepository.save(domain);
+            return null;
+        }).subscribeOn(Schedulers.boundedElastic()).then();
+    }
+
+    /**
+     * Disable DNSSEC
+     */
+    public Mono<Void> disableDnssec(Long domainId) {
+        return Mono.fromCallable(() -> {
+            Domain domain = domainRepository.findById(domainId)
+                    .orElseThrow(() -> new RuntimeException("Domain not found: " + domainId));
+
+            if (domain.getDnsProviderType() != Domain.DnsProviderType.MANUAL) {
+                com.robin.gateway.service.dns.DnsProvider provider = dnsProviderFactory.getProvider(domain.getDnsProviderType());
+                provider.disableDnssec(domain);
+            }
+
+            domain.setDnssecEnabled(false);
+            domainRepository.save(domain);
+            return null;
+        }).subscribeOn(Schedulers.boundedElastic()).then();
+    }
 
     /**
      * Get all domains with pagination
