@@ -11,7 +11,7 @@ import { NotificationService } from '@core/services/notification.service';
 @Component({
   selector: 'app-domain-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, ConfirmationDialogComponent],
+  imports: [CommonModule, RouterModule],
   template: `
     <div class="p-10 min-h-screen bg-background text-foreground">
       <div class="max-w-[1400px] mx-auto space-y-8">

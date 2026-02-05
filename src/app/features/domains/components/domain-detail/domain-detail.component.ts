@@ -15,7 +15,7 @@ import { DnssecDialogComponent } from '../dnssec-dialog/dnssec-dialog.component'
 @Component({
   selector: 'app-domain-detail',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, DnsRecordDialogComponent, ConfirmationDialogComponent, DnssecDialogComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './domain-detail.component.html'
 })
 export class DomainDetailComponent implements OnInit, OnDestroy {
