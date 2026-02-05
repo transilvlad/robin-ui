@@ -74,11 +74,11 @@ export class BlocklistComponent implements OnInit {
     };
 
     if (this.filterType) {
-      params.type = this.filterType;
+      params['type'] = this.filterType;
     }
 
     if (this.filterActive !== null) {
-      params.active = this.filterActive;
+      params['active'] = this.filterActive;
     }
 
     this.securityService.getBlocklistEntries(params).subscribe({
@@ -298,7 +298,7 @@ export class BlocklistComponent implements OnInit {
         }
 
         this.loadEntries();
-        event.target.value = ''; // Reset file input
+        target.value = ''; // Reset file input
       },
       error: (error) => {
         this.snackBar.open(
@@ -309,7 +309,7 @@ export class BlocklistComponent implements OnInit {
             panelClass: ['error-snackbar']
           }
         );
-        event.target.value = ''; // Reset file input
+        target.value = ''; // Reset file input
       }
     });
   }

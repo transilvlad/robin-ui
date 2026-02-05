@@ -68,8 +68,8 @@ export class DomainDetailComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private isDomainValid(domain: Domain | null): domain is Domain {
-    return domain !== null && domain.id !== undefined;
+  private isDomainValid(domain: Domain | null): domain is Domain & { id: number } {
+    return domain !== null && typeof domain.id === 'number';
   }
 
   loadDomain(id: number): void {
@@ -130,7 +130,8 @@ export class DomainDetailComponent implements OnInit, OnDestroy {
           next: () => {
             this.notificationService.success('Sync completed successfully');
             if (this.isDomainValid(this.domain)) {
-              this.loadDomain(this.domain.id);
+              const domainId = this.domain.id;
+              this.loadDomain(domainId);
             }
           },
           error: (err) => {
@@ -155,7 +156,8 @@ export class DomainDetailComponent implements OnInit, OnDestroy {
         .subscribe(() => {
           this.notificationService.success('Settings saved');
           if (this.isDomainValid(this.domain)) {
-            this.loadDomain(this.domain.id);
+            const domainId = this.domain.id;
+            this.loadDomain(domainId);
           }
         });
     }
@@ -201,7 +203,8 @@ export class DomainDetailComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this.destroy$))
             .subscribe(() => {
               if (this.isDomainValid(this.domain)) {
-                this.loadRecords(this.domain.id);
+                const domainId = this.domain.id;
+                this.loadRecords(domainId);
               }
               this.notificationService.success('Record updated successfully');
             });
@@ -250,7 +253,8 @@ export class DomainDetailComponent implements OnInit, OnDestroy {
             .subscribe(() => {
               this.notificationService.success('Record deleted successfully');
               if (this.isDomainValid(this.domain)) {
-                this.loadRecords(this.domain.id);
+                const domainId = this.domain.id;
+                this.loadRecords(domainId);
               }
             });
         }
