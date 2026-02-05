@@ -68,6 +68,7 @@ export class SidebarComponent {
       route: '/settings',
       children: [
         { label: 'Server', icon: 'server', route: '/settings/server' },
+        { label: 'Reporting', icon: 'analytics', route: '/settings/reporting' },
         { label: 'Users', icon: 'people', route: '/settings/users' },
         { label: 'Dovecot', icon: 'dovecot', route: '/settings/dovecot' },
         { label: 'Integrations', icon: 'webhook', route: '/settings/integrations/providers' },

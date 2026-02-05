@@ -13,6 +13,8 @@ export interface Domain {
   registrarProviderType: 'NONE' | 'MANUAL' | 'CLOUDFLARE' | 'AWS_ROUTE53' | 'GODADDY';
   registrarProviderId?: number;
   registrarProvider?: any; // ProviderConfig
+  emailProviderId?: number;
+  emailProvider?: any; // ProviderConfig
   renewalDate?: string;
   nameservers?: string;
   dnssecEnabled?: boolean;
@@ -22,6 +24,18 @@ export interface Domain {
   bimiSelector?: string;
   bimiLogoUrl?: string;
   dkimSelectorPrefix?: string;
+  
+  // DMARC
+  dmarcPolicy?: string;
+  dmarcSubdomainPolicy?: string;
+  dmarcPercentage?: number;
+  dmarcAlignment?: string;
+  dmarcReportingEmail?: string;
+  
+  // SPF
+  spfIncludes?: string;
+  spfSoftFail?: boolean;
+
   createdAt?: string;
   updatedAt?: string;
 }
@@ -45,6 +59,12 @@ export interface Page<T> {
   totalPages: number;
   size: number;
   number: number;
+}
+
+export interface DiscoveryResult {
+  discoveredRecords: DnsRecord[];
+  proposedRecords: DnsRecord[];
+  configuration: Domain;
 }
 
 @Injectable({
@@ -82,7 +102,19 @@ export class DomainService {
     return this.http.get<DnsRecord[]>(`${this.apiUrl}/${domainId}/records`);
   }
 
+  updateRecord(id: number, record: Partial<DnsRecord>): Observable<DnsRecord> {
+    return this.http.put<DnsRecord>(`${environment.apiUrl}/dns-records/${id}`, record);
+  }
+
+  deleteRecord(id: number): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/dns-records/${id}`);
+  }
+
   syncDomain(id: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${id}/sync`, {});
+  }
+  
+  discover(domain: string, dnsProviderId?: number): Observable<DiscoveryResult> {
+    return this.http.post<DiscoveryResult>(`${this.apiUrl}/discover`, { domain, dnsProviderId });
   }
 }

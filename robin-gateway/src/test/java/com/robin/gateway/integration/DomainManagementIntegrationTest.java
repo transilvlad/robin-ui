@@ -1,8 +1,9 @@
 package com.robin.gateway.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.robin.gateway.model.Domain;
 import com.robin.gateway.model.Alias;
+import com.robin.gateway.model.DnsRecord;
+import com.robin.gateway.model.Domain;
 import com.robin.gateway.model.dto.AliasRequest;
 import com.robin.gateway.model.dto.AuthResponse;
 import com.robin.gateway.model.dto.DomainRequest;
@@ -120,6 +121,20 @@ class DomainManagementIntegrationTest {
 
                     // Store for later tests
                     this.createdDomainId = domain.getId();
+                });
+
+        // Verify DNS records were generated
+        webTestClient.get()
+                .uri("/api/v1/domains/" + createdDomainId + "/records")
+                .header("Authorization", "Bearer " + adminToken)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(DnsRecord.class)
+                .value(records -> {
+                    assertThat(records).isNotEmpty();
+                    assertThat(records).anyMatch(r -> r.getType() == DnsRecord.RecordType.MX);
+                    assertThat(records).anyMatch(r -> r.getType() == DnsRecord.RecordType.TXT && r.getPurpose() == DnsRecord.RecordPurpose.SPF);
+                    assertThat(records).anyMatch(r -> r.getType() == DnsRecord.RecordType.TXT && r.getPurpose() == DnsRecord.RecordPurpose.DKIM);
                 });
     }
 

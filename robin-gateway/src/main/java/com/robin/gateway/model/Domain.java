@@ -46,6 +46,10 @@ public class Domain {
     @JoinColumn(name = "registrar_provider_id")
     private ProviderConfig registrarProvider;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "email_provider_id")
+    private ProviderConfig emailProvider;
+
     @Column(name = "renewal_date")
     private LocalDate renewalDate;
 
@@ -78,6 +82,29 @@ public class Domain {
     @Column(name = "dkim_selector_prefix")
     @Builder.Default
     private String dkimSelectorPrefix = "robin";
+
+    // DMARC Configuration
+    @Column(name = "dmarc_policy")
+    private String dmarcPolicy;
+
+    @Column(name = "dmarc_subdomain_policy")
+    private String dmarcSubdomainPolicy;
+
+    @Column(name = "dmarc_percentage")
+    private Integer dmarcPercentage;
+
+    @Column(name = "dmarc_alignment")
+    private String dmarcAlignment;
+
+    @Column(name = "dmarc_reporting_email")
+    private String dmarcReportingEmail;
+
+    // SPF Configuration
+    @Column(name = "spf_includes")
+    private String spfIncludes;
+
+    @Column(name = "spf_soft_fail")
+    private Boolean spfSoftFail;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

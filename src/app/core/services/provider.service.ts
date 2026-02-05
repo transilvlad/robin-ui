@@ -7,7 +7,7 @@ import { Page } from './domain.service';
 export interface ProviderConfig {
   id?: number;
   name: string;
-  type: 'CLOUDFLARE' | 'AWS_ROUTE53' | 'GODADDY';
+  type: 'CLOUDFLARE' | 'AWS_ROUTE53' | 'GODADDY' | 'EMAIL';
   credentials?: Record<string, string>; // Only for creating
   createdAt?: string;
 }
@@ -27,6 +27,10 @@ export class ProviderService {
 
   createProvider(provider: ProviderConfig): Observable<ProviderConfig> {
     return this.http.post<ProviderConfig>(this.apiUrl, provider);
+  }
+
+  updateProvider(id: number, provider: ProviderConfig): Observable<ProviderConfig> {
+    return this.http.put<ProviderConfig>(`${this.apiUrl}/${id}`, provider);
   }
 
   deleteProvider(id: number): Observable<void> {

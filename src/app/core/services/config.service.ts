@@ -48,6 +48,10 @@ export class ConfigService {
   updateConfig<T>(section: string, config: T): Observable<T> {
     return this.http.put(`${this.baseUrl}/${section}`, config, { responseType: 'text' }).pipe(
       map(data => {
+        // Handle empty response (200 OK with no body)
+        if (!data || data.trim() === '') {
+          return config;
+        }
         return JSON5.parse(data) as T;
       }),
       catchError(err => {

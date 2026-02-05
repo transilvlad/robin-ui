@@ -48,6 +48,6 @@ public class ProviderConfig {
     }
 
     public enum ProviderType {
-        CLOUDFLARE, AWS_ROUTE53, GODADDY
+        CLOUDFLARE, AWS_ROUTE53, GODADDY, EMAIL
     }
 }

@@ -21,6 +21,7 @@ public class DomainController {
     private final DomainService domainService;
     private final DomainSyncService domainSyncService;
     private final DnsRecordRepository dnsRecordRepository;
+    private final com.robin.gateway.service.DnsDiscoveryService dnsDiscoveryService;
 
     @GetMapping
     public Mono<Page<Domain>> getAllDomains(
@@ -37,9 +38,21 @@ public class DomainController {
         return domainService.getDomainById(id);
     }
 
+    @PostMapping("/discover")
+    public Mono<com.robin.gateway.service.DnsDiscoveryService.DiscoveryResult> discoverDomain(@RequestBody DiscoverDomainRequest request) {
+        return dnsDiscoveryService.discover(request.getDomain(), request.getDnsProviderId());
+    }
+
     @PostMapping
     public Mono<Domain> createDomain(@RequestBody CreateDomainRequest request) {
-        return domainService.createDomain(request.getDomain(), request.getDnsProviderId(), request.getRegistrarProviderId());
+        return domainService.createDomain(
+            request.getDomain(), 
+            request.getDnsProviderId(), 
+            request.getRegistrarProviderId(),
+            request.getEmailProviderId(),
+            request.getConfig(),
+            request.getInitialRecords()
+        );
     }
 
     @PutMapping("/{id}")
@@ -53,15 +66,34 @@ public class DomainController {
     }
 
     @Data
+    public static class DiscoverDomainRequest {
+        private String domain;
+        private Long dnsProviderId;
+    }
+
+    @Data
     public static class CreateDomainRequest {
         private String domain;
         private Long dnsProviderId;
         private Long registrarProviderId;
+        private Long emailProviderId;
+        private Domain config;
+        private List<InitialRecordRequest> initialRecords;
+    }
+
+    @Data
+    public static class InitialRecordRequest {
+        private com.robin.gateway.model.DnsRecord.RecordType type;
+        private String name;
+        private String content;
+        private Integer ttl;
+        private Integer priority;
+        private com.robin.gateway.model.DnsRecord.RecordPurpose purpose;
     }
 
     @GetMapping("/{id}/records")
     public Mono<List<com.robin.gateway.model.DnsRecord>> getRecords(@PathVariable Long id) {
-        return Mono.fromCallable(() -> dnsRecordRepository.findByDomainId(id))
+        return Mono.fromCallable(() -> dnsRecordRepository.findByDomain_Id(id))
                 .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic());
     }
 

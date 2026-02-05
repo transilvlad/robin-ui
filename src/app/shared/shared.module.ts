@@ -26,12 +26,18 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 import { HeaderComponent } from './components/header/header.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { StatusBadgeComponent } from './components/status-badge/status-badge.component';
+import { ToastComponent } from './components/toast/toast.component';
+import { ConfirmationDialogComponent } from './components/confirmation-dialog/confirmation-dialog.component';
 
 // Pipes
 import { BytesPipe } from './pipes/bytes.pipe';
 import { RelativeTimePipe } from './pipes/relative-time.pipe';
 
-const components = [HeaderComponent, SidebarComponent, StatusBadgeComponent];
+const components = [
+  HeaderComponent, 
+  SidebarComponent, 
+  StatusBadgeComponent
+];
 
 const pipes = [BytesPipe, RelativeTimePipe];
 
@@ -62,6 +68,8 @@ const materialModules = [
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
+    ToastComponent,
+    ConfirmationDialogComponent,
     ...materialModules,
   ],
   exports: [
@@ -72,6 +80,8 @@ const materialModules = [
     ...materialModules,
     ...components,
     ...pipes,
+    ToastComponent,
+    ConfirmationDialogComponent
   ],
 })
 export class SharedModule {}

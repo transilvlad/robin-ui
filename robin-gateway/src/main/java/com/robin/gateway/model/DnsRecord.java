@@ -1,10 +1,9 @@
 package com.robin.gateway.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
@@ -21,6 +20,9 @@ public class DnsRecord {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "domain_id", nullable = false)
+    @JsonIgnore
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Domain domain;
 
     @Enumerated(EnumType.STRING)
@@ -55,17 +57,22 @@ public class DnsRecord {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @JsonProperty("domainId")
+    public Long getDomainId() {
+        return domain != null ? domain.getId() : null;
+    }
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
     
     public enum RecordType {
-        MX, TXT, CNAME, A, TLSA, NS, DS
+        MX, TXT, CNAME, A, AAAA, TLSA, NS, DS, PTR, SRV
     }
 
     public enum RecordPurpose {
-        DKIM, SPF, DMARC, MTA_STS_RECORD, MTA_STS_POLICY_HOST, DANE, BIMI, DNSSEC, NS, VERIFICATION, MX
+        DKIM, SPF, DMARC, MTA_STS_RECORD, MTA_STS_POLICY_HOST, DANE, BIMI, DNSSEC, NS, VERIFICATION, MX, SERVICE_DISCOVERY, OTHER
     }
 
     public enum SyncStatus {

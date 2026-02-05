@@ -17,28 +17,62 @@ import java.util.Map;
 public class ProviderController {
 
     private final ProviderConfigService providerConfigService;
+    private final com.robin.gateway.service.EncryptionService encryptionService;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     @GetMapping
-    public Mono<Page<ProviderConfig>> getAllProviders(
+    public Mono<Page<Map<String, Object>>> getAllProviders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
         return providerConfigService.getAllProviders(pageable)
-                .map(p -> {
-                    // Redact credentials in response
-                    p.getContent().forEach(c -> c.setCredentials(null));
-                    return p;
-                });
+                .map(p -> p.map(this::sanitizeProvider));
     }
 
     @PostMapping
-    public Mono<ProviderConfig> createProvider(@RequestBody CreateProviderRequest request) {
+    public Mono<Map<String, Object>> createProvider(@RequestBody CreateProviderRequest request) {
         return providerConfigService.createProvider(request.getName(), request.getType(), request.getCredentials())
-                .map(p -> {
-                    p.setCredentials(null);
-                    return p;
+                .map(this::sanitizeProvider);
+    }
+
+    @PutMapping("/{id}")
+    public Mono<Map<String, Object>> updateProvider(@PathVariable Long id, @RequestBody CreateProviderRequest request) {
+        return providerConfigService.updateProvider(id, request.getName(), request.getType(), request.getCredentials())
+                .map(this::sanitizeProvider);
+    }
+
+    private Map<String, Object> sanitizeProvider(ProviderConfig config) {
+        Map<String, Object> map = new java.util.HashMap<>();
+        map.put("id", config.getId());
+        map.put("name", config.getName());
+        map.put("type", config.getType());
+        map.put("createdAt", config.getCreatedAt());
+        
+        // Parse and sanitize credentials
+        Map<String, String> sanitizedCreds = new java.util.HashMap<>();
+        if (config.getCredentials() != null && !config.getCredentials().isEmpty()) {
+            try {
+                String decrypted = encryptionService.decrypt(config.getCredentials());
+                Map<String, String> actualCreds = objectMapper.readValue(decrypted, new com.fasterxml.jackson.core.type.TypeReference<Map<String, String>>() {});
+                actualCreds.forEach((k, v) -> {
+                    if (isSensitive(k)) {
+                        sanitizedCreds.put(k, "********");
+                    } else {
+                        sanitizedCreds.put(k, v);
+                    }
                 });
+            } catch (Exception e) {
+                // Ignore parsing errors for sanitization
+            }
+        }
+        map.put("credentials", sanitizedCreds);
+        return map;
+    }
+
+    private boolean isSensitive(String key) {
+        String k = key.toLowerCase();
+        return k.contains("token") || k.contains("secret") || k.contains("key") || k.contains("password");
     }
 
     @DeleteMapping("/{id}")

@@ -18,6 +18,7 @@ import reactor.core.publisher.Mono;
 
 import java.security.Principal;
 import java.time.Duration;
+import java.util.Map;
 
 /**
  * Authentication REST controller.
@@ -131,6 +132,14 @@ public class AuthController {
                     return ResponseEntity.ok().<Void>build();
                 })
                 .doOnSuccess(v -> log.info("User logged out successfully"));
+    }
+
+    /**
+     * Verify token endpoint.
+     */
+    @GetMapping("/verify")
+    public Mono<ResponseEntity<Map<String, Boolean>>> verifyToken(Principal principal) {
+        return Mono.just(ResponseEntity.ok(Map.of("valid", principal != null)));
     }
 
     /**

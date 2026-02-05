@@ -1,9 +1,15 @@
 package com.robin.gateway.service;
 
 import com.robin.gateway.model.Alias;
+import com.robin.gateway.model.DkimKey;
+import com.robin.gateway.model.DnsRecord;
 import com.robin.gateway.model.Domain;
 import com.robin.gateway.repository.AliasRepository;
+import com.robin.gateway.repository.DnsRecordRepository;
 import com.robin.gateway.repository.DomainRepository;
+import com.robin.gateway.service.DkimService;
+import com.robin.gateway.service.DnsRecordGenerator;
+import com.robin.gateway.service.ConfigurationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,6 +30,11 @@ public class DomainService {
     private final DomainRepository domainRepository;
     private final AliasRepository aliasRepository;
     private final com.robin.gateway.repository.ProviderConfigRepository providerConfigRepository;
+    private final DnsRecordRepository dnsRecordRepository;
+    private final DkimService dkimService;
+    private final DnsRecordGenerator dnsRecordGenerator;
+    private final ConfigurationService configService;
+    private final org.springframework.transaction.support.TransactionTemplate transactionTemplate;
 
     /**
      * Get all domains with pagination
@@ -64,9 +75,10 @@ public class DomainService {
     /**
      * Create a new domain
      */
-    @Transactional
-    public Mono<Domain> createDomain(String domainName, Long dnsProviderId, Long registrarProviderId) {
-        return Mono.fromCallable(() -> {
+    public Mono<Domain> createDomain(String domainName, Long dnsProviderId, Long registrarProviderId, Long emailProviderId, Domain configOverride, List<com.robin.gateway.controller.DomainController.InitialRecordRequest> initialRecords) {
+        return Mono.fromCallable(() -> transactionTemplate.execute(status -> {
+            log.info("Starting atomic transaction for domain creation: {}", domainName);
+            
             // Check if domain already exists
             if (domainRepository.existsByDomain(domainName)) {
                 throw new IllegalArgumentException("Domain already exists: " + domainName);
@@ -89,11 +101,80 @@ public class DomainService {
                 });
             }
 
+            if (emailProviderId != null) {
+                providerConfigRepository.findById(emailProviderId).ifPresent(builder::emailProvider);
+            }
+
+            // Apply global defaults for DMARC/SPF
+            try {
+                java.util.Map<String, Object> config = configService.getConfig("email_reporting").block();
+                if (config != null) {
+                    builder.dmarcReportingEmail((String) config.get("reportingEmail"));
+                    
+                    @SuppressWarnings("unchecked")
+                    java.util.Map<String, Object> dmarc = (java.util.Map<String, Object>) config.get("dmarc");
+                    if (dmarc != null) {
+                        builder.dmarcPolicy((String) dmarc.get("policy"));
+                        builder.dmarcSubdomainPolicy((String) dmarc.get("subdomainPolicy"));
+                        if (dmarc.get("percentage") instanceof Number) {
+                            builder.dmarcPercentage(((Number) dmarc.get("percentage")).intValue());
+                        }
+                        builder.dmarcAlignment((String) dmarc.get("alignment"));
+                    }
+
+                    @SuppressWarnings("unchecked")
+                    java.util.Map<String, Object> spf = (java.util.Map<String, Object>) config.get("spf");
+                    if (spf != null) {
+                        builder.spfIncludes((String) spf.get("includes"));
+                        if (spf.get("softFail") instanceof Boolean) {
+                            builder.spfSoftFail((Boolean) spf.get("softFail"));
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to load global defaults for new domain", e);
+            }
+
+            // Apply overrides if present (from discovery/user input)
+            if (configOverride != null) {
+                if (configOverride.getDmarcPolicy() != null) builder.dmarcPolicy(configOverride.getDmarcPolicy());
+                if (configOverride.getDmarcSubdomainPolicy() != null) builder.dmarcSubdomainPolicy(configOverride.getDmarcSubdomainPolicy());
+                if (configOverride.getDmarcPercentage() != null) builder.dmarcPercentage(configOverride.getDmarcPercentage());
+                if (configOverride.getDmarcAlignment() != null) builder.dmarcAlignment(configOverride.getDmarcAlignment());
+                if (configOverride.getDmarcReportingEmail() != null) builder.dmarcReportingEmail(configOverride.getDmarcReportingEmail());
+                
+                if (configOverride.getSpfIncludes() != null) builder.spfIncludes(configOverride.getSpfIncludes());
+                if (configOverride.getSpfSoftFail() != null) builder.spfSoftFail(configOverride.getSpfSoftFail());
+            }
+
             Domain domain = builder.build();
-            return domainRepository.save(domain);
-        })
+            domain = domainRepository.save(domain);
+
+            // Save records
+            if (initialRecords != null && !initialRecords.isEmpty()) {
+                final Domain savedDomain = domain;
+                List<DnsRecord> records = initialRecords.stream().map(r -> DnsRecord.builder()
+                        .domain(savedDomain)
+                        .type(r.getType())
+                        .name(r.getName())
+                        .content(r.getContent())
+                        .ttl(r.getTtl())
+                        .priority(r.getPriority())
+                        .purpose(r.getPurpose() != null ? r.getPurpose() : DnsRecord.RecordPurpose.OTHER)
+                        .syncStatus(DnsRecord.SyncStatus.PENDING)
+                        .build()).toList();
+                dnsRecordRepository.saveAll(records);
+                log.info("Saved {} initial DNS records for domain {}", records.size(), domain.getDomain());
+            } else {
+                // Default flow: Generate expected DNS records
+                List<DnsRecord> records = dnsRecordGenerator.generateExpectedRecords(domain);
+                dnsRecordRepository.saveAll(records);
+            }
+
+            return domain;
+        }))
                 .subscribeOn(Schedulers.boundedElastic())
-                .doOnSuccess(domain -> log.info("Created domain: {}", domain.getDomain()))
+                .doOnSuccess(d -> log.info("Created domain: {}", d.getDomain()))
                 .doOnError(e -> log.error("Error creating domain: {}", domainName, e));
     }
 
@@ -128,6 +209,15 @@ public class DomainService {
             if (update.getDaneEnabled() != null) domain.setDaneEnabled(update.getDaneEnabled());
             if (update.getBimiSelector() != null) domain.setBimiSelector(update.getBimiSelector());
             if (update.getBimiLogoUrl() != null) domain.setBimiLogoUrl(update.getBimiLogoUrl());
+
+            // DMARC & SPF
+            if (update.getDmarcPolicy() != null) domain.setDmarcPolicy(update.getDmarcPolicy());
+            if (update.getDmarcSubdomainPolicy() != null) domain.setDmarcSubdomainPolicy(update.getDmarcSubdomainPolicy());
+            if (update.getDmarcPercentage() != null) domain.setDmarcPercentage(update.getDmarcPercentage());
+            if (update.getDmarcAlignment() != null) domain.setDmarcAlignment(update.getDmarcAlignment());
+            if (update.getDmarcReportingEmail() != null) domain.setDmarcReportingEmail(update.getDmarcReportingEmail());
+            if (update.getSpfIncludes() != null) domain.setSpfIncludes(update.getSpfIncludes());
+            if (update.getSpfSoftFail() != null) domain.setSpfSoftFail(update.getSpfSoftFail());
 
             return domainRepository.save(domain);
         })
