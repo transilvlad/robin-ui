@@ -1,5 +1,8 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { CommonModule } from '@angular/common';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DomainService, DnsRecord, Domain } from '@core/services/domain.service';
 import { NotificationService } from '@core/services/notification.service';
 import { finalize } from 'rxjs/operators';
@@ -10,7 +13,8 @@ export interface DnssecDialogData {
 
 @Component({
   selector: 'app-dnssec-dialog',
-  standalone: false,
+  standalone: true,
+  imports: [CommonModule, MatDialogModule, MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './dnssec-dialog.component.html'
 })
 export class DnssecDialogComponent implements OnInit {

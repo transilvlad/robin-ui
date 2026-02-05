@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
 import { DomainService, Domain, DnsRecord } from '@core/services/domain.service';
@@ -13,7 +14,8 @@ import { DnssecDialogComponent } from '../dnssec-dialog/dnssec-dialog.component'
 
 @Component({
   selector: 'app-domain-detail',
-  standalone: false,
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, DnsRecordDialogComponent, ConfirmationDialogComponent, DnssecDialogComponent],
   templateUrl: './domain-detail.component.html'
 })
 export class DomainDetailComponent implements OnInit, OnDestroy {

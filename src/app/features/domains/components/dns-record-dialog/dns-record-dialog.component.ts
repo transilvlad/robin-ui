@@ -1,11 +1,14 @@
 import { Component, Inject } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
 import { DnsRecord } from '@core/services/domain.service';
 
 @Component({
   selector: 'app-dns-record-dialog',
-  standalone: false,
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MatButtonModule],
   template: `
     <div class="p-6 space-y-6">
       <div class="flex flex-col gap-2">

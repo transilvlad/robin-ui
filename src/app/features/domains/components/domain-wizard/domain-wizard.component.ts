@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -10,7 +11,8 @@ import { NotificationService } from '@core/services/notification.service';
 
 @Component({
   selector: 'app-domain-wizard',
-  standalone: false,
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   template: `
     <div class="p-10 min-h-screen bg-background text-foreground">
       <div class="max-w-[800px] mx-auto space-y-8">

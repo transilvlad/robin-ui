@@ -1,4 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
@@ -8,7 +10,8 @@ import { NotificationService } from '@core/services/notification.service';
 
 @Component({
   selector: 'app-domain-list',
-  standalone: false,
+  standalone: true,
+  imports: [CommonModule, RouterModule, ConfirmationDialogComponent],
   template: `
     <div class="p-10 min-h-screen bg-background text-foreground">
       <div class="max-w-[1400px] mx-auto space-y-8">

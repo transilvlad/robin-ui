@@ -55,7 +55,7 @@ const routes: Routes = [
   {
     path: 'domains',
     loadChildren: () =>
-      import('./features/domains/domain.module').then((m) => m.DomainModule),
+      import('./features/domains/domain.routes').then((m) => m.DOMAIN_ROUTES),
     canActivate: [authGuard],
   },
   {
