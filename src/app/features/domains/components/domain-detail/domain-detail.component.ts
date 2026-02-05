@@ -1,20 +1,23 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { finalize } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { finalize, takeUntil } from 'rxjs/operators';
 import { DomainService, Domain, DnsRecord } from '@core/services/domain.service';
 import { ProviderService, ProviderConfig } from '@core/services/provider.service';
 import { NotificationService } from '@core/services/notification.service';
 import { MatDialog } from '@angular/material/dialog';
 import { DnsRecordDialogComponent } from '../dns-record-dialog/dns-record-dialog.component';
 import { ConfirmationDialogComponent } from '@shared/components/confirmation-dialog/confirmation-dialog.component';
+import { DnssecDialogComponent } from '../dnssec-dialog/dnssec-dialog.component';
 
 @Component({
   selector: 'app-domain-detail',
   standalone: false,
   templateUrl: './domain-detail.component.html'
 })
-export class DomainDetailComponent implements OnInit {
+export class DomainDetailComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   domain: Domain | null = null;
   records: DnsRecord[] = [];
   providers: ProviderConfig[] = [];
@@ -60,12 +63,23 @@ export class DomainDetailComponent implements OnInit {
     this.loadProviders();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private isDomainValid(domain: Domain | null): domain is Domain {
+    return domain !== null && domain.id !== undefined;
+  }
+
   loadDomain(id: number): void {
-    this.domainService.getDomain(id).subscribe(data => {
-      this.domain = data;
-      this.loadRecords(id);
-      this.updateForm(data);
-    });
+    this.domainService.getDomain(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        this.domain = data;
+        this.loadRecords(id);
+        this.updateForm(data);
+      });
   }
 
   updateForm(domain: Domain): void {
@@ -89,29 +103,37 @@ export class DomainDetailComponent implements OnInit {
   }
 
   loadRecords(id: number): void {
-    this.domainService.getRecords(id).subscribe(data => {
-      this.records = data.sort((a, b) => a.type.localeCompare(b.type));
-    });
+    this.domainService.getRecords(id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        this.records = data.sort((a, b) => a.type.localeCompare(b.type));
+      });
   }
 
   loadProviders(): void {
-    this.providerService.getProviders(0, 100).subscribe(data => {
-      this.providers = data.content;
-    });
+    this.providerService.getProviders(0, 100)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        this.providers = data.content;
+      });
   }
 
   sync(): void {
     if (this.domain?.id && !this.isSyncing) {
       this.isSyncing = true;
       this.domainService.syncDomain(this.domain.id)
-        .pipe(finalize(() => this.isSyncing = false))
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => this.isSyncing = false)
+        )
         .subscribe({
           next: () => {
             this.notificationService.success('Sync completed successfully');
-            this.loadDomain(this.domain!.id!);
+            if (this.isDomainValid(this.domain)) {
+              this.loadDomain(this.domain.id);
+            }
           },
           error: (err) => {
-            console.error('Sync failed', err);
             this.notificationService.error('Sync failed: ' + (err.error?.message || err.message || 'Unknown error'));
           }
         });
@@ -128,10 +150,14 @@ export class DomainDetailComponent implements OnInit {
         emailProvider: update.emailProviderId ? { id: update.emailProviderId } : null
       };
 
-      this.domainService.updateDomain(this.domain.id, payload as Domain).subscribe(() => {
-        this.notificationService.success('Settings saved');
-        this.loadDomain(this.domain!.id!);
-      });
+      this.domainService.updateDomain(this.domain.id, payload as Domain)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          this.notificationService.success('Settings saved');
+          if (this.isDomainValid(this.domain)) {
+            this.loadDomain(this.domain.id);
+          }
+        });
     }
   }
 
@@ -146,14 +172,18 @@ export class DomainDetailComponent implements OnInit {
         }
       });
 
-      dialogRef.afterClosed().subscribe(confirmed => {
-        if (confirmed && this.domain?.id) {
-          this.domainService.deleteDomain(this.domain.id).subscribe(() => {
-            this.notificationService.success('Domain deleted successfully');
-            this.router.navigate(['/domains']);
-          });
-        }
-      });
+      dialogRef.afterClosed()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(confirmed => {
+          if (confirmed && this.domain?.id) {
+            this.domainService.deleteDomain(this.domain.id)
+              .pipe(takeUntil(this.destroy$))
+              .subscribe(() => {
+                this.notificationService.success('Domain deleted successfully');
+                this.router.navigate(['/domains']);
+              });
+          }
+        });
     }
   }
 
@@ -163,17 +193,45 @@ export class DomainDetailComponent implements OnInit {
       data: record
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && this.domain?.id) {
-        this.domainService.updateRecord(record.id!, result).subscribe(() => {
-          this.loadRecords(this.domain!.id!);
-          this.notificationService.success('Record updated successfully');
-        });
-      }
+    dialogRef.afterClosed()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(result => {
+        if (result && this.isDomainValid(this.domain) && record.id) {
+          this.domainService.updateRecord(record.id, result)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(() => {
+              if (this.isDomainValid(this.domain)) {
+                this.loadRecords(this.domain.id);
+              }
+              this.notificationService.success('Record updated successfully');
+            });
+        }
+      });
+  }
+
+  configureDnssec(): void {
+    if (!this.domain) return;
+    
+    const dialogRef = this.dialog.open(DnssecDialogComponent, {
+      width: '600px',
+      data: { domain: this.domain }
     });
+
+    dialogRef.afterClosed()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(result => {
+        if (result && this.domain?.id) {
+          this.loadDomain(this.domain.id);
+        }
+      });
   }
 
   deleteRecord(record: DnsRecord): void {
+    if (!record.id) {
+      this.notificationService.error('Record ID not available');
+      return;
+    }
+
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       data: {
         title: 'Delete Record',
@@ -183,15 +241,19 @@ export class DomainDetailComponent implements OnInit {
       }
     });
 
-    dialogRef.afterClosed().subscribe(confirmed => {
-      if (confirmed) {
-        this.domainService.deleteRecord(record.id!).subscribe(() => {
-          this.notificationService.success('Record deleted successfully');
-          if (this.domain?.id) {
-             this.loadRecords(this.domain.id);
-          }
-        });
-      }
-    });
+    dialogRef.afterClosed()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(confirmed => {
+        if (confirmed && record.id) {
+          this.domainService.deleteRecord(record.id)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(() => {
+              this.notificationService.success('Record deleted successfully');
+              if (this.isDomainValid(this.domain)) {
+                this.loadRecords(this.domain.id);
+              }
+            });
+        }
+      });
   }
 }

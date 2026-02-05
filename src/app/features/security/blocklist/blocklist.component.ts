@@ -68,7 +68,7 @@ export class BlocklistComponent implements OnInit {
   loadEntries(): void {
     this.loading = true;
 
-    const params: any = {
+    const params: Record<string, string | number | boolean> = {
       page: this.currentPage,
       limit: this.pageSize,
     };
@@ -266,8 +266,9 @@ export class BlocklistComponent implements OnInit {
     });
   }
 
-  onFileSelected(event: any): void {
-    const file: File = event.target.files[0];
+  onFileSelected(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const file: File | undefined = target.files?.[0];
     if (!file) return;
 
     // Validate file type

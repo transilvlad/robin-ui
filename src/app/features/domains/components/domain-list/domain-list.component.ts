@@ -1,5 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { MatDialog } from '@angular/material/dialog';
 import { DomainService, Domain, Page } from '../../../../core/services/domain.service';
+import { ConfirmationDialogComponent } from '@shared/components/confirmation-dialog/confirmation-dialog.component';
+import { NotificationService } from '@core/services/notification.service';
 
 @Component({
   selector: 'app-domain-list',
@@ -82,26 +87,55 @@ import { DomainService, Domain, Page } from '../../../../core/services/domain.se
     </div>
   `
 })
-export class DomainListComponent implements OnInit {
+export class DomainListComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   domains: Page<Domain> | null = null;
 
-  constructor(private domainService: DomainService) {}
+  constructor(
+    private domainService: DomainService,
+    private dialog: MatDialog,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit(): void {
     this.loadDomains();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   loadDomains(): void {
-    this.domainService.getDomains().subscribe(data => {
-      this.domains = data;
-    });
+    this.domainService.getDomains()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        this.domains = data;
+      });
   }
 
   deleteDomain(domain: Domain): void {
-    if (confirm(`Are you sure you want to delete ${domain.domain}?`)) {
-      this.domainService.deleteDomain(domain.id!).subscribe(() => {
-        this.loadDomains();
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Domain',
+        message: `Are you sure you want to delete ${domain.domain}? This action cannot be undone.`,
+        confirmText: 'Delete',
+        confirmColor: 'warn'
+      }
+    });
+
+    dialogRef.afterClosed()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(confirmed => {
+        if (confirmed && domain.id) {
+          this.domainService.deleteDomain(domain.id)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(() => {
+              this.notificationService.success('Domain deleted successfully');
+              this.loadDomains();
+            });
+        }
       });
-    }
   }
 }

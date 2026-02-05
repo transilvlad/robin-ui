@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ConfigService } from '@core/services/config.service';
 import { CommonModule } from '@angular/common';
 
@@ -74,7 +75,7 @@ export class EmailReportingComponent implements OnInit {
         this.form.patchValue(fullConfig);
         this.loading = false;
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         // Maybe file doesn't exist yet, just keep defaults
         this.loading = false;
       }
@@ -98,7 +99,7 @@ export class EmailReportingComponent implements OnInit {
         this.successMessage = 'Settings saved successfully.';
         setTimeout(() => this.successMessage = null, 3000);
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.saving = false;
         this.errorMessage = 'Failed to save settings.';
         console.error('Error saving config', err);

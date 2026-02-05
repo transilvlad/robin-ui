@@ -1,8 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { DomainService, DiscoveryResult } from '@core/services/domain.service';
-import { ProviderService } from '@core/services/provider.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { DomainService, DiscoveryResult, DnsRecord, CreateDomainRequest } from '@core/services/domain.service';
+import { ProviderService, ProviderConfig } from '@core/services/provider.service';
+import { NotificationService } from '@core/services/notification.service';
 
 @Component({
   selector: 'app-domain-wizard',
@@ -234,25 +238,27 @@ import { ProviderService } from '@core/services/provider.service';
     </div>
   `
 })
-export class DomainWizardComponent implements OnInit {
+export class DomainWizardComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   domainForm: FormGroup;
-  
+
   mode: 'new' | 'existing' | null = null;
   step: number = 1;
   loading: boolean = false;
   discoveredConfig: DiscoveryResult | null = null;
   selectedProposedIndices: Set<number> = new Set();
 
-  allProviders: any[] = [];
-  dnsProviders: any[] = [];
-  registrarProviders: any[] = [];
-  emailProviders: any[] = [];
+  allProviders: ProviderConfig[] = [];
+  dnsProviders: ProviderConfig[] = [];
+  registrarProviders: ProviderConfig[] = [];
+  emailProviders: ProviderConfig[] = [];
 
   constructor(
     private fb: FormBuilder,
     private domainService: DomainService,
     private providerService: ProviderService,
-    private router: Router
+    private router: Router,
+    private notificationService: NotificationService
   ) {
     this.domainForm = this.fb.group({
       domain: ['', [Validators.required, Validators.pattern('^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$')]],
@@ -263,12 +269,19 @@ export class DomainWizardComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.providerService.getProviders(0, 100).subscribe(data => {
-      this.allProviders = data.content;
-      this.dnsProviders = this.allProviders.filter(p => ['CLOUDFLARE', 'AWS_ROUTE53'].includes(p.type));
-      this.registrarProviders = this.allProviders.filter(p => ['CLOUDFLARE', 'AWS_ROUTE53', 'GODADDY'].includes(p.type));
-      this.emailProviders = this.allProviders.filter(p => p.type === 'EMAIL');
-    });
+    this.providerService.getProviders(0, 100)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => {
+        this.allProviders = data.content;
+        this.dnsProviders = this.allProviders.filter(p => ['CLOUDFLARE', 'AWS_ROUTE53'].includes(p.type));
+        this.registrarProviders = this.allProviders.filter(p => ['CLOUDFLARE', 'AWS_ROUTE53', 'GODADDY'].includes(p.type));
+        this.emailProviders = this.allProviders.filter(p => p.type === 'EMAIL');
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   setMode(mode: 'new' | 'existing'): void {
@@ -325,71 +338,75 @@ export class DomainWizardComponent implements OnInit {
     const domain = this.domainForm.get('domain')?.value;
     const dnsProviderId = this.domainForm.get('dnsProviderId')?.value;
     if (!domain) return;
-    
+
     this.loading = true;
-    this.domainService.discover(domain, dnsProviderId).subscribe({
+    this.domainService.discover(domain, dnsProviderId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
         next: (res) => {
-            this.discoveredConfig = res;
-            this.loading = false;
-            this.step = 2;
-            // Default select all proposed
-            this.selectedProposedIndices.clear();
-            res.proposedRecords?.forEach((_, i) => this.selectedProposedIndices.add(i));
+          this.discoveredConfig = res;
+          this.loading = false;
+          this.step = 2;
+          // Default select all proposed
+          this.selectedProposedIndices.clear();
+          res.proposedRecords?.forEach((_, i) => this.selectedProposedIndices.add(i));
         },
-        error: (err) => {
-            this.loading = false;
-            console.error(err);
-            if (err.status === 500 && err.error?.message?.includes('already exists')) {
-                alert(`The domain "${domain}" is already registered in Robin.`);
-            } else {
-                alert('Discovery failed. Please check the domain name and try again.');
-            }
+        error: (err: HttpErrorResponse) => {
+          this.loading = false;
+          console.error(err);
+          if (err.status === 500 && err.error?.message?.includes('already exists')) {
+            this.notificationService.error(`The domain "${domain}" is already registered in Robin.`);
+          } else {
+            this.notificationService.error('Discovery failed. Please check the domain name and try again.');
+          }
         }
-    });
+      });
   }
 
   createDomain(): void {
-     this.loading = true;
-     
-     const initialRecords: any[] = [];
-     if (this.mode === 'existing' && this.discoveredConfig) {
-         // Start with discovered records
-         initialRecords.push(...this.discoveredConfig.discoveredRecords);
+    this.loading = true;
 
-         // Add selected proposed records only if they don't conflict with existing ones
-         this.discoveredConfig.proposedRecords?.forEach((proposed, i) => {
-             if (this.selectedProposedIndices.has(i)) {
-                 const alreadyExists = initialRecords.some(existing => 
-                     existing.type === proposed.type && 
-                     existing.name === proposed.name &&
-                     existing.content === proposed.content
-                 );
+    const initialRecords: DnsRecord[] = [];
+    if (this.mode === 'existing' && this.discoveredConfig) {
+      // Start with discovered records
+      initialRecords.push(...this.discoveredConfig.discoveredRecords);
 
-                 if (!alreadyExists) {
-                     initialRecords.push(proposed);
-                 }
-             }
-         });
-     }
+      // Add selected proposed records only if they don't conflict with existing ones
+      this.discoveredConfig.proposedRecords?.forEach((proposed, i) => {
+        if (this.selectedProposedIndices.has(i)) {
+          const alreadyExists = initialRecords.some(existing =>
+            existing.type === proposed.type &&
+            existing.name === proposed.name &&
+            existing.content === proposed.content
+          );
 
-     const payload = {
-         ...this.domainForm.value,
-         config: this.discoveredConfig?.configuration,
-         initialRecords: initialRecords.length > 0 ? initialRecords : null
-     };
+          if (!alreadyExists) {
+            initialRecords.push(proposed);
+          }
+        }
+      });
+    }
 
-     this.domainService.createDomain(payload).subscribe({
+    const payload: CreateDomainRequest = {
+      ...this.domainForm.value,
+      config: this.discoveredConfig?.configuration,
+      initialRecords: initialRecords.length > 0 ? initialRecords : null
+    };
+
+    this.domainService.createDomain(payload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
         next: (domain) => {
           this.router.navigate(['/domains', domain.id]);
         },
-        error: (err) => {
+        error: (err: HttpErrorResponse) => {
           this.loading = false;
           console.error('Error creating domain', err);
-          
+
           if (err.status === 500 && err.error?.message?.includes('already exists')) {
-              alert(`The domain "${payload.domain}" is already registered in Robin.`);
+            this.notificationService.error(`The domain "${payload.domain}" is already registered in Robin.`);
           } else {
-              alert('Failed to create domain. Please check your settings and try again.');
+            this.notificationService.error('Failed to create domain. Please check your settings and try again.');
           }
         }
       });

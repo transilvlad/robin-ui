@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray, FormControl } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfigService } from '@core/services/config.service';
 import { DovecotConfig } from '@core/models/config.model';
@@ -64,7 +65,7 @@ export class DovecotConfigComponent implements OnInit {
         this.patchForm(config);
         this.loading = false;
       },
-      error: (error: any) => {
+      error: (error: HttpErrorResponse) => {
         console.error('Failed to load Dovecot config:', error);
         this.snackBar.open('Failed to load Dovecot configuration', 'Close', {
           duration: 5000,
@@ -139,7 +140,7 @@ export class DovecotConfigComponent implements OnInit {
           panelClass: ['success-snackbar']
         });
       },
-      error: (error: any) => {
+      error: (error: HttpErrorResponse) => {
         this.saving = false;
         this.snackBar.open(
           `✗ Failed to save configuration: ${error.message || 'Unknown error'}`,

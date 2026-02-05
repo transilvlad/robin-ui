@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { ProviderConfig } from './provider.service';
 
 export interface Domain {
   id?: number;
@@ -9,12 +10,12 @@ export interface Domain {
   status: 'PENDING' | 'VERIFIED' | 'FAILED' | 'ACTIVE';
   dnsProviderType: 'MANUAL' | 'CLOUDFLARE' | 'AWS_ROUTE53';
   dnsProviderId?: number;
-  dnsProvider?: any; // ProviderConfig
+  dnsProvider?: ProviderConfig | null;
   registrarProviderType: 'NONE' | 'MANUAL' | 'CLOUDFLARE' | 'AWS_ROUTE53' | 'GODADDY';
   registrarProviderId?: number;
-  registrarProvider?: any; // ProviderConfig
+  registrarProvider?: ProviderConfig | null;
   emailProviderId?: number;
-  emailProvider?: any; // ProviderConfig
+  emailProvider?: ProviderConfig | null;
   renewalDate?: string;
   nameservers?: string;
   dnssecEnabled?: boolean;
@@ -67,6 +68,15 @@ export interface DiscoveryResult {
   configuration: Domain;
 }
 
+export interface CreateDomainRequest {
+  domain: string;
+  dnsProviderId?: number | null;
+  registrarProviderId?: number | null;
+  emailProviderId?: number | null;
+  config?: Partial<Domain>;
+  initialRecords?: DnsRecord[] | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -86,7 +96,7 @@ export class DomainService {
     return this.http.get<Domain>(`${this.apiUrl}/${id}`);
   }
 
-  createDomain(request: any): Observable<Domain> {
+  createDomain(request: CreateDomainRequest): Observable<Domain> {
     return this.http.post<Domain>(this.apiUrl, request);
   }
 
@@ -116,5 +126,17 @@ export class DomainService {
   
   discover(domain: string, dnsProviderId?: number): Observable<DiscoveryResult> {
     return this.http.post<DiscoveryResult>(`${this.apiUrl}/discover`, { domain, dnsProviderId });
+  }
+
+  getDnssecStatus(id: number): Observable<DnsRecord[]> {
+    return this.http.get<DnsRecord[]>(`${this.apiUrl}/${id}/dnssec`);
+  }
+
+  enableDnssec(id: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${id}/dnssec/enable`, {});
+  }
+
+  disableDnssec(id: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${id}/dnssec/disable`, {});
   }
 }
