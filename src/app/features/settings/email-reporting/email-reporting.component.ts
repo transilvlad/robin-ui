@@ -1,8 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Subject, takeUntil } from 'rxjs';
 import { ConfigService } from '@core/services/config.service';
 import { CommonModule } from '@angular/common';
+import { LoggingService } from '@core/services/logging.service';
 
 interface EmailReportingConfig {
   reportingEmail: string;
@@ -24,9 +26,11 @@ interface EmailReportingConfig {
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './email-reporting.component.html'
 })
-export class EmailReportingComponent implements OnInit {
+export class EmailReportingComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private configService = inject(ConfigService);
+  private loggingService = inject(LoggingService);
+  private readonly destroy$ = new Subject<void>();
 
   form: FormGroup;
   loading = false;
@@ -54,32 +58,39 @@ export class EmailReportingComponent implements OnInit {
     this.loadConfig();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   loadConfig() {
     this.loading = true;
-    this.configService.getConfig<EmailReportingConfig>('email_reporting').subscribe({
-      next: (config: EmailReportingConfig) => {
-        // If config is empty or partial, use defaults
-        const fullConfig = {
-          reportingEmail: config?.reportingEmail || '',
-          dmarc: {
-            policy: config?.dmarc?.policy || 'none',
-            subdomainPolicy: config?.dmarc?.subdomainPolicy || 'none',
-            percentage: config?.dmarc?.percentage ?? 100,
-            alignment: config?.dmarc?.alignment || 'r'
-          },
-          spf: {
-            includes: config?.spf?.includes || '',
-            softFail: config?.spf?.softFail ?? true
-          }
-        };
-        this.form.patchValue(fullConfig);
-        this.loading = false;
-      },
-      error: (err: HttpErrorResponse) => {
-        // Maybe file doesn't exist yet, just keep defaults
-        this.loading = false;
-      }
-    });
+    this.configService.getConfig<EmailReportingConfig>('email_reporting')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (config: EmailReportingConfig) => {
+          // If config is empty or partial, use defaults
+          const fullConfig = {
+            reportingEmail: config?.reportingEmail || '',
+            dmarc: {
+              policy: config?.dmarc?.policy || 'none',
+              subdomainPolicy: config?.dmarc?.subdomainPolicy || 'none',
+              percentage: config?.dmarc?.percentage ?? 100,
+              alignment: config?.dmarc?.alignment || 'r'
+            },
+            spf: {
+              includes: config?.spf?.includes || '',
+              softFail: config?.spf?.softFail ?? true
+            }
+          };
+          this.form.patchValue(fullConfig);
+          this.loading = false;
+        },
+        error: (err: HttpErrorResponse) => {
+          // Maybe file doesn't exist yet, just keep defaults
+          this.loading = false;
+        }
+      });
   }
 
   save() {
@@ -93,17 +104,19 @@ export class EmailReportingComponent implements OnInit {
     // Ensure numbers are numbers
     formValue.dmarc.percentage = Number(formValue.dmarc.percentage);
 
-    this.configService.updateConfig('email_reporting', formValue).subscribe({
-      next: () => {
-        this.saving = false;
-        this.successMessage = 'Settings saved successfully.';
-        setTimeout(() => this.successMessage = null, 3000);
-      },
-      error: (err: HttpErrorResponse) => {
-        this.saving = false;
-        this.errorMessage = 'Failed to save settings.';
-        console.error('Error saving config', err);
-      }
-    });
+    this.configService.updateConfig('email_reporting', formValue)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.saving = false;
+          this.successMessage = 'Settings saved successfully.';
+          setTimeout(() => this.successMessage = null, 3000);
+        },
+        error: (err: HttpErrorResponse) => {
+          this.saving = false;
+          this.errorMessage = 'Failed to save settings.';
+          this.loggingService.error('Error saving config', err);
+        }
+      });
   }
 }

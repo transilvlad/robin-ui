@@ -28,18 +28,11 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { StatusBadgeComponent } from './components/status-badge/status-badge.component';
 import { ToastComponent } from './components/toast/toast.component';
 import { ConfirmationDialogComponent } from './components/confirmation-dialog/confirmation-dialog.component';
+import { FormErrorComponent } from './components/form-error/form-error.component';
 
 // Pipes
 import { BytesPipe } from './pipes/bytes.pipe';
 import { RelativeTimePipe } from './pipes/relative-time.pipe';
-
-const components = [
-  HeaderComponent, 
-  SidebarComponent, 
-  StatusBadgeComponent
-];
-
-const pipes = [BytesPipe, RelativeTimePipe];
 
 const materialModules = [
   MatButtonModule,
@@ -62,15 +55,23 @@ const materialModules = [
 ];
 
 @NgModule({
-  declarations: [...components, ...pipes],
+  declarations: [],
   imports: [
     CommonModule,
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
+    ...materialModules,
+    // Standalone components
+    HeaderComponent,
+    SidebarComponent,
+    StatusBadgeComponent,
     ToastComponent,
     ConfirmationDialogComponent,
-    ...materialModules,
+    FormErrorComponent,
+    // Standalone pipes
+    BytesPipe,
+    RelativeTimePipe,
   ],
   exports: [
     CommonModule,
@@ -78,10 +79,16 @@ const materialModules = [
     FormsModule,
     ReactiveFormsModule,
     ...materialModules,
-    ...components,
-    ...pipes,
+    // Standalone components
+    HeaderComponent,
+    SidebarComponent,
+    StatusBadgeComponent,
     ToastComponent,
-    ConfirmationDialogComponent
+    ConfirmationDialogComponent,
+    FormErrorComponent,
+    // Standalone pipes
+    BytesPipe,
+    RelativeTimePipe,
   ],
 })
 export class SharedModule {}

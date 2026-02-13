@@ -1,10 +1,12 @@
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'app-queue-widget',
+    standalone: true,
+    imports: [CommonModule],
     templateUrl: './queue-widget.component.html',
     styleUrls: ['./queue-widget.component.scss'],
-    standalone: false,
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class QueueWidgetComponent {

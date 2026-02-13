@@ -11,44 +11,44 @@ const routes: Routes = [
   {
     path: 'dashboard',
     loadChildren: () =>
-      import('./features/dashboard/dashboard.module').then(
-        (m) => m.DashboardModule
+      import('./features/dashboard/dashboard.routes').then(
+        (m) => m.DASHBOARD_ROUTES
       ),
     canActivate: [authGuard],
   },
   {
     path: 'email',
     loadChildren: () =>
-      import('./features/email/email.module').then((m) => m.EmailModule),
+      import('./features/email/email.routes').then((m) => m.EMAIL_ROUTES),
     canActivate: [authGuard],
   },
   {
     path: 'security',
     loadChildren: () =>
-      import('./features/security/security.module').then(
-        (m) => m.SecurityModule
+      import('./features/security/security.routes').then(
+        (m) => m.SECURITY_ROUTES
       ),
     canActivate: [authGuard],
   },
   {
     path: 'routing',
     loadChildren: () =>
-      import('./features/routing/routing.module').then((m) => m.RoutingModule),
+      import('./features/routing/routing.routes').then((m) => m.ROUTING_ROUTES),
     canActivate: [authGuard],
   },
   {
     path: 'monitoring',
     loadChildren: () =>
-      import('./features/monitoring/monitoring.module').then(
-        (m) => m.MonitoringModule
+      import('./features/monitoring/monitoring.routes').then(
+        (m) => m.MONITORING_ROUTES
       ),
     canActivate: [authGuard],
   },
   {
     path: 'settings',
     loadChildren: () =>
-      import('./features/settings/settings.module').then(
-        (m) => m.SettingsModule
+      import('./features/settings/settings.routes').then(
+        (m) => m.SETTINGS_ROUTES
       ),
     canActivate: [authGuard],
   },

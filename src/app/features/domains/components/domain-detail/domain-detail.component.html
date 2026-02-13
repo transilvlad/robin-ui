@@ -4,8 +4,8 @@
       <!-- Header -->
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div class="flex items-center gap-4">
-          <a routerLink=".." class="btn-ghost btn-sm h-10 w-10 p-0 rounded-full" title="Back to list">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          <a routerLink=".." class="btn-ghost btn-sm h-10 w-10 p-0 rounded-full" aria-label="Back to domains list">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
           </a>
           <div>
             <h1 class="text-3xl font-bold tracking-tight">{{ domain.domain }}</h1>
@@ -142,11 +142,11 @@
                       <span class="badge badge-outline text-[10px] uppercase">{{ record.purpose }}</span>
                     </td>
                     <td class="table-cell text-right whitespace-nowrap">
-                        <button class="btn btn-ghost btn-sm" (click)="editRecord(record)" title="Edit Record">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                        <button class="btn btn-ghost btn-sm" (click)="editRecord(record)" aria-label="Edit DNS record">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                         </button>
-                        <button class="btn btn-ghost btn-sm text-destructive" (click)="deleteRecord(record)" title="Delete Record">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                        <button class="btn btn-ghost btn-sm text-destructive" (click)="deleteRecord(record)" aria-label="Delete DNS record">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                         </button>
                     </td>
                   </tr>
@@ -226,7 +226,22 @@
                   </div>
                   <div class="space-y-2">
                     <label class="text-sm font-medium">Percentage</label>
-                    <input type="number" class="input bg-background" formControlName="dmarcPercentage" min="0" max="100">
+                    <input
+                      type="number"
+                      class="input bg-background"
+                      formControlName="dmarcPercentage"
+                      min="0"
+                      max="100"
+                      [attr.aria-describedby]="settingsForm.get('dmarcPercentage')?.invalid && settingsForm.get('dmarcPercentage')?.touched ? 'dmarcPercentage-error' : null"
+                    >
+                    <app-form-error
+                      [control]="settingsForm.get('dmarcPercentage')"
+                      [fieldName]="'dmarcPercentage'"
+                      [customMessages]="{
+                        min: 'Percentage must be at least 0',
+                        max: 'Percentage must not exceed 100'
+                      }">
+                    </app-form-error>
                   </div>
                    <div class="space-y-2">
                     <label class="text-sm font-medium">Alignment</label>
@@ -237,7 +252,17 @@
                   </div>
                   <div class="space-y-2 md:col-span-2">
                     <label class="text-sm font-medium">Reporting Email (RUA/RUF)</label>
-                    <input type="email" class="input" formControlName="dmarcReportingEmail">
+                    <input
+                      type="email"
+                      class="input"
+                      formControlName="dmarcReportingEmail"
+                      placeholder="reports@example.com"
+                      [attr.aria-describedby]="settingsForm.get('dmarcReportingEmail')?.invalid && settingsForm.get('dmarcReportingEmail')?.touched ? 'dmarcReportingEmail-error' : null"
+                    >
+                    <app-form-error
+                      [control]="settingsForm.get('dmarcReportingEmail')"
+                      [fieldName]="'dmarcReportingEmail'">
+                    </app-form-error>
                     <p class="text-xs text-muted-foreground">Leave blank to use global default.</p>
                   </div>
                 </div>

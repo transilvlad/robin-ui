@@ -67,11 +67,11 @@ import { NotificationService } from '@core/services/notification.service';
                     <td class="table-cell text-muted-foreground">{{ domain.renewalDate || '-' }}</td>
                     <td class="table-cell text-right">
                       <div class="flex items-center justify-end gap-2">
-                        <a [routerLink]="[domain.id]" class="btn-ghost btn-sm h-8 w-8 p-0" title="View Details">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        <a [routerLink]="[domain.id]" class="btn-ghost btn-sm h-8 w-8 p-0" aria-label="View domain details">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </a>
-                        <button (click)="deleteDomain(domain)" class="btn-ghost btn-sm h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10" title="Delete Domain">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        <button (click)="deleteDomain(domain)" class="btn-ghost btn-sm h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10" aria-label="Delete domain">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                         </button>
                       </div>
                     </td>

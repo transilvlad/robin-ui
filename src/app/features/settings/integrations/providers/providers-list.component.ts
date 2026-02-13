@@ -1,11 +1,14 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
 import { ProviderService, ProviderConfig } from '@core/services/provider.service';
 import { Page } from '@core/services/domain.service';
 
 @Component({
   selector: 'app-providers-list',
-  standalone: false,
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
   template: `
     <div class="p-10 min-h-screen bg-background text-foreground">
       <div class="max-w-[1400px] mx-auto space-y-8">
@@ -35,11 +38,11 @@ import { Page } from '@core/services/domain.service';
                   <svg *ngIf="provider.type === 'EMAIL'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-blue-500"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                 </div>
                 <div class="flex gap-1">
-                    <button (click)="openEditModal(provider)" class="btn-ghost btn-icon text-muted-foreground hover:text-primary">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                    <button (click)="openEditModal(provider)" class="btn-ghost btn-icon text-muted-foreground hover:text-primary" aria-label="Edit provider">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                     </button>
-                    <button (click)="deleteProvider(provider)" class="btn-ghost btn-icon text-muted-foreground hover:text-destructive">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                    <button (click)="deleteProvider(provider)" class="btn-ghost btn-icon text-muted-foreground hover:text-destructive" aria-label="Delete provider">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                     </button>
                 </div>
               </div>
@@ -143,11 +146,12 @@ import { Page } from '@core/services/domain.service';
     </div>
   `
 })
-export class ProvidersListComponent implements OnInit {
+export class ProvidersListComponent implements OnInit, OnDestroy {
   providers: Page<ProviderConfig> | null = null;
   isModalOpen = false;
   editingProvider: ProviderConfig | null = null;
   providerForm: FormGroup;
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
     private providerService: ProviderService,
@@ -170,8 +174,15 @@ export class ProvidersListComponent implements OnInit {
     this.loadProviders();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   loadProviders(): void {
-    this.providerService.getProviders().subscribe(data => this.providers = data);
+    this.providerService.getProviders()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(data => this.providers = data);
   }
 
   openCreateModal(): void {
@@ -230,16 +241,20 @@ export class ProvidersListComponent implements OnInit {
         ? this.providerService.updateProvider(this.editingProvider.id!, config)
         : this.providerService.createProvider(config);
 
-      request.subscribe(() => {
-        this.isModalOpen = false;
-        this.loadProviders();
-      });
+      request
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          this.isModalOpen = false;
+          this.loadProviders();
+        });
     }
   }
 
   deleteProvider(provider: ProviderConfig): void {
     if (confirm(`Delete provider ${provider.name}?`)) {
-      this.providerService.deleteProvider(provider.id!).subscribe(() => this.loadProviders());
+      this.providerService.deleteProvider(provider.id!)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => this.loadProviders());
     }
   }
 }

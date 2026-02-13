@@ -1,10 +1,12 @@
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'app-status-badge',
     templateUrl: './status-badge.component.html',
     styleUrls: ['./status-badge.component.scss'],
-    standalone: false,
+    standalone: true,
+    imports: [CommonModule],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StatusBadgeComponent {

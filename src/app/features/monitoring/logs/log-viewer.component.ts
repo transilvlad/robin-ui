@@ -1,8 +1,21 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { ScrollingModule } from '@angular/cdk/scrolling';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCardModule } from '@angular/material/card';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { MonitoringService } from '../../../core/services/monitoring.service';
+import { LoggingService } from '../../../core/services/logging.service';
 import {
   LogEntry,
   LogLevel,
@@ -15,11 +28,28 @@ import {
   selector: 'app-log-viewer',
   templateUrl: './log-viewer.component.html',
   styleUrls: ['./log-viewer.component.scss'],
-  standalone: false
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    ScrollingModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatCardModule,
+    MatProgressSpinnerModule,
+    MatSlideToggleModule,
+    MatSnackBarModule,
+    MatChipsModule,
+    MatExpansionModule,
+  ]
 })
 export class LogViewerComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly monitoringService = inject(MonitoringService);
+  private readonly loggingService = inject(LoggingService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroy$ = new Subject<void>();
 
@@ -117,7 +147,7 @@ export class LogViewerComponent implements OnInit, OnDestroy {
         this.availableLoggers = loggers;
       },
       error: (error) => {
-        console.error('Failed to load loggers:', error);
+        this.loggingService.error('Failed to load loggers', error);
       }
     });
   }
@@ -160,7 +190,7 @@ export class LogViewerComponent implements OnInit, OnDestroy {
         this.loading = false;
       },
       error: (error) => {
-        console.error('Failed to load logs:', error);
+        this.loggingService.error('Failed to load logs', error);
         this.snackBar.open('Failed to load logs', 'Close', {
           duration: 5000,
           panelClass: ['error-snackbar']
@@ -197,7 +227,7 @@ export class LogViewerComponent implements OnInit, OnDestroy {
         }
       },
       error: (error) => {
-        console.error('Auto-refresh failed:', error);
+        this.loggingService.error('Auto-refresh failed', error);
       }
     });
   }

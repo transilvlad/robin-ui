@@ -225,14 +225,14 @@
                   </td>
                   <td class="table-cell text-right">
                     <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button (click)="toggleActive(entry)" class="btn-ghost btn-icon h-8 w-8 text-muted-foreground hover:text-primary" [title]="entry.active ? 'Deactivate' : 'Activate'">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <button (click)="toggleActive(entry)" class="btn-ghost btn-icon h-8 w-8 text-muted-foreground hover:text-primary" [attr.aria-label]="entry.active ? 'Deactivate entry' : 'Activate entry'">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                           @if (entry.active) { <circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/> }
                           @else { <path d="m9 18 6-6-6-6"/> }
                         </svg>
                       </button>
-                      <button (click)="deleteEntry(entry)" class="btn-ghost btn-icon h-8 w-8 text-destructive hover:bg-destructive/10" title="Delete Entry">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <button (click)="deleteEntry(entry)" class="btn-ghost btn-icon h-8 w-8 text-destructive hover:bg-destructive/10" aria-label="Delete blocklist entry">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                           <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
                         </svg>
                       </button>

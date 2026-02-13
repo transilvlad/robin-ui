@@ -8,6 +8,7 @@ import { takeUntil } from 'rxjs/operators';
 import { DomainService, DiscoveryResult, DnsRecord, CreateDomainRequest } from '@core/services/domain.service';
 import { ProviderService, ProviderConfig } from '@core/services/provider.service';
 import { NotificationService } from '@core/services/notification.service';
+import { LoggingService } from '@core/services/logging.service';
 
 @Component({
   selector: 'app-domain-wizard',
@@ -260,7 +261,8 @@ export class DomainWizardComponent implements OnInit, OnDestroy {
     private domainService: DomainService,
     private providerService: ProviderService,
     private router: Router,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private loggingService: LoggingService
   ) {
     this.domainForm = this.fb.group({
       domain: ['', [Validators.required, Validators.pattern('^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$')]],
@@ -355,7 +357,7 @@ export class DomainWizardComponent implements OnInit, OnDestroy {
         },
         error: (err: HttpErrorResponse) => {
           this.loading = false;
-          console.error(err);
+          this.loggingService.error('Domain discovery failed', err);
           if (err.status === 500 && err.error?.message?.includes('already exists')) {
             this.notificationService.error(`The domain "${domain}" is already registered in Robin.`);
           } else {
@@ -403,7 +405,7 @@ export class DomainWizardComponent implements OnInit, OnDestroy {
         },
         error: (err: HttpErrorResponse) => {
           this.loading = false;
-          console.error('Error creating domain', err);
+          this.loggingService.error('Failed to create domain', err);
 
           if (err.status === 500 && err.error?.message?.includes('already exists')) {
             this.notificationService.error(`The domain "${payload.domain}" is already registered in Robin.`);

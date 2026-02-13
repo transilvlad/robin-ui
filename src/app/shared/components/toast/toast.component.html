@@ -1,7 +1,10 @@
 <div class="toast-container">
   @for (notification of notifications$ | async; track notification.id) {
-    <div 
+    <div
        class="toast p-4 rounded-lg shadow-lg border flex items-start gap-3 bg-background text-foreground"
+       role="alert"
+       aria-live="polite"
+       aria-atomic="true"
        [ngClass]="{
          'border-green-500/50 bg-green-500/10': notification.type === 'success',
          'border-red-500/50 bg-red-500/10': notification.type === 'error',
@@ -31,8 +34,11 @@
     </div>
 
     <!-- Close Button -->
-    <button (click)="remove(notification.id)" class="text-muted-foreground hover:text-foreground transition-colors">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+    <button
+      (click)="remove(notification.id)"
+      class="text-muted-foreground hover:text-foreground transition-colors"
+      aria-label="Close notification">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
     </button>
   </div>
   }

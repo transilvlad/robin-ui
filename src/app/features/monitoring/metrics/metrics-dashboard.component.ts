@@ -1,8 +1,18 @@
 import { Component, OnInit, OnDestroy, inject, ViewChild, ElementRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil } from 'rxjs';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCardModule } from '@angular/material/card';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MonitoringService } from '../../../core/services/monitoring.service';
+import { LoggingService } from '../../../core/services/logging.service';
 import {
   TimeRange,
   TimeRangeLabels,
@@ -21,10 +31,23 @@ Chart.register(...registerables);
   selector: 'app-metrics-dashboard',
   templateUrl: './metrics-dashboard.component.html',
   styleUrls: ['./metrics-dashboard.component.scss'],
-  standalone: false
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSelectModule,
+    MatCardModule,
+    MatProgressSpinnerModule,
+    MatSlideToggleModule,
+    MatSnackBarModule,
+    MatTooltipModule,
+  ]
 })
 export class MetricsDashboardComponent implements OnInit, OnDestroy {
   private readonly monitoringService = inject(MonitoringService);
+  private readonly loggingService = inject(LoggingService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly destroy$ = new Subject<void>();
 
@@ -83,7 +106,7 @@ export class MetricsDashboardComponent implements OnInit, OnDestroy {
         this.loading = false;
       },
       error: (error) => {
-        console.error('Failed to load metrics:', error);
+        this.loggingService.error('Failed to load metrics', error);
         this.snackBar.open('Failed to load metrics', 'Close', {
           duration: 5000,
           panelClass: ['error-snackbar']
@@ -101,7 +124,7 @@ export class MetricsDashboardComponent implements OnInit, OnDestroy {
         this.systemStats = stats;
       },
       error: (error) => {
-        console.error('Failed to load system stats:', error);
+        this.loggingService.error('Failed to load system stats', error);
       }
     });
   }
@@ -114,7 +137,7 @@ export class MetricsDashboardComponent implements OnInit, OnDestroy {
         this.queueStats = stats;
       },
       error: (error) => {
-        console.error('Failed to load queue stats:', error);
+        this.loggingService.error('Failed to load queue stats', error);
       }
     });
   }
@@ -128,7 +151,7 @@ export class MetricsDashboardComponent implements OnInit, OnDestroy {
         this.updateCharts(data);
       },
       error: (error) => {
-        console.error('Auto-refresh failed:', error);
+        this.loggingService.error('Auto-refresh failed', error);
       }
     });
 

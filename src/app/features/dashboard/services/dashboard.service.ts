@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { ApiService } from '@core/services/api.service';
 import { HealthResponse } from '@core/models/health.model';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class DashboardService {
   constructor(private apiService: ApiService) {}
 

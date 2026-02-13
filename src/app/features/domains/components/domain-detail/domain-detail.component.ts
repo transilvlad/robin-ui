@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Subject } from 'rxjs';
 import { finalize, takeUntil } from 'rxjs/operators';
@@ -11,11 +11,12 @@ import { MatDialog } from '@angular/material/dialog';
 import { DnsRecordDialogComponent } from '../dns-record-dialog/dns-record-dialog.component';
 import { ConfirmationDialogComponent } from '@shared/components/confirmation-dialog/confirmation-dialog.component';
 import { DnssecDialogComponent } from '../dnssec-dialog/dnssec-dialog.component';
+import { FormErrorComponent } from '@shared/components/form-error/form-error.component';
 
 @Component({
   selector: 'app-domain-detail',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, FormErrorComponent],
   templateUrl: './domain-detail.component.html'
 })
 export class DomainDetailComponent implements OnInit, OnDestroy {
@@ -48,9 +49,9 @@ export class DomainDetailComponent implements OnInit, OnDestroy {
       // DMARC
       dmarcPolicy: ['none'],
       dmarcSubdomainPolicy: ['none'],
-      dmarcPercentage: [100],
+      dmarcPercentage: [100, [Validators.min(0), Validators.max(100)]],
       dmarcAlignment: ['r'],
-      dmarcReportingEmail: [''],
+      dmarcReportingEmail: ['', [Validators.email]],
       // SPF
       spfIncludes: [''],
       spfSoftFail: [true]
@@ -144,6 +145,12 @@ export class DomainDetailComponent implements OnInit, OnDestroy {
   }
 
   onSaveSettings(): void {
+    if (this.settingsForm.invalid) {
+      this.markFormGroupTouched(this.settingsForm);
+      this.notificationService.error('Please fix validation errors before saving');
+      return;
+    }
+
     if (this.domain?.id) {
       const update: Partial<Domain> = this.settingsForm.value;
       const payload = {
@@ -163,6 +170,17 @@ export class DomainDetailComponent implements OnInit, OnDestroy {
           }
         });
     }
+  }
+
+  private markFormGroupTouched(formGroup: FormGroup): void {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      control?.markAsTouched();
+
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
+    });
   }
 
   onDelete(): void {

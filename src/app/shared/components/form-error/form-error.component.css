@@ -1,0 +1,42 @@
+.form-error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.375rem;
+  background-color: rgba(239, 68, 68, 0.1);
+  border-left: 3px solid rgb(239, 68, 68);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: rgb(239, 68, 68);
+  animation: slideIn 0.2s ease-out;
+}
+
+.form-error-icon {
+  flex-shrink: 0;
+  color: rgb(239, 68, 68);
+}
+
+.form-error-message {
+  flex: 1;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .form-error {
+    background-color: rgba(239, 68, 68, 0.15);
+  }
+}
