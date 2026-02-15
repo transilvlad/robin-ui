@@ -3,6 +3,12 @@ package com.robin.gateway.auth;
 import com.robin.gateway.model.dto.AuthResponse;
 import com.robin.gateway.model.dto.LoginRequest;
 import com.robin.gateway.model.dto.TokenResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +40,7 @@ import java.util.Map;
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Authentication", description = "APIs for user login, logout, and session management")
 public class AuthController {
 
     private final AuthService authService;
@@ -47,6 +54,13 @@ public class AuthController {
      * @return authentication response with tokens
      */
     @PostMapping("/login")
+    @Operation(summary = "Login", description = "Authenticates user and returns JWT access token via body and refresh token via HttpOnly cookie")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully authenticated",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Account disabled", content = @Content)
+    })
     public Mono<ResponseEntity<AuthResponse>> login(
             @Valid @RequestBody LoginRequest loginRequest,
             ServerHttpRequest request,
@@ -84,6 +98,12 @@ public class AuthController {
      * @return new access token
      */
     @PostMapping("/refresh")
+    @Operation(summary = "Refresh Access Token", description = "Uses the refresh token cookie to issue a new access token")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Token successfully refreshed",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = TokenResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Invalid or missing refresh token", content = @Content)
+    })
     public Mono<ResponseEntity<TokenResponse>> refresh(ServerHttpRequest request) {
         return Mono.fromCallable(() -> {
                     String refreshToken = extractRefreshTokenFromCookie(request);
@@ -111,6 +131,7 @@ public class AuthController {
      * @return success response
      */
     @PostMapping("/logout")
+    @Operation(summary = "Logout", description = "Invalidates the refresh token and clears the authentication cookie")
     public Mono<ResponseEntity<Void>> logout(
             ServerHttpRequest request,
             ServerHttpResponse response) {
@@ -138,6 +159,7 @@ public class AuthController {
      * Verify token endpoint.
      */
     @GetMapping("/verify")
+    @Operation(summary = "Verify Token", description = "Checks if the current access token is valid")
     public Mono<ResponseEntity<Map<String, Boolean>>> verifyToken(Principal principal) {
         return Mono.just(ResponseEntity.ok(Map.of("valid", principal != null)));
     }
@@ -149,6 +171,12 @@ public class AuthController {
      * @return user details
      */
     @GetMapping("/me")
+    @Operation(summary = "Get Current User", description = "Returns details about the currently authenticated user")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Current user details retrieved",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Not authenticated", content = @Content)
+    })
     public Mono<ResponseEntity<AuthResponse>> getCurrentUser(Principal principal) {
         return Mono.fromCallable(() -> {
             if (principal == null) {

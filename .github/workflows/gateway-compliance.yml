@@ -34,6 +34,10 @@ jobs:
         working-directory: ./robin-gateway
         run: mvn clean test
 
+      - name: Run Integration Tests
+        working-directory: ./robin-gateway
+        run: mvn test -Dgroups=docker-integration
+
       - name: Generate Coverage Report
         working-directory: ./robin-gateway
         run: mvn jacoco:report

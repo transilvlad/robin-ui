@@ -1,6 +1,7 @@
 package com.robin.gateway.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -124,6 +125,7 @@ public class MonitoringController {
 
     @GetMapping("/queue")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @Operation(summary = "Get queue statistics", description = "Returns statistics about the MTA email queue (sizes, ages, etc.)")
     public Mono<ResponseEntity<Map<String, Object>>> getQueueStats() {
         return webClientBuilder.build()
                 .get()
@@ -139,10 +141,11 @@ public class MonitoringController {
 
     @GetMapping("/export")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @Operation(summary = "Export metrics", description = "Downloads historical metrics in the specified format")
     public Mono<ResponseEntity<String>> exportMetrics(
-            @RequestParam Instant start,
-            @RequestParam Instant end,
-            @RequestParam(defaultValue = "csv") String format) {
+            @Parameter(description = "Start timestamp") @RequestParam Instant start,
+            @Parameter(description = "End timestamp") @RequestParam Instant end,
+            @Parameter(description = "Export format (csv, json)") @RequestParam(defaultValue = "csv") String format) {
         
         // Simplified export - just return the graphite data as text for now
         return webClientBuilder.build()

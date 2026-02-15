@@ -2,6 +2,13 @@ package com.robin.gateway.controller;
 
 import com.robin.gateway.model.ProviderConfig;
 import com.robin.gateway.service.ProviderConfigService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -17,6 +24,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/providers")
 @RequiredArgsConstructor
+@Tag(name = "Provider Management", description = "APIs for managing DNS and Registrar provider configurations")
 public class ProviderController {
 
     private final ProviderConfigService providerConfigService;
@@ -24,9 +32,10 @@ public class ProviderController {
     private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
     @GetMapping
+    @Operation(summary = "List all providers", description = "Returns a paginated list of configured providers with sanitized credentials")
     public Mono<Page<Map<String, Object>>> getAllProviders(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
         return providerConfigService.getAllProviders(pageable)
@@ -34,13 +43,25 @@ public class ProviderController {
     }
 
     @PostMapping
+    @Operation(summary = "Create a new provider", description = "Registers a new DNS or Registrar provider (e.g. Cloudflare, AWS Route53)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Provider created successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data")
+    })
     public Mono<Map<String, Object>> createProvider(@Valid @RequestBody CreateProviderRequest request) {
         return providerConfigService.createProvider(request.getName(), request.getType(), request.getCredentials())
                 .map(this::sanitizeProvider);
     }
 
     @PutMapping("/{id}")
-    public Mono<Map<String, Object>> updateProvider(@PathVariable Long id, @Valid @RequestBody CreateProviderRequest request) {
+    @Operation(summary = "Update provider", description = "Updates an existing provider configuration")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Provider updated successfully"),
+        @ApiResponse(responseCode = "404", description = "Provider not found")
+    })
+    public Mono<Map<String, Object>> updateProvider(
+            @Parameter(description = "Internal provider ID") @PathVariable Long id, 
+            @Valid @RequestBody CreateProviderRequest request) {
         return providerConfigService.updateProvider(id, request.getName(), request.getType(), request.getCredentials())
                 .map(this::sanitizeProvider);
     }
@@ -83,14 +104,18 @@ public class ProviderController {
         return providerConfigService.deleteProvider(id);
     }
 
+    @Schema(description = "Request for creating or updating a provider configuration")
     @Data
     public static class CreateProviderRequest {
+        @Schema(description = "Display name for the provider", example = "Cloudflare Main Account")
         @NotBlank(message = "Name is required")
         private String name;
         
+        @Schema(description = "Type of the provider")
         @NotNull(message = "Type is required")
         private ProviderConfig.ProviderType type;
         
+        @Schema(description = "Provider credentials (e.g. apiToken, apiKey, secret). Key-value pairs depend on provider type.")
         @NotNull(message = "Credentials are required")
         private Map<String, String> credentials;
     }
