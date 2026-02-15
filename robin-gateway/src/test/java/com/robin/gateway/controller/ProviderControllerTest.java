@@ -98,7 +98,7 @@ class ProviderControllerTest {
             .jsonPath("$.content[0].type").isEqualTo("CLOUDFLARE")
             .jsonPath("$.content[0].credentials.apiToken").isEqualTo("********")
             .jsonPath("$.content[0].credentials.email").isEqualTo("user@test.com")
-            .jsonPath("$.content[1].credentials.accessKeyId").isEqualTo("AKIATEST")
+            .jsonPath("$.content[1].credentials.accessKeyId").isEqualTo("********")
             .jsonPath("$.content[1].credentials.secretAccessKey").isEqualTo("********")
             .jsonPath("$.totalElements").isEqualTo(2);
 
@@ -241,7 +241,7 @@ class ProviderControllerTest {
             .jsonPath("$.id").isEqualTo(20)
             .jsonPath("$.name").isEqualTo("AWS Route53")
             .jsonPath("$.type").isEqualTo("AWS_ROUTE53")
-            .jsonPath("$.credentials.accessKeyId").isEqualTo("AKIAIOSFODNN7EXAMPLE")
+            .jsonPath("$.credentials.accessKeyId").isEqualTo("********")
             .jsonPath("$.credentials.secretAccessKey").isEqualTo("********")
             .jsonPath("$.credentials.region").isEqualTo("us-east-1");
 

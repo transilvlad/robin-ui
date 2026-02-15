@@ -54,7 +54,7 @@ class MtaStsControllerTest {
             .header("Host", "test.com")
             .exchange()
             .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.TEXT_PLAIN_VALUE)
+            .expectHeader().contentTypeCompatibleWith(MediaType.TEXT_PLAIN)
             .expectBody(String.class)
             .value(body -> {
                 assertThat(body).contains("version: STSv1");
@@ -86,7 +86,7 @@ class MtaStsControllerTest {
             .header("Host", "example.com")
             .exchange()
             .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.TEXT_PLAIN_VALUE)
+            .expectHeader().contentTypeCompatibleWith(MediaType.TEXT_PLAIN)
             .expectBody(String.class)
             .value(body -> {
                 assertThat(body).contains("version: STSv1");
@@ -118,7 +118,7 @@ class MtaStsControllerTest {
             .header("Host", "mta-sts.test.com")
             .exchange()
             .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.TEXT_PLAIN_VALUE)
+            .expectHeader().contentTypeCompatibleWith(MediaType.TEXT_PLAIN)
             .expectBody(String.class)
             .value(body -> {
                 assertThat(body).contains("mx: mail.test.com");

@@ -300,6 +300,7 @@ class DomainControllerTest {
         // Given
         Long domainId = 1L;
         Domain updateRequest = Domain.builder()
+            .domain("test.com")
             .dmarcPolicy("quarantine")
             .spfIncludes("_spf.google.com")
             .build();
@@ -534,6 +535,7 @@ class DomainControllerTest {
         // Given
         Long domainId = 999L;
         Domain updateRequest = Domain.builder()
+            .domain("test.com")
             .dmarcPolicy("quarantine")
             .build();
 

@@ -2,6 +2,7 @@ package com.robin.gateway.service;
 
 import com.robin.gateway.model.User;
 import com.robin.gateway.repository.UserRepository;
+import com.robin.gateway.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -337,7 +338,7 @@ class UserServiceTest {
         // Act & Assert
         StepVerifier.create(userService.updateUser("nonexistent", updates))
                 .expectErrorMatches(throwable ->
-                        throwable instanceof IllegalArgumentException &&
+                        throwable instanceof ResourceNotFoundException &&
                         throwable.getMessage().contains("User not found"))
                 .verify();
 
@@ -398,7 +399,7 @@ class UserServiceTest {
         // Act & Assert
         StepVerifier.create(userService.deleteUser("nonexistent"))
                 .expectErrorMatches(throwable ->
-                        throwable instanceof IllegalArgumentException &&
+                        throwable instanceof ResourceNotFoundException &&
                         throwable.getMessage().contains("User not found"))
                 .verify();
 

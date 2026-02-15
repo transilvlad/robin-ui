@@ -206,6 +206,8 @@ class UserControllerTest {
         String username = "user@test.com";
 
         User updateRequest = User.builder()
+            .username(username)
+            .passwordHash("dummyHash")
             .roles(Set.of("ROLE_ADMIN"))
             .enabled(true)
             .build();
@@ -246,6 +248,8 @@ class UserControllerTest {
         String username = "nonexistent@test.com";
 
         User updateRequest = User.builder()
+            .username(username)
+            .passwordHash("dummyHash")
             .enabled(false)
             .build();
 
@@ -269,6 +273,8 @@ class UserControllerTest {
         String username = "user@test.com";
 
         User updateRequest = User.builder()
+            .username(username)
+            .passwordHash("dummyHash")
             .quotaBytes(5000000000L) // 5GB
             .build();
 
@@ -414,6 +420,8 @@ class UserControllerTest {
         String username = "user@test.com";
 
         User updateRequest = User.builder()
+            .username(username)
+            .passwordHash("dummyHash")
             .enabled(false)
             .build();
 

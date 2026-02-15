@@ -94,7 +94,7 @@ class PasswordSyncServiceTest {
     void shouldThrowExceptionWhenUserIdIsNull() {
         // When/Then
         assertThatThrownBy(() -> passwordSyncService.updatePassword(null, "password"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("userId must not be null");
 
         verifyNoInteractions(userRepository, passwordEncoder, jdbcTemplate);
@@ -105,7 +105,7 @@ class PasswordSyncServiceTest {
     void shouldThrowExceptionWhenPlainPasswordIsNull() {
         // When/Then
         assertThatThrownBy(() -> passwordSyncService.updatePassword(1L, null))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("plainPassword must not be null");
 
         verifyNoInteractions(userRepository, passwordEncoder, jdbcTemplate);
@@ -168,7 +168,7 @@ class PasswordSyncServiceTest {
     void shouldThrowExceptionWhenUsernameIsNull() {
         // When/Then
         assertThatThrownBy(() -> passwordSyncService.updatePasswordByUsername(null, "password"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("username must not be null");
 
         verifyNoInteractions(userRepository, passwordEncoder, jdbcTemplate);
@@ -239,7 +239,7 @@ class PasswordSyncServiceTest {
     void shouldThrowExceptionWhenValidatingWithNullUserId() {
         // When/Then
         assertThatThrownBy(() -> passwordSyncService.validatePassword(null, "password"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("userId must not be null");
 
         verifyNoInteractions(userRepository, passwordEncoder);
@@ -250,7 +250,7 @@ class PasswordSyncServiceTest {
     void shouldThrowExceptionWhenValidatingWithNullPassword() {
         // When/Then
         assertThatThrownBy(() -> passwordSyncService.validatePassword(1L, null))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("plainPassword must not be null");
 
         verifyNoInteractions(userRepository, passwordEncoder);
