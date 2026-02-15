@@ -4,6 +4,9 @@ import com.robin.gateway.model.Domain;
 import com.robin.gateway.repository.DnsRecordRepository;
 import com.robin.gateway.service.DomainService;
 import com.robin.gateway.service.DomainSyncService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -39,12 +42,12 @@ public class DomainController {
     }
 
     @PostMapping("/discover")
-    public Mono<com.robin.gateway.service.DnsDiscoveryService.DiscoveryResult> discoverDomain(@RequestBody DiscoverDomainRequest request) {
+    public Mono<com.robin.gateway.service.DnsDiscoveryService.DiscoveryResult> discoverDomain(@Valid @RequestBody DiscoverDomainRequest request) {
         return dnsDiscoveryService.discover(request.getDomain(), request.getDnsProviderId());
     }
 
     @PostMapping
-    public Mono<Domain> createDomain(@RequestBody CreateDomainRequest request) {
+    public Mono<Domain> createDomain(@Valid @RequestBody CreateDomainRequest request) {
         return domainService.createDomain(
             request.getDomain(), 
             request.getDnsProviderId(), 
@@ -56,7 +59,7 @@ public class DomainController {
     }
 
     @PutMapping("/{id}")
-    public Mono<Domain> updateDomain(@PathVariable Long id, @RequestBody Domain domain) {
+    public Mono<Domain> updateDomain(@PathVariable Long id, @Valid @RequestBody Domain domain) {
         return domainService.updateDomain(id, domain);
     }
 
@@ -67,14 +70,21 @@ public class DomainController {
 
     @Data
     public static class DiscoverDomainRequest {
+        @NotBlank(message = "Domain is required")
         private String domain;
+        
+        @NotNull(message = "DNS Provider ID is required")
         private Long dnsProviderId;
     }
 
     @Data
     public static class CreateDomainRequest {
+        @NotBlank(message = "Domain is required")
         private String domain;
+        
+        @NotNull(message = "DNS Provider ID is required")
         private Long dnsProviderId;
+        
         private Long registrarProviderId;
         private Long emailProviderId;
         private Domain config;
@@ -83,9 +93,15 @@ public class DomainController {
 
     @Data
     public static class InitialRecordRequest {
+        @NotNull(message = "Type is required")
         private com.robin.gateway.model.DnsRecord.RecordType type;
+        
+        @NotBlank(message = "Name is required")
         private String name;
+        
+        @NotBlank(message = "Content is required")
         private String content;
+        
         private Integer ttl;
         private Integer priority;
         private com.robin.gateway.model.DnsRecord.RecordPurpose purpose;

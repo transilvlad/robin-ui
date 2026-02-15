@@ -3,6 +3,9 @@ package com.robin.gateway.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import java.time.LocalDateTime;
 
@@ -27,15 +30,20 @@ public class DnsRecord {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
+    @NotNull(message = "Record type is required")
     private RecordType type;
 
     @Column(nullable = false)
+    @NotBlank(message = "Record name is required")
     private String name;
 
     @Column(nullable = false, columnDefinition = "TEXT")
+    @NotBlank(message = "Record content is required")
     private String content;
 
     @Column(nullable = false)
+    @NotNull(message = "TTL is required")
+    @Min(value = 60, message = "TTL must be at least 60 seconds")
     private Integer ttl;
 
     private Integer priority;

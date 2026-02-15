@@ -2,6 +2,9 @@ package com.robin.gateway.controller;
 
 import com.robin.gateway.model.ProviderConfig;
 import com.robin.gateway.service.ProviderConfigService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -31,13 +34,13 @@ public class ProviderController {
     }
 
     @PostMapping
-    public Mono<Map<String, Object>> createProvider(@RequestBody CreateProviderRequest request) {
+    public Mono<Map<String, Object>> createProvider(@Valid @RequestBody CreateProviderRequest request) {
         return providerConfigService.createProvider(request.getName(), request.getType(), request.getCredentials())
                 .map(this::sanitizeProvider);
     }
 
     @PutMapping("/{id}")
-    public Mono<Map<String, Object>> updateProvider(@PathVariable Long id, @RequestBody CreateProviderRequest request) {
+    public Mono<Map<String, Object>> updateProvider(@PathVariable Long id, @Valid @RequestBody CreateProviderRequest request) {
         return providerConfigService.updateProvider(id, request.getName(), request.getType(), request.getCredentials())
                 .map(this::sanitizeProvider);
     }
@@ -82,8 +85,13 @@ public class ProviderController {
 
     @Data
     public static class CreateProviderRequest {
+        @NotBlank(message = "Name is required")
         private String name;
+        
+        @NotNull(message = "Type is required")
         private ProviderConfig.ProviderType type;
+        
+        @NotNull(message = "Credentials are required")
         private Map<String, String> credentials;
     }
 }

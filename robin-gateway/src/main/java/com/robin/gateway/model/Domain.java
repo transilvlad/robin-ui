@@ -1,6 +1,9 @@
 package com.robin.gateway.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +24,8 @@ public class Domain {
     private Long id;
 
     @Column(nullable = false, unique = true)
+    @NotBlank(message = "Domain name is required")
+    @Pattern(regexp = "^([a-z0-9]+(-[a-z0-9]+)*\\.)+[a-z]{2,}$", message = "Invalid domain format")
     private String domain;
 
     @Enumerated(EnumType.STRING)
