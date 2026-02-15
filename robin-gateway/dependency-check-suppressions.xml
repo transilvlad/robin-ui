@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!--
+        OWASP Dependency Check Suppressions for Robin Gateway
+        Document all CVE exceptions with justification
+    -->
+
+    <!--
+        Example suppression format:
+        <suppress>
+            <notes><![CDATA[
+            Justification: This vulnerability only affects X feature which we don't use
+            Risk: Low - not exploitable in our configuration
+            Mitigation: Monitoring for updates
+            ]]></notes>
+            <cve>CVE-2023-XXXXX</cve>
+        </suppress>
+    -->
+
+    <!-- Add actual suppressions here as needed during compliance checks -->
+
+</suppressions>

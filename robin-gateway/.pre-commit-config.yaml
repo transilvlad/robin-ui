@@ -1,0 +1,101 @@
+# Robin Gateway - Pre-Commit Hooks Configuration
+#
+# This file configures pre-commit hooks to enforce code quality standards
+# before code is committed to the repository.
+#
+# Installation:
+#   1. Install pre-commit: pip install pre-commit
+#   2. Install hooks: pre-commit install
+#
+# Usage:
+#   - Hooks run automatically on git commit
+#   - Skip hooks: git commit --no-verify (not recommended)
+#   - Run manually: pre-commit run --all-files
+#
+# Documentation: https://pre-commit.com/
+
+repos:
+  # Java/Maven checks
+  - repo: local
+    hooks:
+      # Run unit tests before commit
+      - id: maven-test
+        name: Maven Test
+        entry: bash -c 'cd robin-gateway && mvn test -q'
+        language: system
+        pass_filenames: false
+        stages: [commit]
+
+      # Check code coverage meets threshold
+      - id: maven-coverage
+        name: Maven Coverage Check
+        entry: bash -c 'cd robin-gateway && mvn jacoco:check -q'
+        language: system
+        pass_filenames: false
+        stages: [commit]
+
+      # Run Checkstyle
+      - id: checkstyle
+        name: Checkstyle
+        entry: bash -c 'cd robin-gateway && mvn checkstyle:check -q'
+        language: system
+        pass_filenames: false
+        stages: [commit]
+
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # Prevent large files from being committed
+      - id: check-added-large-files
+        args: ['--maxkb=500']
+
+      # Ensure files end with a newline
+      - id: end-of-file-fixer
+
+      # Trim trailing whitespace
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+
+      # Check for merge conflicts
+      - id: check-merge-conflict
+
+      # Check YAML files are valid
+      - id: check-yaml
+        args: ['--unsafe']  # Allow custom YAML tags
+
+      # Check JSON files are valid
+      - id: check-json
+
+      # Check XML files are valid
+      - id: check-xml
+
+      # Prevent committing to main branch directly
+      - id: no-commit-to-branch
+        args: ['--branch', 'main', '--branch', 'master']
+
+  # Java-specific checks
+  - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+    rev: v2.12.0
+    hooks:
+      # Format Java files (requires google-java-format installed)
+      - id: pretty-format-java
+        args: [--autofix]
+
+# Configuration
+default_language_version:
+  python: python3
+
+# Exclude patterns
+exclude: |
+  (?x)^(
+    target/.*|
+    .mvn/.*|
+    .*\.iml|
+    .*\.class|
+    .*\.jar
+  )$
+
+# Skip hooks in these scenarios
+# (can be overridden with --no-verify flag)
+fail_fast: false  # Continue running all hooks even if one fails
