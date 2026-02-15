@@ -1,3 +1,7 @@
+# CORS Configuration for Production
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:https://robin-ui.production.com}
+
 spring:
   # Production profile - uses environment variables (no defaults for sensitive data)
   # All configuration must be provided via environment variables

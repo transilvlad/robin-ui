@@ -2,6 +2,7 @@ package com.robin.gateway.controller;
 
 import com.robin.gateway.model.User;
 import com.robin.gateway.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,7 +26,7 @@ public class UserController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public Mono<ResponseEntity<User>> createUser(@RequestBody User user) {
+    public Mono<ResponseEntity<User>> createUser(@Valid @RequestBody User user) {
         return userService.createUser(user)
                 .map(this::sanitizeUser)
                 .map(ResponseEntity::ok);
@@ -33,7 +34,7 @@ public class UserController {
 
     @PutMapping("/{username}")
     @PreAuthorize("hasRole('ADMIN')")
-    public Mono<ResponseEntity<User>> updateUser(@PathVariable String username, @RequestBody User user) {
+    public Mono<ResponseEntity<User>> updateUser(@PathVariable String username, @Valid @RequestBody User user) {
         return userService.updateUser(username, user)
                 .map(this::sanitizeUser)
                 .map(ResponseEntity::ok);
