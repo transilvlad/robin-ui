@@ -69,7 +69,7 @@ public class GatewayPerformanceTest {
                 .port(0) // Random port
                 .route(routes -> routes
                         .get("/health", (request, response) -> response.sendString(Mono.just("OK")))
-                        .get("/client/queue/status", (request, response) -> response.sendString(Mono.just("{"status":"OK"}")))
+                        .get("/client/queue/status", (request, response) -> response.sendString(Mono.just("{\"status\":\"OK\"}")))
                 )
                 .bindNow();
 
