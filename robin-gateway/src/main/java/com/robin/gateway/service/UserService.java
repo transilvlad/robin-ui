@@ -1,5 +1,6 @@
 package com.robin.gateway.service;
 
+import com.robin.gateway.exception.ResourceNotFoundException;
 import com.robin.gateway.model.User;
 import com.robin.gateway.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -55,14 +56,14 @@ public class UserService {
     public Mono<User> updateUser(String username, User updated) {
         return Mono.fromCallable(() -> {
             User existing = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
             // Update password using PasswordSyncService for dual-hash strategy
             if (updated.getPasswordHash() != null && !updated.getPasswordHash().isEmpty()) {
                 passwordSyncService.updatePassword(existing.getId(), updated.getPasswordHash());
                 // Reload to get updated password hashes
                 existing = userRepository.findById(existing.getId())
-                        .orElseThrow(() -> new IllegalStateException("User not found after password update"));
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found after password update"));
             }
 
             // Update other fields
@@ -86,7 +87,7 @@ public class UserService {
     public Mono<Void> deleteUser(String username) {
         return Mono.fromRunnable(() -> {
             User user = userRepository.findByUsername(username)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
             userRepository.delete(user);
         }).subscribeOn(Schedulers.boundedElastic()).then();
     }

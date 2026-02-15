@@ -1,5 +1,6 @@
 package com.robin.gateway.service;
 
+import com.robin.gateway.exception.ResourceNotFoundException;
 import com.robin.gateway.model.Alias;
 import com.robin.gateway.model.DkimKey;
 import com.robin.gateway.model.DnsRecord;
@@ -45,7 +46,7 @@ public class DomainService {
     public Mono<List<DnsRecord>> getDnssecStatus(Long domainId) {
         return Mono.fromCallable(() -> {
             Domain domain = domainRepository.findById(domainId)
-                    .orElseThrow(() -> new RuntimeException("Domain not found: " + domainId));
+                    .orElseThrow(() -> new ResourceNotFoundException("Domain not found: " + domainId));
 
             if (domain.getDnsProviderType() == Domain.DnsProviderType.MANUAL) {
                 // For manual, we can only return what we have locally or nothing
@@ -63,7 +64,7 @@ public class DomainService {
     public Mono<Void> enableDnssec(Long domainId) {
         return Mono.fromCallable(() -> {
             Domain domain = domainRepository.findById(domainId)
-                    .orElseThrow(() -> new RuntimeException("Domain not found: " + domainId));
+                    .orElseThrow(() -> new ResourceNotFoundException("Domain not found: " + domainId));
 
             if (domain.getDnsProviderType() != Domain.DnsProviderType.MANUAL) {
                 com.robin.gateway.service.dns.DnsProvider provider = dnsProviderFactory.getProvider(domain.getDnsProviderType());
@@ -82,7 +83,7 @@ public class DomainService {
     public Mono<Void> disableDnssec(Long domainId) {
         return Mono.fromCallable(() -> {
             Domain domain = domainRepository.findById(domainId)
-                    .orElseThrow(() -> new RuntimeException("Domain not found: " + domainId));
+                    .orElseThrow(() -> new ResourceNotFoundException("Domain not found: " + domainId));
 
             if (domain.getDnsProviderType() != Domain.DnsProviderType.MANUAL) {
                 com.robin.gateway.service.dns.DnsProvider provider = dnsProviderFactory.getProvider(domain.getDnsProviderType());
@@ -116,7 +117,7 @@ public class DomainService {
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(optionalDomain -> optionalDomain
                         .map(Mono::just)
-                        .orElse(Mono.error(new RuntimeException("Domain not found: " + id))))
+                        .orElse(Mono.error(new ResourceNotFoundException("Domain not found: " + id))))
                 .doOnSuccess(domain -> log.debug("Retrieved domain: {}", domain.getDomain()))
                 .doOnError(e -> log.error("Error retrieving domain with id: {}", id, e));
     }
@@ -244,7 +245,7 @@ public class DomainService {
     public Mono<Domain> updateDomain(Long id, Domain update) {
         return Mono.fromCallable(() -> {
             Domain domain = domainRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Domain not found: " + id));
+                    .orElseThrow(() -> new ResourceNotFoundException("Domain not found: " + id));
 
             if (update.getDnsProviderType() != null) domain.setDnsProviderType(update.getDnsProviderType());
             if (update.getRegistrarProviderType() != null) domain.setRegistrarProviderType(update.getRegistrarProviderType());
@@ -290,7 +291,7 @@ public class DomainService {
     public Mono<Void> deleteDomain(Long id) {
         return Mono.fromCallable(() -> {
             if (!domainRepository.existsById(id)) {
-                throw new RuntimeException("Domain not found: " + id);
+                throw new ResourceNotFoundException("Domain not found: " + id);
             }
 
             // Delete all aliases for this domain first
@@ -318,7 +319,7 @@ public class DomainService {
     public Mono<List<Alias>> getAliasesByDomain(Long domainId) {
         return Mono.fromCallable(() -> {
             Domain domain = domainRepository.findById(domainId)
-                    .orElseThrow(() -> new RuntimeException("Domain not found: " + domainId));
+                    .orElseThrow(() -> new ResourceNotFoundException("Domain not found: " + domainId));
 
             return aliasRepository.findBySource(domain.getDomain() + "%");
         })
@@ -345,7 +346,7 @@ public class DomainService {
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(optionalAlias -> optionalAlias
                         .map(Mono::just)
-                        .orElse(Mono.error(new RuntimeException("Alias not found: " + id))))
+                        .orElse(Mono.error(new ResourceNotFoundException("Alias not found: " + id))))
                 .doOnSuccess(alias -> log.debug("Retrieved alias: {} -> {}", alias.getSource(), alias.getDestination()))
                 .doOnError(e -> log.error("Error retrieving alias with id: {}", id, e));
     }
@@ -394,7 +395,7 @@ public class DomainService {
     public Mono<Alias> updateAlias(Long id, String destination) {
         return Mono.fromCallable(() -> {
             Alias alias = aliasRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Alias not found: " + id));
+                    .orElseThrow(() -> new ResourceNotFoundException("Alias not found: " + id));
 
             if (!destination.contains("@")) {
                 throw new IllegalArgumentException("Invalid email format for destination");
@@ -415,7 +416,7 @@ public class DomainService {
     public Mono<Void> deleteAlias(Long id) {
         return Mono.fromCallable(() -> {
             if (!aliasRepository.existsById(id)) {
-                throw new RuntimeException("Alias not found: " + id);
+                throw new ResourceNotFoundException("Alias not found: " + id);
             }
 
             aliasRepository.deleteById(id);
