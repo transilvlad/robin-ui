@@ -2,7 +2,7 @@ package com.robin.gateway.controller;
 
 import com.robin.gateway.controller.DomainController.CreateDomainRequest;
 import com.robin.gateway.controller.DomainController.DiscoverDomainRequest;
-import com.robin.gateway.controller.DomainController.InitialRecordRequest;
+import com.robin.gateway.model.dto.InitialRecordRequest;
 import com.robin.gateway.model.DnsRecord;
 import com.robin.gateway.model.Domain;
 import com.robin.gateway.repository.DnsRecordRepository;

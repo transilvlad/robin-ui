@@ -2,8 +2,8 @@ package com.robin.gateway.service;
 
 import com.robin.gateway.model.DnsRecord;
 import com.robin.gateway.model.Domain;
+import com.robin.gateway.model.DkimKey;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -17,9 +17,9 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@Disabled("Fix NPE in DnsRecordGenerator logic related to DKIM keys")
 @DisplayName("DnsRecordGenerator Tests")
 class DnsRecordGeneratorTest {
 
@@ -46,6 +46,14 @@ class DnsRecordGeneratorTest {
         // Default: config service returns empty/default config
         when(configService.getConfig("email_reporting")).thenReturn(Mono.empty());
         when(configService.getConfig("server")).thenReturn(Mono.empty());
+
+        // Default: dkim service returns valid key
+        DkimKey dummyKey = DkimKey.builder()
+                .id(1L)
+                .selector("robin1")
+                .publicKey("MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...")
+                .build();
+        when(dkimService.generateKey(any(Domain.class), anyString())).thenReturn(dummyKey);
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.robin.gateway.controller;
 
 import com.robin.gateway.model.Domain;
+import com.robin.gateway.model.dto.InitialRecordRequest;
 import com.robin.gateway.repository.DnsRecordRepository;
 import com.robin.gateway.service.DomainService;
 import com.robin.gateway.service.DomainSyncService;
@@ -124,31 +125,6 @@ public class DomainController {
 
         @Schema(description = "Optional list of initial DNS records to create")
         private List<InitialRecordRequest> initialRecords;
-    }
-
-    @Schema(description = "Request for creating an initial DNS record")
-    @Data
-    public static class InitialRecordRequest {
-        @Schema(description = "DNS record type")
-        @NotNull(message = "Type is required")
-        private com.robin.gateway.model.DnsRecord.RecordType type;
-        
-        @Schema(description = "Record name (e.g. '@', 'mail', 'www')", example = "mail")
-        @NotBlank(message = "Name is required")
-        private String name;
-        
-        @Schema(description = "Record content/value", example = "1.2.3.4")
-        @NotBlank(message = "Content is required")
-        private String content;
-        
-        @Schema(description = "TTL in seconds", example = "3600")
-        private Integer ttl;
-
-        @Schema(description = "MX record priority", example = "10")
-        private Integer priority;
-
-        @Schema(description = "Robin-specific purpose for this record")
-        private com.robin.gateway.model.DnsRecord.RecordPurpose purpose;
     }
 
     @GetMapping("/{id}/records")

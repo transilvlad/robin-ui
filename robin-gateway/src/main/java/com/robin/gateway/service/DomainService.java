@@ -5,6 +5,7 @@ import com.robin.gateway.model.Alias;
 import com.robin.gateway.model.DkimKey;
 import com.robin.gateway.model.DnsRecord;
 import com.robin.gateway.model.Domain;
+import com.robin.gateway.model.dto.InitialRecordRequest;
 import com.robin.gateway.repository.AliasRepository;
 import com.robin.gateway.repository.DnsRecordRepository;
 import com.robin.gateway.repository.DomainRepository;
@@ -135,7 +136,7 @@ public class DomainService {
     /**
      * Create a new domain
      */
-    public Mono<Domain> createDomain(String domainName, Long dnsProviderId, Long registrarProviderId, Long emailProviderId, Domain configOverride, List<com.robin.gateway.controller.DomainController.InitialRecordRequest> initialRecords) {
+    public Mono<Domain> createDomain(String domainName, Long dnsProviderId, Long registrarProviderId, Long emailProviderId, Domain configOverride, List<InitialRecordRequest> initialRecords) {
         return Mono.fromCallable(() -> transactionTemplate.execute(status -> {
             log.info("Starting atomic transaction for domain creation: {}", domainName);
             
@@ -171,6 +172,7 @@ public class DomainService {
                 if (config != null) {
                     builder.dmarcReportingEmail((String) config.get("reportingEmail"));
                     
+                    // [GAP-006] JSON config mapping is untyped
                     @SuppressWarnings("unchecked")
                     java.util.Map<String, Object> dmarc = (java.util.Map<String, Object>) config.get("dmarc");
                     if (dmarc != null) {
@@ -182,6 +184,7 @@ public class DomainService {
                         builder.dmarcAlignment((String) dmarc.get("alignment"));
                     }
 
+                    // [GAP-006] JSON config mapping is untyped
                     @SuppressWarnings("unchecked")
                     java.util.Map<String, Object> spf = (java.util.Map<String, Object>) config.get("spf");
                     if (spf != null) {

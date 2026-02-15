@@ -1,6 +1,6 @@
 package com.robin.gateway.service;
 
-import com.robin.gateway.controller.DomainController;
+import com.robin.gateway.model.dto.InitialRecordRequest;
 import com.robin.gateway.model.Alias;
 import com.robin.gateway.model.DnsRecord;
 import com.robin.gateway.model.Domain;
@@ -292,13 +292,13 @@ class DomainServiceTest {
     @DisplayName("Should create domain with initial DNS records")
     void testCreateDomainWithInitialRecords() {
         // Arrange
-        DomainController.InitialRecordRequest record1 = new DomainController.InitialRecordRequest();
+        InitialRecordRequest record1 = new InitialRecordRequest();
         record1.setType(DnsRecord.RecordType.A);
         record1.setName("@");
         record1.setContent("192.168.1.1");
         record1.setTtl(3600);
 
-        List<DomainController.InitialRecordRequest> initialRecords = Arrays.asList(record1);
+        List<InitialRecordRequest> initialRecords = Arrays.asList(record1);
 
         Domain savedDomain = Domain.builder()
                 .id(4L)

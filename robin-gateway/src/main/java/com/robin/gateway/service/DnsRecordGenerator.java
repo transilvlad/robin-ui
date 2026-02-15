@@ -52,6 +52,7 @@ public class DnsRecordGenerator {
         if (config != null) {
             reportingEmail = (String) config.getOrDefault("reportingEmail", reportingEmail);
             
+            // [GAP-006] Map access for JSON configuration sections is untyped
             @SuppressWarnings("unchecked")
             Map<String, Object> dmarc = (Map<String, Object>) config.get("dmarc");
             if (dmarc != null) {
@@ -61,6 +62,7 @@ public class DnsRecordGenerator {
                 dmarcAlignment = (String) dmarc.getOrDefault("alignment", dmarcAlignment);
             }
 
+            // [GAP-006] Map access for JSON configuration sections is untyped
             @SuppressWarnings("unchecked")
             Map<String, Object> spf = (Map<String, Object>) config.get("spf");
             if (spf != null) {

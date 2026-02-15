@@ -120,7 +120,7 @@ public class SecurityConfig {
                     Claims claims = jwtTokenProvider.getAllClaimsFromToken(token);
                     String username = claims.getSubject();
 
-                    // JWT claims are inherently untyped - this is a justified use of unchecked cast
+                    // [GAP-006] JWT claims are inherently untyped - this is a justified use of unchecked cast
                     // because the JWT library doesn't provide type-safe access to custom claims
                     @SuppressWarnings("unchecked")
                     List<String> roles = claims.get("roles", List.class);
