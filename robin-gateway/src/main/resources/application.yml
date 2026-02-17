@@ -9,6 +9,9 @@ spring:
   application:
     name: robin-gateway
 
+  session:
+    store-type: none
+
   profiles:
     active: dev
 

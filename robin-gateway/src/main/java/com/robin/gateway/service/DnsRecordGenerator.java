@@ -14,6 +14,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Service for generating expected DNS records for a domain based on global settings and domain-specific configuration.
+ * Handles SPF, MX, DMARC, DKIM, MTA-STS, BIMI, DANE, and Autodiscovery records.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -29,6 +33,13 @@ public class DnsRecordGenerator {
     @Value("${robin.mail.cert-path:/etc/ssl/certs/mail.pem}")
     private String certPath;
 
+    /**
+     * Generates a list of expected DNS records for a given domain.
+     * Logic incorporates global defaults from 'email_reporting' config and overrides from domain settings.
+     *
+     * @param domain the domain to generate records for
+     * @return list of expected DNS records
+     */
     public List<DnsRecord> generateExpectedRecords(Domain domain) {
         List<DnsRecord> records = new ArrayList<>();
         
@@ -194,7 +205,10 @@ public class DnsRecordGenerator {
             serverDomain = domain.getDomain(); // Self-reference if no server domain configured
         }
 
-        String prefix = domain.getDkimSelectorPrefix(); // Default "robin"
+        String prefix = domain.getDkimSelectorPrefix();
+        if (prefix == null || prefix.isEmpty()) {
+            prefix = "robin";
+        }
         
         if (domain.getId() == null) {
             // Transient domain (Discovery mode) - Return placeholders for DKIM
@@ -212,22 +226,8 @@ public class DnsRecordGenerator {
         } else if (domain.getDomain().equals(serverDomain)) {
             // This IS the server domain (or we are falling back to self-hosting keys)
             // Generate/Ensure actual TXT records exist for the 3 selectors
-            // Note: We are not generating keys here to avoid side effects in a getter-like method,
-            // but we assume keys named prefix1, prefix2, prefix3 exist or will be created.
-            // For now, we fetch existing keys. If this is a new setup, DkimService should probably 
-            // ensure these exist for the server domain.
-            
-            // To properly support this, we check if keys exist, if not, we might create them?
-            // Or better: Just check DB. If empty, maybe create?
-            // Let's stick to reading DB. The creation should happen elsewhere or we iterate 1..3.
-            
-            // Actually, for the "Primary/System Domain", we want to expose the Public Keys.
-            // We need 3 keys: prefix1, prefix2, prefix3.
             for (int i = 1; i <= 3; i++) {
                 String selector = prefix + i;
-                // Check if key exists in DB? 
-                // Since this method is often called to preview records, we shouldn't modify DB.
-                // But we can check DkimService.
                 Optional<DkimKey> keyOpt = dkimService.getKeysForDomain(domain).stream()
                         .filter(k -> k.getSelector().equals(selector))
                         .findFirst();
@@ -242,39 +242,27 @@ public class DnsRecordGenerator {
                             .purpose(DnsRecord.RecordPurpose.DKIM)
                             .build());
                 } else {
-                    // Placeholder or indication that key needs generation
-                    // For the system domain, we really should generate them.
-                    // But avoiding side effects here.
-                    // We'll return a placeholder or skip? 
-                    // Let's create a "Pending Generation" record if possible, or trigger generation?
-                    // To be safe: We generate them on the fly if missing (Transactional issue?)
-                    // DnsRecordGenerator is likely called inside a Transaction in createDomain/syncDomain.
-                    // So we can try to generate.
-                    try {
-                        DkimKey newKey = dkimService.generateKey(domain, selector);
-                        if (i == 1) dkimService.activateKey(newKey.getId()); // Activate first one
-                        records.add(DnsRecord.builder()
-                                .domain(domain)
-                                .type(DnsRecord.RecordType.TXT)
-                                .name(selector + "._domainkey")
-                                .content("v=DKIM1; k=rsa; p=" + newKey.getPublicKey())
-                                .ttl(3600)
-                                .purpose(DnsRecord.RecordPurpose.DKIM)
-                                .build());
-                    } catch (Exception e) {
-                        log.error("Failed to generate auto-DKIM key for selector {}", selector, e);
-                    }
+                    // Placeholder if key needs generation. Side-effects should ideally be handled by sync logic,
+                    // but for the system domain we want to show what WILL be there.
+                    records.add(DnsRecord.builder()
+                            .domain(domain)
+                            .type(DnsRecord.RecordType.TXT)
+                            .name(selector + "._domainkey")
+                            .content("PENDING_KEY_GENERATION")
+                            .ttl(3600)
+                            .purpose(DnsRecord.RecordPurpose.DKIM)
+                            .build());
                 }
             }
         } else {
             // CNAME to Server Domain
             for (int i = 1; i <= 3; i++) {
                 String selector = prefix + i;
-                String target = selector + "._domainkey." + serverDomain;
+                String target = selector + "._domainkey." + serverDomain + ".";
                 
                 records.add(DnsRecord.builder()
                         .domain(domain)
-                        .type(DnsRecord.RecordType.CNAME) // Ensure CNAME is in Enum
+                        .type(DnsRecord.RecordType.CNAME)
                         .name(selector + "._domainkey")
                         .content(target)
                         .ttl(3600)

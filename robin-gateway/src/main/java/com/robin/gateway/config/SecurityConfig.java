@@ -62,6 +62,9 @@ public class SecurityConfig {
                 // Disable CSRF (using stateless JWT)
                 .csrf(csrf -> csrf.disable())
 
+                // Disable session creation
+                .requestCache(cache -> cache.disable())
+
                 // Configure CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 

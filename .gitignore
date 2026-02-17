@@ -46,3 +46,5 @@ CLAUDE.md
 
 # Environment
 .env
+.env.backup
+.env.docker.backup
