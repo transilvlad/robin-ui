@@ -73,7 +73,7 @@ public class AuthController {
                     AuthResponse authResponse = authService.login(loginRequest, ipAddress, userAgent);
 
                     // Set refresh token as HttpOnly cookie
-                    ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", authResponse.getTokens().getRefreshToken())
+                    ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", authResponse.tokens().refreshToken())
                             .httpOnly(true)
                             .secure(true) // Enable in production with HTTPS
                             .path("/")
@@ -84,9 +84,20 @@ public class AuthController {
                     response.addCookie(refreshTokenCookie);
 
                     // Don't send refresh token in response body
-                    authResponse.getTokens().setRefreshToken(null);
+                    TokenResponse safeTokens = TokenResponse.builder()
+                            .accessToken(authResponse.tokens().accessToken())
+                            .refreshToken(null)
+                            .tokenType(authResponse.tokens().tokenType())
+                            .expiresIn(authResponse.tokens().expiresIn())
+                            .build();
 
-                    return ResponseEntity.ok(authResponse);
+                    AuthResponse safeAuthResponse = AuthResponse.builder()
+                            .user(authResponse.user())
+                            .tokens(safeTokens)
+                            .permissions(authResponse.permissions())
+                            .build();
+
+                    return ResponseEntity.ok(safeAuthResponse);
                 })
                 .doOnError(e -> log.error("Login error: {}", e.getMessage()));
     }
@@ -116,9 +127,14 @@ public class AuthController {
                     TokenResponse tokenResponse = authService.refreshToken(refreshToken);
 
                     // Don't send refresh token in response
-                    tokenResponse.setRefreshToken(null);
+                    TokenResponse safeResponse = TokenResponse.builder()
+                            .accessToken(tokenResponse.accessToken())
+                            .refreshToken(null)
+                            .tokenType(tokenResponse.tokenType())
+                            .expiresIn(tokenResponse.expiresIn())
+                            .build();
 
-                    return ResponseEntity.ok(tokenResponse);
+                    return ResponseEntity.ok(safeResponse);
                 })
                 .doOnError(e -> log.error("Token refresh error: {}", e.getMessage()));
     }

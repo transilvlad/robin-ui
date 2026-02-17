@@ -89,8 +89,8 @@ class DomainManagementIntegrationTest {
                 .expectBody(AuthResponse.class)
                 .returnResult()
                 .getResponseBody()
-                .getTokens()
-                .getAccessToken();
+                .tokens()
+                .accessToken();
 
         assertThat(adminToken).isNotBlank();
     }

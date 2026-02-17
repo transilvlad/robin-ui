@@ -292,11 +292,12 @@ class DomainServiceTest {
     @DisplayName("Should create domain with initial DNS records")
     void testCreateDomainWithInitialRecords() {
         // Arrange
-        InitialRecordRequest record1 = new InitialRecordRequest();
-        record1.setType(DnsRecord.RecordType.A);
-        record1.setName("@");
-        record1.setContent("192.168.1.1");
-        record1.setTtl(3600);
+        InitialRecordRequest record1 = InitialRecordRequest.builder()
+                .type(DnsRecord.RecordType.A)
+                .name("@")
+                .content("192.168.1.1")
+                .ttl(3600)
+                .build();
 
         List<InitialRecordRequest> initialRecords = Arrays.asList(record1);
 

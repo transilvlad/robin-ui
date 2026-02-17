@@ -44,10 +44,10 @@ public class AuthService {
      */
     @Transactional
     public AuthResponse login(LoginRequest loginRequest, String ipAddress, String userAgent) {
-        log.info("Login attempt for user: {}", loginRequest.getUsername());
+        log.info("Login attempt for user: {}", loginRequest.username());
 
         // Find user by username
-        User user = userRepository.findByUsername(loginRequest.getUsername())
+        User user = userRepository.findByUsername(loginRequest.username())
                 .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
 
         // Check if user is enabled
@@ -56,8 +56,8 @@ public class AuthService {
         }
 
         // Validate password
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
-            log.warn("Failed login attempt for user: {}", loginRequest.getUsername());
+        if (!passwordEncoder.matches(loginRequest.password(), user.getPasswordHash())) {
+            log.warn("Failed login attempt for user: {}", loginRequest.username());
             throw new BadCredentialsException("Invalid username or password");
         }
 

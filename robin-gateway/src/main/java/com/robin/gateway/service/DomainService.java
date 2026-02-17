@@ -218,12 +218,12 @@ public class DomainService {
                 final Domain savedDomain = domain;
                 List<DnsRecord> records = initialRecords.stream().map(r -> DnsRecord.builder()
                         .domain(savedDomain)
-                        .type(r.getType())
-                        .name(r.getName())
-                        .content(r.getContent())
-                        .ttl(r.getTtl())
-                        .priority(r.getPriority())
-                        .purpose(r.getPurpose() != null ? r.getPurpose() : DnsRecord.RecordPurpose.OTHER)
+                        .type(r.type())
+                        .name(r.name())
+                        .content(r.content())
+                        .ttl(r.ttl())
+                        .priority(r.priority())
+                        .purpose(r.purpose() != null ? r.purpose() : DnsRecord.RecordPurpose.OTHER)
                         .syncStatus(DnsRecord.SyncStatus.PENDING)
                         .build()).toList();
                 dnsRecordRepository.saveAll(records);

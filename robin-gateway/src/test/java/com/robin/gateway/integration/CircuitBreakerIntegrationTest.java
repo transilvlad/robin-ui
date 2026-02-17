@@ -88,8 +88,8 @@ class CircuitBreakerIntegrationTest {
                 .expectBody(AuthResponse.class)
                 .returnResult()
                 .getResponseBody()
-                .getTokens()
-                .getAccessToken();
+                .tokens()
+                .accessToken();
 
         assertThat(adminToken).isNotBlank();
     }
@@ -192,8 +192,8 @@ class CircuitBreakerIntegrationTest {
                 .expectStatus().isOk()
                 .expectBody(AuthResponse.class)
                 .value(response -> {
-                    assertThat(response.getUser()).isNotNull();
-                    assertThat(response.getTokens()).isNotNull();
+                    assertThat(response.user()).isNotNull();
+                    assertThat(response.tokens()).isNotNull();
                 });
     }
 

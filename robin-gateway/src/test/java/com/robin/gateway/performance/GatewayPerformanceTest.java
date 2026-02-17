@@ -112,14 +112,13 @@ public class GatewayPerformanceTest {
                     .bodyValue(loginRequest)
                     .exchange()
                     .expectStatus().isOk()
-                    .returnResult(AuthResponse.class)
-                    .getResponseBody()
-                    .blockFirst()
-                    .getTokens()
-                    .getAccessToken();
-        }
-    }
-
+                                    .returnResult(AuthResponse.class)
+                                    .getResponseBody()
+                                    .blockFirst()
+                                    .tokens()
+                                    .accessToken();
+                            }
+                        }
     @Test
     @Order(1)
     @DisplayName("Test 1: Gateway Overhead Analysis (< 5ms)")

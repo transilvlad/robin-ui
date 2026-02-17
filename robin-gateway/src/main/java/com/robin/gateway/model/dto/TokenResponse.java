@@ -1,23 +1,23 @@
 package com.robin.gateway.model.dto;
 
-import lombok.AllArgsConstructor;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * Token response DTO.
- *
- * @author Robin Gateway Team
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
-public class TokenResponse {
+@Schema(description = "Token response containing access and refresh tokens")
+public record TokenResponse(
+    @Schema(description = "JWT access token")
+    String accessToken,
 
-    private String accessToken;
-    private String refreshToken;
-    private String tokenType;
-    private Long expiresIn;
-}
+    @Schema(description = "JWT refresh token")
+    String refreshToken,
+
+    @Schema(description = "Type of token (always Bearer)")
+    String tokenType,
+
+    @Schema(description = "Token expiration in seconds")
+    Long expiresIn
+) {}

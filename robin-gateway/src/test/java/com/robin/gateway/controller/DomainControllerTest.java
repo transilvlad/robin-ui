@@ -249,11 +249,12 @@ class DomainControllerTest {
     @DisplayName("POST /api/v1/domains should create domain with initial records")
     void testCreateDomainWithInitialRecords() {
         // Given
-        InitialRecordRequest recordRequest = new InitialRecordRequest();
-        recordRequest.setType(DnsRecord.RecordType.A);
-        recordRequest.setName("mail");
-        recordRequest.setContent("1.2.3.4");
-        recordRequest.setTtl(3600);
+        InitialRecordRequest recordRequest = InitialRecordRequest.builder()
+                .type(DnsRecord.RecordType.A)
+                .name("mail")
+                .content("1.2.3.4")
+                .ttl(3600)
+                .build();
 
         CreateDomainRequest request = new CreateDomainRequest();
         request.setDomain("newdomain.com");
