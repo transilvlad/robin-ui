@@ -1,0 +1,65 @@
+<section class="dmarc-dashboard">
+  <header class="dashboard-header">
+    <h1>DMARC Dashboard</h1>
+    <p>Report quality, sender profile, and traffic trends.</p>
+    @if (usingMockData) {
+      <span class="chip chip-warn">Mock Data</span>
+    }
+  </header>
+
+  @if (error) {
+    <div class="alert">{{ error }}</div>
+  }
+
+  @if (loading) {
+    <div class="loading">Loading DMARC dashboard...</div>
+  } @else {
+    <div class="summary-grid">
+      <article class="summary-card">
+        <h2>Total Reports</h2>
+        <p>{{ summary.totalReports }}</p>
+      </article>
+      <article class="summary-card">
+        <h2>Total Messages</h2>
+        <p>{{ summary.totalMessages }}</p>
+      </article>
+      <article class="summary-card">
+        <h2>Pass Rate</h2>
+        <p>{{ summary.passRate }}%</p>
+      </article>
+      <article class="summary-card">
+        <h2>Unique Reporters</h2>
+        <p>{{ summary.uniqueReporters }}</p>
+      </article>
+    </div>
+
+    <div class="chart-grid">
+      <article class="chart-card chart-wide">
+        <h3>Pass vs Fail by Date</h3>
+        <div class="chart-host">
+          <canvas
+            #trendCanvas>
+          </canvas>
+        </div>
+      </article>
+
+      <article class="chart-card">
+        <h3>IP Class Distribution</h3>
+        <div class="chart-host">
+          <canvas
+            #pieCanvas>
+          </canvas>
+        </div>
+      </article>
+
+      <article class="chart-card">
+        <h3>Top Reporters by Volume</h3>
+        <div class="chart-host">
+          <canvas
+            #reporterCanvas>
+          </canvas>
+        </div>
+      </article>
+    </div>
+  }
+</section>
