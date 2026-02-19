@@ -106,16 +106,16 @@ Up to **6 sessions can work simultaneously** during waves 2–3b.
 
 | ID       | Status      | Session | Track                | Depends On              | Blocks                          | Description                              |
 |----------|-------------|---------|----------------------|-------------------------|---------------------------------|------------------------------------------|
-| TASK-18 | pending     | —       | Deploy Foundation    | —                       | TASK-19,20,21,22,23,24,25,26,27 | Ansible skeleton + inventory + group_vars |
-| TASK-19 | pending     | —       | Deploy LXC           | TASK-18                 | TASK-20,21,22,23,24             | proxmox_lxc role: create+start Debian 12 LXC |
-| TASK-20 | pending     | —       | Deploy Services      | TASK-19                 | TASK-22,23,26                   | postgresql role: install + 2 DBs + user  |
-| TASK-21 | pending     | —       | Deploy Services      | TASK-19                 | TASK-23,26                      | redis role: install + auth + 127.0.0.1   |
-| TASK-22 | pending     | —       | Deploy Services      | TASK-19,20              | TASK-26                         | robin role: JAR + systemd + UFW          |
-| TASK-23 | pending     | —       | Deploy Services      | TASK-19,20,21           | TASK-26                         | robin-gateway role: mvn build + systemd  |
-| TASK-24 | pending     | —       | Deploy Services      | TASK-19                 | TASK-26                         | robin-ui role: ng build + nginx deploy   |
-| TASK-25 | pending     | —       | Deploy Cloud         | TASK-18                 | TASK-27                         | haproxy-cloud role: HAProxy + Certbot    |
-| TASK-26 | pending     | —       | Deploy Playbook      | TASK-19,20,21,22,23,24  | TASK-27                         | main-lxc.yml: full LXC stack wired       |
-| TASK-27 | pending     | —       | Deploy Playbook      | TASK-25,26              | —                               | main-haproxy.yml: cloud proxy + smoke    |
+| TASK-18 | done        | claude  | Deploy Foundation    | —                       | TASK-19,20,21,22,23,24,25,26,27 | Ansible skeleton + inventory + group_vars + PLAN file committed to robin-ui repo |
+| TASK-19 | pending     | —       | Deploy LXC           | TASK-18                 | TASK-20,21,22,23,24             | proxmox_lxc role: create+start Debian 12 LXC. Fill container_ip/gateway in group_vars/robin_lxc.yml first |
+| TASK-20 | done        | claude  | Deploy Services      | TASK-19                 | TASK-22,23,26                   | postgresql role: install + 2 DBs + user. Files: roles/postgresql/ |
+| TASK-21 | done        | claude  | Deploy Services      | TASK-19                 | TASK-23,26                      | redis role: install + auth + 127.0.0.1. Files: roles/redis/ |
+| TASK-22 | done        | claude  | Deploy Services      | TASK-19,20              | TASK-26                         | robin role: JAR + systemd + UFW. Files: roles/robin/ |
+| TASK-23 | pending     | —       | Deploy Services      | TASK-19,20,21           | TASK-26                         | robin-gateway role: mvn build + systemd. Files: roles/robin-gateway/ (NOT YET CREATED) |
+| TASK-24 | pending     | —       | Deploy Services      | TASK-19                 | TASK-26                         | robin-ui role: ng build + nginx deploy. Files: roles/robin-ui/ (NOT YET CREATED) |
+| TASK-25 | pending     | —       | Deploy Cloud         | TASK-18                 | TASK-27                         | haproxy-cloud role: HAProxy + Certbot. Files: roles/haproxy-cloud/ (NOT YET CREATED) |
+| TASK-26 | pending     | —       | Deploy Playbook      | TASK-19,20,21,22,23,24  | TASK-27                         | main-lxc.yml: full LXC stack wired. Playbook exists; needs TASK-23,24 role completion |
+| TASK-27 | pending     | —       | Deploy Playbook      | TASK-25,26              | —                               | main-haproxy.yml: cloud proxy + smoke. Playbook exists; needs TASK-25 role completion |
 
 ### Deployment Waves (TASK-18–27)
 
