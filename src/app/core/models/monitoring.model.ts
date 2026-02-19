@@ -171,7 +171,7 @@ export interface ChartConfig {
   type: 'line' | 'bar' | 'doughnut' | 'pie';
   labels: string[];
   datasets: ChartDataset[];
-  options?: any;
+  options?: Record<string, unknown>;
 }
 
 // ==========================================

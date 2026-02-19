@@ -1,0 +1,13 @@
+{
+  "reportingEmail" : "reports@robin.local",
+  "dmarc" : {
+    "policy" : "reject",
+    "subdomainPolicy" : "reject",
+    "percentage" : 100,
+    "alignment" : "s"
+  },
+  "spf" : {
+    "includes" : "robin.local",
+    "softFail" : true
+  }
+}

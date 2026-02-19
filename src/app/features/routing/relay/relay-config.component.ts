@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'app-relay-config',
@@ -10,6 +11,7 @@ import { Component } from '@angular/core';
       </div>
     </div>
   `,
-    standalone: false
+    standalone: true,
+    imports: [CommonModule]
 })
 export class RelayConfigComponent {}

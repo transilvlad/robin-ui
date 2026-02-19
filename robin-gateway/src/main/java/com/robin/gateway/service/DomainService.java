@@ -1,9 +1,18 @@
 package com.robin.gateway.service;
 
+import com.robin.gateway.exception.ResourceNotFoundException;
 import com.robin.gateway.model.Alias;
+import com.robin.gateway.model.DkimKey;
+import com.robin.gateway.model.DnsRecord;
 import com.robin.gateway.model.Domain;
+import com.robin.gateway.model.dto.InitialRecordRequest;
 import com.robin.gateway.repository.AliasRepository;
+import com.robin.gateway.repository.DnsRecordRepository;
 import com.robin.gateway.repository.DomainRepository;
+import com.robin.gateway.service.DkimService;
+import com.robin.gateway.service.DnsRecordGenerator;
+import com.robin.gateway.service.ConfigurationService;
+import com.robin.gateway.service.dns.DnsProviderFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -23,12 +32,79 @@ public class DomainService {
 
     private final DomainRepository domainRepository;
     private final AliasRepository aliasRepository;
+    private final com.robin.gateway.repository.ProviderConfigRepository providerConfigRepository;
+    private final DnsRecordRepository dnsRecordRepository;
+    private final DkimService dkimService;
+    private final DnsRecordGenerator dnsRecordGenerator;
+    private final ConfigurationService configService;
+    private final org.springframework.transaction.support.TransactionTemplate transactionTemplate;
+
+    private final DnsProviderFactory dnsProviderFactory;
+
+    /**
+     * Get DNSSEC status and DS records
+     */
+    public Mono<List<DnsRecord>> getDnssecStatus(Long domainId) {
+        return Mono.fromCallable(() -> {
+            Domain domain = domainRepository.findById(domainId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Domain not found: " + domainId));
+
+            if (domain.getDnsProviderType() == Domain.DnsProviderType.MANUAL) {
+                // For manual, we can only return what we have locally or nothing
+                return List.<DnsRecord>of();
+            }
+
+            com.robin.gateway.service.dns.DnsProvider provider = dnsProviderFactory.getProvider(domain.getDnsProviderType());
+            return provider.getDsRecords(domain);
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    /**
+     * Enable DNSSEC
+     */
+    public Mono<Void> enableDnssec(Long domainId) {
+        return Mono.fromCallable(() -> {
+            Domain domain = domainRepository.findById(domainId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Domain not found: " + domainId));
+
+            if (domain.getDnsProviderType() != Domain.DnsProviderType.MANUAL) {
+                com.robin.gateway.service.dns.DnsProvider provider = dnsProviderFactory.getProvider(domain.getDnsProviderType());
+                provider.enableDnssec(domain);
+            }
+            
+            domain.setDnssecEnabled(true);
+            domainRepository.save(domain);
+            return null;
+        }).subscribeOn(Schedulers.boundedElastic()).then();
+    }
+
+    /**
+     * Disable DNSSEC
+     */
+    public Mono<Void> disableDnssec(Long domainId) {
+        return Mono.fromCallable(() -> {
+            Domain domain = domainRepository.findById(domainId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Domain not found: " + domainId));
+
+            if (domain.getDnsProviderType() != Domain.DnsProviderType.MANUAL) {
+                com.robin.gateway.service.dns.DnsProvider provider = dnsProviderFactory.getProvider(domain.getDnsProviderType());
+                provider.disableDnssec(domain);
+            }
+
+            domain.setDnssecEnabled(false);
+            domainRepository.save(domain);
+            return null;
+        }).subscribeOn(Schedulers.boundedElastic()).then();
+    }
 
     /**
      * Get all domains with pagination
      */
     public Mono<Page<Domain>> getAllDomains(Pageable pageable) {
-        return Mono.fromCallable(() -> domainRepository.findAll(pageable))
+        return Mono.fromCallable(() -> {
+            log.debug("Fetching domains with pageable: {}", pageable);
+            return domainRepository.findAll(pageable);
+        })
                 .subscribeOn(Schedulers.boundedElastic())
                 .doOnSuccess(domains -> log.debug("Retrieved {} domains", domains.getTotalElements()))
                 .doOnError(e -> log.error("Error retrieving domains", e));
@@ -42,7 +118,7 @@ public class DomainService {
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(optionalDomain -> optionalDomain
                         .map(Mono::just)
-                        .orElse(Mono.error(new RuntimeException("Domain not found: " + id))))
+                        .orElse(Mono.error(new ResourceNotFoundException("Domain not found: " + id))))
                 .doOnSuccess(domain -> log.debug("Retrieved domain: {}", domain.getDomain()))
                 .doOnError(e -> log.error("Error retrieving domain with id: {}", id, e));
     }
@@ -60,23 +136,155 @@ public class DomainService {
     /**
      * Create a new domain
      */
-    @Transactional
-    public Mono<Domain> createDomain(String domainName) {
-        return Mono.fromCallable(() -> {
+    public Mono<Domain> createDomain(String domainName, Long dnsProviderId, Long registrarProviderId, Long emailProviderId, Domain configOverride, List<InitialRecordRequest> initialRecords) {
+        return Mono.fromCallable(() -> transactionTemplate.execute(status -> {
+            log.info("Starting atomic transaction for domain creation: {}", domainName);
+            
             // Check if domain already exists
             if (domainRepository.existsByDomain(domainName)) {
                 throw new IllegalArgumentException("Domain already exists: " + domainName);
             }
 
-            Domain domain = Domain.builder()
-                    .domain(domainName)
-                    .build();
+            Domain.DomainBuilder builder = Domain.builder()
+                    .domain(domainName);
+
+            if (dnsProviderId != null) {
+                providerConfigRepository.findById(dnsProviderId).ifPresent(p -> {
+                    builder.dnsProvider(p);
+                    builder.dnsProviderType(Domain.DnsProviderType.valueOf(p.getType().name()));
+                });
+            }
+
+            if (registrarProviderId != null) {
+                providerConfigRepository.findById(registrarProviderId).ifPresent(p -> {
+                    builder.registrarProvider(p);
+                    builder.registrarProviderType(Domain.RegistrarProviderType.valueOf(p.getType().name()));
+                });
+            }
+
+            if (emailProviderId != null) {
+                providerConfigRepository.findById(emailProviderId).ifPresent(builder::emailProvider);
+            }
+
+            // Apply global defaults for DMARC/SPF
+            try {
+                java.util.Map<String, Object> config = configService.getConfig("email_reporting").block();
+                if (config != null) {
+                    builder.dmarcReportingEmail((String) config.get("reportingEmail"));
+                    
+                    // [GAP-006] JSON config mapping is untyped
+                    @SuppressWarnings("unchecked")
+                    java.util.Map<String, Object> dmarc = (java.util.Map<String, Object>) config.get("dmarc");
+                    if (dmarc != null) {
+                        builder.dmarcPolicy((String) dmarc.get("policy"));
+                        builder.dmarcSubdomainPolicy((String) dmarc.get("subdomainPolicy"));
+                        if (dmarc.get("percentage") instanceof Number) {
+                            builder.dmarcPercentage(((Number) dmarc.get("percentage")).intValue());
+                        }
+                        builder.dmarcAlignment((String) dmarc.get("alignment"));
+                    }
+
+                    // [GAP-006] JSON config mapping is untyped
+                    @SuppressWarnings("unchecked")
+                    java.util.Map<String, Object> spf = (java.util.Map<String, Object>) config.get("spf");
+                    if (spf != null) {
+                        builder.spfIncludes((String) spf.get("includes"));
+                        if (spf.get("softFail") instanceof Boolean) {
+                            builder.spfSoftFail((Boolean) spf.get("softFail"));
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to load global defaults for new domain", e);
+            }
+
+            // Apply overrides if present (from discovery/user input)
+            if (configOverride != null) {
+                if (configOverride.getDmarcPolicy() != null) builder.dmarcPolicy(configOverride.getDmarcPolicy());
+                if (configOverride.getDmarcSubdomainPolicy() != null) builder.dmarcSubdomainPolicy(configOverride.getDmarcSubdomainPolicy());
+                if (configOverride.getDmarcPercentage() != null) builder.dmarcPercentage(configOverride.getDmarcPercentage());
+                if (configOverride.getDmarcAlignment() != null) builder.dmarcAlignment(configOverride.getDmarcAlignment());
+                if (configOverride.getDmarcReportingEmail() != null) builder.dmarcReportingEmail(configOverride.getDmarcReportingEmail());
+                
+                if (configOverride.getSpfIncludes() != null) builder.spfIncludes(configOverride.getSpfIncludes());
+                if (configOverride.getSpfSoftFail() != null) builder.spfSoftFail(configOverride.getSpfSoftFail());
+            }
+
+            Domain domain = builder.build();
+            domain = domainRepository.save(domain);
+
+            // Save records
+            if (initialRecords != null && !initialRecords.isEmpty()) {
+                final Domain savedDomain = domain;
+                List<DnsRecord> records = initialRecords.stream().map(r -> DnsRecord.builder()
+                        .domain(savedDomain)
+                        .type(r.type())
+                        .name(r.name())
+                        .content(r.content())
+                        .ttl(r.ttl())
+                        .priority(r.priority())
+                        .purpose(r.purpose() != null ? r.purpose() : DnsRecord.RecordPurpose.OTHER)
+                        .syncStatus(DnsRecord.SyncStatus.PENDING)
+                        .build()).toList();
+                dnsRecordRepository.saveAll(records);
+                log.info("Saved {} initial DNS records for domain {}", records.size(), domain.getDomain());
+            } else {
+                // Default flow: Generate expected DNS records
+                List<DnsRecord> records = dnsRecordGenerator.generateExpectedRecords(domain);
+                dnsRecordRepository.saveAll(records);
+            }
+
+            return domain;
+        }))
+                .subscribeOn(Schedulers.boundedElastic())
+                .doOnSuccess(d -> log.info("Created domain: {}", d.getDomain()))
+                .doOnError(e -> log.error("Error creating domain: {}", domainName, e));
+    }
+
+    /**
+     * Update an existing domain
+     */
+    @Transactional
+    public Mono<Domain> updateDomain(Long id, Domain update) {
+        return Mono.fromCallable(() -> {
+            Domain domain = domainRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Domain not found: " + id));
+
+            if (update.getDnsProviderType() != null) domain.setDnsProviderType(update.getDnsProviderType());
+            if (update.getRegistrarProviderType() != null) domain.setRegistrarProviderType(update.getRegistrarProviderType());
+            
+            if (update.getDnsProvider() != null && update.getDnsProvider().getId() != null) {
+                providerConfigRepository.findById(update.getDnsProvider().getId()).ifPresent(domain::setDnsProvider);
+            } else if (update.getDnsProvider() == null) {
+                domain.setDnsProvider(null);
+            }
+
+            if (update.getRegistrarProvider() != null && update.getRegistrarProvider().getId() != null) {
+                providerConfigRepository.findById(update.getRegistrarProvider().getId()).ifPresent(domain::setRegistrarProvider);
+            } else if (update.getRegistrarProvider() == null) {
+                domain.setRegistrarProvider(null);
+            }
+
+            // Other fields
+            if (update.getDnssecEnabled() != null) domain.setDnssecEnabled(update.getDnssecEnabled());
+            if (update.getMtaStsEnabled() != null) domain.setMtaStsEnabled(update.getMtaStsEnabled());
+            if (update.getMtaStsMode() != null) domain.setMtaStsMode(update.getMtaStsMode());
+            if (update.getDaneEnabled() != null) domain.setDaneEnabled(update.getDaneEnabled());
+            if (update.getBimiSelector() != null) domain.setBimiSelector(update.getBimiSelector());
+            if (update.getBimiLogoUrl() != null) domain.setBimiLogoUrl(update.getBimiLogoUrl());
+
+            // DMARC & SPF
+            if (update.getDmarcPolicy() != null) domain.setDmarcPolicy(update.getDmarcPolicy());
+            if (update.getDmarcSubdomainPolicy() != null) domain.setDmarcSubdomainPolicy(update.getDmarcSubdomainPolicy());
+            if (update.getDmarcPercentage() != null) domain.setDmarcPercentage(update.getDmarcPercentage());
+            if (update.getDmarcAlignment() != null) domain.setDmarcAlignment(update.getDmarcAlignment());
+            if (update.getDmarcReportingEmail() != null) domain.setDmarcReportingEmail(update.getDmarcReportingEmail());
+            if (update.getSpfIncludes() != null) domain.setSpfIncludes(update.getSpfIncludes());
+            if (update.getSpfSoftFail() != null) domain.setSpfSoftFail(update.getSpfSoftFail());
 
             return domainRepository.save(domain);
         })
-                .subscribeOn(Schedulers.boundedElastic())
-                .doOnSuccess(domain -> log.info("Created domain: {}", domain.getDomain()))
-                .doOnError(e -> log.error("Error creating domain: {}", domainName, e));
+                .subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
@@ -86,7 +294,7 @@ public class DomainService {
     public Mono<Void> deleteDomain(Long id) {
         return Mono.fromCallable(() -> {
             if (!domainRepository.existsById(id)) {
-                throw new RuntimeException("Domain not found: " + id);
+                throw new ResourceNotFoundException("Domain not found: " + id);
             }
 
             // Delete all aliases for this domain first
@@ -114,7 +322,7 @@ public class DomainService {
     public Mono<List<Alias>> getAliasesByDomain(Long domainId) {
         return Mono.fromCallable(() -> {
             Domain domain = domainRepository.findById(domainId)
-                    .orElseThrow(() -> new RuntimeException("Domain not found: " + domainId));
+                    .orElseThrow(() -> new ResourceNotFoundException("Domain not found: " + domainId));
 
             return aliasRepository.findBySource(domain.getDomain() + "%");
         })
@@ -141,7 +349,7 @@ public class DomainService {
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(optionalAlias -> optionalAlias
                         .map(Mono::just)
-                        .orElse(Mono.error(new RuntimeException("Alias not found: " + id))))
+                        .orElse(Mono.error(new ResourceNotFoundException("Alias not found: " + id))))
                 .doOnSuccess(alias -> log.debug("Retrieved alias: {} -> {}", alias.getSource(), alias.getDestination()))
                 .doOnError(e -> log.error("Error retrieving alias with id: {}", id, e));
     }
@@ -190,7 +398,7 @@ public class DomainService {
     public Mono<Alias> updateAlias(Long id, String destination) {
         return Mono.fromCallable(() -> {
             Alias alias = aliasRepository.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Alias not found: " + id));
+                    .orElseThrow(() -> new ResourceNotFoundException("Alias not found: " + id));
 
             if (!destination.contains("@")) {
                 throw new IllegalArgumentException("Invalid email format for destination");
@@ -211,7 +419,7 @@ public class DomainService {
     public Mono<Void> deleteAlias(Long id) {
         return Mono.fromCallable(() -> {
             if (!aliasRepository.existsById(id)) {
-                throw new RuntimeException("Alias not found: " + id);
+                throw new ResourceNotFoundException("Alias not found: " + id);
             }
 
             aliasRepository.deleteById(id);

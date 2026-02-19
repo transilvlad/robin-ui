@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { AuthStore } from '../../../core/state/auth.store';
 import { LoginRequest } from '../../../core/models/auth.model';
+import { FormErrorComponent } from '../../../shared/components/form-error/form-error.component';
 
 /**
  * Login Component
@@ -20,7 +21,8 @@ import { LoginRequest } from '../../../core/models/auth.model';
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    FormErrorComponent
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
@@ -85,31 +87,5 @@ export class LoginComponent implements OnInit {
         this.markFormGroupTouched(control);
       }
     });
-  }
-
-  getErrorMessage(fieldName: string): string {
-    const control = this.loginForm.get(fieldName);
-    if (!control || !control.errors || !control.touched) {
-      return '';
-    }
-
-    if (control.errors['required']) {
-      return `${this.getFieldLabel(fieldName)} is required`;
-    }
-
-    if (control.errors['minlength']) {
-      const minLength = control.errors['minlength'].requiredLength;
-      return `${this.getFieldLabel(fieldName)} must be at least ${minLength} characters`;
-    }
-
-    return 'Invalid field value';
-  }
-
-  private getFieldLabel(fieldName: string): string {
-    const labels: Record<string, string> = {
-      username: 'Email Address',
-      password: 'Password',
-    };
-    return labels[fieldName] || fieldName;
   }
 }

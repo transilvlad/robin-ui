@@ -1,0 +1,80 @@
+name: Gateway Compliance
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'robin-gateway/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'robin-gateway/**'
+
+jobs:
+  compliance:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+
+      - name: Build and Test
+        working-directory: ./robin-gateway
+        run: mvn clean test
+
+      - name: Run Integration Tests
+        working-directory: ./robin-gateway
+        run: mvn test -Dgroups=docker-integration
+
+      - name: Generate Coverage Report
+        working-directory: ./robin-gateway
+        run: mvn jacoco:report
+
+      - name: Check Coverage Threshold
+        working-directory: ./robin-gateway
+        run: mvn jacoco:check
+
+      - name: Run Checkstyle
+        working-directory: ./robin-gateway
+        run: mvn checkstyle:check
+
+      - name: Run PMD
+        working-directory: ./robin-gateway
+        run: mvn pmd:check
+
+      - name: Run SpotBugs
+        working-directory: ./robin-gateway
+        run: mvn spotbugs:check
+
+      - name: Security Scan (OWASP)
+        working-directory: ./robin-gateway
+        run: mvn org.owasp:dependency-check-maven:check
+
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./robin-gateway/target/site/jacoco/jacoco.xml
+          flags: gateway
+
+      - name: Archive Reports
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: compliance-reports
+          path: |
+            robin-gateway/target/site/jacoco/
+            robin-gateway/target/checkstyle-result.xml
+            robin-gateway/target/pmd.xml
+            robin-gateway/target/spotbugsXml.xml

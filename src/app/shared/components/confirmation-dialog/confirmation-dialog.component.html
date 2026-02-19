@@ -1,0 +1,12 @@
+<h2 mat-dialog-title class="text-lg font-semibold">{{ data.title }}</h2>
+<mat-dialog-content>
+  <p class="text-muted-foreground">{{ data.message }}</p>
+</mat-dialog-content>
+<mat-dialog-actions align="end" class="gap-2 mt-4">
+  <button mat-button (click)="dialogRef.close(false)">
+    {{ data.cancelText || 'Cancel' }}
+  </button>
+  <button mat-flat-button [color]="data.confirmColor || 'primary'" (click)="dialogRef.close(true)">
+    {{ data.confirmText || 'Confirm' }}
+  </button>
+</mat-dialog-actions>

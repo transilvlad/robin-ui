@@ -1,27 +1,23 @@
 package com.robin.gateway.model.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * Login request DTO.
- *
- * @author Robin Gateway Team
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
-public class LoginRequest {
-
+@Schema(description = "Authentication request containing user credentials")
+public record LoginRequest(
+    @Schema(description = "Username or email address", example = "admin@robin.local")
     @NotBlank(message = "Username is required")
-    private String username;
+    String username,
 
+    @Schema(description = "Plain text password", example = "admin123")
     @NotBlank(message = "Password is required")
-    private String password;
+    String password,
 
-    private Boolean rememberMe;
-}
+    @Schema(description = "Whether to issue a long-lived refresh token")
+    Boolean rememberMe
+) {}

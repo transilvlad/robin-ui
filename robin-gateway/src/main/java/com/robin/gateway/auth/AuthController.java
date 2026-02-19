@@ -3,6 +3,12 @@ package com.robin.gateway.auth;
 import com.robin.gateway.model.dto.AuthResponse;
 import com.robin.gateway.model.dto.LoginRequest;
 import com.robin.gateway.model.dto.TokenResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +24,7 @@ import reactor.core.publisher.Mono;
 
 import java.security.Principal;
 import java.time.Duration;
+import java.util.Map;
 
 /**
  * Authentication REST controller.
@@ -33,6 +40,7 @@ import java.time.Duration;
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Authentication", description = "APIs for user login, logout, and session management")
 public class AuthController {
 
     private final AuthService authService;
@@ -46,6 +54,13 @@ public class AuthController {
      * @return authentication response with tokens
      */
     @PostMapping("/login")
+    @Operation(summary = "Login", description = "Authenticates user and returns JWT access token via body and refresh token via HttpOnly cookie")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully authenticated",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content),
+        @ApiResponse(responseCode = "403", description = "Account disabled", content = @Content)
+    })
     public Mono<ResponseEntity<AuthResponse>> login(
             @Valid @RequestBody LoginRequest loginRequest,
             ServerHttpRequest request,
@@ -58,7 +73,7 @@ public class AuthController {
                     AuthResponse authResponse = authService.login(loginRequest, ipAddress, userAgent);
 
                     // Set refresh token as HttpOnly cookie
-                    ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", authResponse.getTokens().getRefreshToken())
+                    ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", authResponse.tokens().refreshToken())
                             .httpOnly(true)
                             .secure(true) // Enable in production with HTTPS
                             .path("/")
@@ -69,9 +84,20 @@ public class AuthController {
                     response.addCookie(refreshTokenCookie);
 
                     // Don't send refresh token in response body
-                    authResponse.getTokens().setRefreshToken(null);
+                    TokenResponse safeTokens = TokenResponse.builder()
+                            .accessToken(authResponse.tokens().accessToken())
+                            .refreshToken(null)
+                            .tokenType(authResponse.tokens().tokenType())
+                            .expiresIn(authResponse.tokens().expiresIn())
+                            .build();
 
-                    return ResponseEntity.ok(authResponse);
+                    AuthResponse safeAuthResponse = AuthResponse.builder()
+                            .user(authResponse.user())
+                            .tokens(safeTokens)
+                            .permissions(authResponse.permissions())
+                            .build();
+
+                    return ResponseEntity.ok(safeAuthResponse);
                 })
                 .doOnError(e -> log.error("Login error: {}", e.getMessage()));
     }
@@ -83,6 +109,12 @@ public class AuthController {
      * @return new access token
      */
     @PostMapping("/refresh")
+    @Operation(summary = "Refresh Access Token", description = "Uses the refresh token cookie to issue a new access token")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Token successfully refreshed",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = TokenResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Invalid or missing refresh token", content = @Content)
+    })
     public Mono<ResponseEntity<TokenResponse>> refresh(ServerHttpRequest request) {
         return Mono.fromCallable(() -> {
                     String refreshToken = extractRefreshTokenFromCookie(request);
@@ -95,9 +127,14 @@ public class AuthController {
                     TokenResponse tokenResponse = authService.refreshToken(refreshToken);
 
                     // Don't send refresh token in response
-                    tokenResponse.setRefreshToken(null);
+                    TokenResponse safeResponse = TokenResponse.builder()
+                            .accessToken(tokenResponse.accessToken())
+                            .refreshToken(null)
+                            .tokenType(tokenResponse.tokenType())
+                            .expiresIn(tokenResponse.expiresIn())
+                            .build();
 
-                    return ResponseEntity.ok(tokenResponse);
+                    return ResponseEntity.ok(safeResponse);
                 })
                 .doOnError(e -> log.error("Token refresh error: {}", e.getMessage()));
     }
@@ -110,6 +147,7 @@ public class AuthController {
      * @return success response
      */
     @PostMapping("/logout")
+    @Operation(summary = "Logout", description = "Invalidates the refresh token and clears the authentication cookie")
     public Mono<ResponseEntity<Void>> logout(
             ServerHttpRequest request,
             ServerHttpResponse response) {
@@ -134,12 +172,27 @@ public class AuthController {
     }
 
     /**
+     * Verify token endpoint.
+     */
+    @GetMapping("/verify")
+    @Operation(summary = "Verify Token", description = "Checks if the current access token is valid")
+    public Mono<ResponseEntity<Map<String, Boolean>>> verifyToken(Principal principal) {
+        return Mono.just(ResponseEntity.ok(Map.of("valid", principal != null)));
+    }
+
+    /**
      * Get current user details.
      *
      * @param principal authenticated user principal
      * @return user details
      */
     @GetMapping("/me")
+    @Operation(summary = "Get Current User", description = "Returns details about the currently authenticated user")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Current user details retrieved",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Not authenticated", content = @Content)
+    })
     public Mono<ResponseEntity<AuthResponse>> getCurrentUser(Principal principal) {
         return Mono.fromCallable(() -> {
             if (principal == null) {

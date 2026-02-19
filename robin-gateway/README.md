@@ -116,8 +116,14 @@ Activate a profile:
 
 ### Running Tests
 
+Run unit tests:
 ```bash
 ./mvnw test
+```
+
+Run integration tests (requires Docker):
+```bash
+./mvnw test -Dgroups=docker-integration
 ```
 
 ### Building for Production

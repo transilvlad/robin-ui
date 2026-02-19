@@ -6,7 +6,7 @@ import {
   StorageFileContent,
 } from '@core/models/storage.model';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class StorageService {
   constructor(private apiService: ApiService) {}
 

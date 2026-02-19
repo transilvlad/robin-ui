@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient(timeout = "PT30S")
 @Testcontainers
+@Tag("docker-integration")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CircuitBreakerIntegrationTest {
@@ -87,8 +88,8 @@ class CircuitBreakerIntegrationTest {
                 .expectBody(AuthResponse.class)
                 .returnResult()
                 .getResponseBody()
-                .getTokens()
-                .getAccessToken();
+                .tokens()
+                .accessToken();
 
         assertThat(adminToken).isNotBlank();
     }
@@ -105,7 +106,8 @@ class CircuitBreakerIntegrationTest {
                 .expectBody()
                 .jsonPath("$.robinClientApi.status").isEqualTo("DOWN")
                 .jsonPath("$.robinServiceApi.status").isEqualTo("DOWN")
-                .jsonPath("$.status").isIn("DEGRADED", "DOWN");
+                .jsonPath("$.status").value(status ->
+                    assertThat(status).isIn("DEGRADED", "DOWN"));
     }
 
     @Test
@@ -190,8 +192,8 @@ class CircuitBreakerIntegrationTest {
                 .expectStatus().isOk()
                 .expectBody(AuthResponse.class)
                 .value(response -> {
-                    assertThat(response.getUser()).isNotNull();
-                    assertThat(response.getTokens()).isNotNull();
+                    assertThat(response.user()).isNotNull();
+                    assertThat(response.tokens()).isNotNull();
                 });
     }
 

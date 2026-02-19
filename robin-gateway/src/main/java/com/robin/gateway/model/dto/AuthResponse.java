@@ -1,35 +1,31 @@
 package com.robin.gateway.model.dto;
 
-import lombok.AllArgsConstructor;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.Set;
 
 /**
  * Authentication response DTO.
- *
- * @author Robin Gateway Team
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
-public class AuthResponse {
+@Schema(description = "Authentication response containing user info and tokens")
+public record AuthResponse(
+    @Schema(description = "User profile information")
+    UserDTO user,
 
-    private UserDTO user;
-    private TokenResponse tokens;
-    private Set<String> permissions;
+    @Schema(description = "Security tokens")
+    TokenResponse tokens,
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
+    @Schema(description = "List of user permissions", example = "[\"READ_DOMAINS\", \"WRITE_DOMAINS\"]")
+    Set<String> permissions
+) {
     @Builder
-    public static class UserDTO {
-        private Long id;
-        private String username;
-        private String email;
-        private Set<String> roles;
-    }
+    @Schema(description = "Minimal user information for the UI")
+    public record UserDTO(
+        Long id,
+        String username,
+        String email,
+        Set<String> roles
+    ) {}
 }

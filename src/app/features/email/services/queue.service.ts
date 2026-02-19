@@ -7,7 +7,7 @@ import {
   QueueActionResponse,
 } from '@core/models/queue.model';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class QueueService {
   constructor(private apiService: ApiService) {}
 

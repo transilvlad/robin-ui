@@ -6,7 +6,11 @@ import { UserListComponent } from './users/user-list.component';
 import { DovecotConfigComponent } from './dovecot/dovecot-config.component';
 
 @NgModule({
-  declarations: [ServerConfigComponent, UserListComponent, DovecotConfigComponent],
+  declarations: [
+    ServerConfigComponent, 
+    UserListComponent, 
+    DovecotConfigComponent
+  ],
   imports: [SharedModule, SettingsRoutingModule],
 })
 export class SettingsModule {}

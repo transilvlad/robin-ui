@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<ruleset name="Robin Gateway PMD Rules"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        Custom PMD ruleset for Robin Gateway
+        Focuses on security, code quality, and performance
+    </description>
+
+    <!-- Best Practices -->
+    <rule ref="category/java/bestpractices.xml">
+        <exclude name="JUnitTestsShouldIncludeAssert"/> <!-- StepVerifier doesn't use traditional asserts -->
+        <exclude name="JUnit4TestShouldUseBeforeAnnotation"/> <!-- Using JUnit 5 -->
+        <exclude name="JUnit4TestShouldUseAfterAnnotation"/> <!-- Using JUnit 5 -->
+        <exclude name="JUnit4TestShouldUseTestAnnotation"/> <!-- Using JUnit 5 -->
+    </rule>
+
+    <!-- Code Style -->
+    <rule ref="category/java/codestyle.xml">
+        <exclude name="AtLeastOneConstructor"/> <!-- Lombok generates constructors -->
+        <exclude name="OnlyOneReturn"/> <!-- Multiple returns improve readability -->
+        <exclude name="TooManyStaticImports"/> <!-- Static imports are fine for tests -->
+        <exclude name="CommentDefaultAccessModifier"/> <!-- Package-private is intentional -->
+        <exclude name="LocalVariableCouldBeFinal"/> <!-- Too noisy -->
+        <exclude name="MethodArgumentCouldBeFinal"/> <!-- Too noisy -->
+        <exclude name="ShortVariable"/> <!-- Allow short variable names like 'id' -->
+        <exclude name="LongVariable"/> <!-- Sometimes long names are necessary -->
+        <exclude name="ConfusingTernary"/> <!-- Ternaries are clear when used properly -->
+    </rule>
+
+    <!-- Design -->
+    <rule ref="category/java/design.xml">
+        <exclude name="LawOfDemeter"/> <!-- Too restrictive for fluent APIs -->
+        <exclude name="LoosePackageCoupling"/> <!-- Spring beans require coupling -->
+        <exclude name="DataClass"/> <!-- DTOs are intentional data classes -->
+        <exclude name="UseUtilityClass"/> <!-- Spring components shouldn't be utility classes -->
+    </rule>
+
+    <!-- Complexity Limits -->
+    <rule ref="category/java/design.xml/CyclomaticComplexity">
+        <properties>
+            <property name="methodReportLevel" value="15"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/CognitiveComplexity">
+        <properties>
+            <property name="reportLevel" value="20"/>
+        </properties>
+    </rule>
+
+    <!-- Documentation -->
+    <rule ref="category/java/documentation.xml">
+        <exclude name="CommentRequired"/> <!-- Not all classes need comments -->
+        <exclude name="CommentSize"/> <!-- Let Checkstyle handle this -->
+    </rule>
+
+    <!-- Error Prone -->
+    <rule ref="category/java/errorprone.xml">
+        <exclude name="BeanMembersShouldSerialize"/> <!-- Entities don't need to be serializable -->
+        <exclude name="DataflowAnomalyAnalysis"/> <!-- Too many false positives -->
+        <exclude name="NullAssignment"/> <!-- Sometimes null assignment is intentional -->
+    </rule>
+
+    <!-- Multithreading -->
+    <rule ref="category/java/multithreading.xml">
+        <exclude name="UseConcurrentHashMap"/> <!-- Spring manages concurrency -->
+        <exclude name="DoNotUseThreads"/> <!-- Reactive streams handle threading -->
+    </rule>
+
+    <!-- Performance -->
+    <rule ref="category/java/performance.xml">
+        <exclude name="AvoidInstantiatingObjectsInLoops"/> <!-- Reactive chains need objects -->
+    </rule>
+
+    <!-- Security -->
+    <rule ref="category/java/security.xml"/>
+
+    <!-- Custom Rules for Spring Boot -->
+    <rule ref="category/java/bestpractices.xml/UseCollectionIsEmpty"/>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod"/>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>
+    <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
+    <rule ref="category/java/bestpractices.xml/UnusedFormalParameter"/>
+
+    <!-- Enforce Type Safety -->
+    <rule ref="category/java/bestpractices.xml/UseStandardCharsets"/>
+    <rule ref="category/java/errorprone.xml/AvoidDuplicateLiterals">
+        <properties>
+            <property name="maxDuplicateLiterals" value="4"/>
+        </properties>
+    </rule>
+
+    <!-- Prevent Common Bugs -->
+    <rule ref="category/java/errorprone.xml/EmptyCatchBlock"/>
+    <rule ref="category/java/errorprone.xml/AvoidBranchingStatementAsLastInLoop"/>
+    <rule ref="category/java/errorprone.xml/CloseResource"/>
+    <rule ref="category/java/errorprone.xml/CompareObjectsWithEquals"/>
+
+    <!-- Performance -->
+    <rule ref="category/java/performance.xml/StringInstantiation"/>
+    <rule ref="category/java/performance.xml/StringToString"/>
+    <rule ref="category/java/performance.xml/UseStringBufferLength"/>
+
+</ruleset>

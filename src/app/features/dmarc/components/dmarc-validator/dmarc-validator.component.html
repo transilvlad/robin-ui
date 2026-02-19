@@ -1,0 +1,90 @@
+<div class="container mx-auto p-6">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-800 dark:text-white">DMARC Record Validator</h1>
+    <p class="text-gray-600 dark:text-gray-400">Validate the DMARC record for any domain and inspect its tags.</p>
+  </div>
+
+  <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 mb-6">
+    <form (ngSubmit)="validate()" #validatorForm="ngForm" class="flex flex-col md:flex-row gap-4">
+      <div class="flex-grow">
+        <label for="domain" class="sr-only">Domain Name</label>
+        <input
+          type="text"
+          id="domain"
+          name="domain"
+          [(ngModel)]="domain"
+          required
+          placeholder="example.com"
+          class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+        >
+      </div>
+      <button
+        type="submit"
+        [disabled]="loading || !domain.trim()"
+        class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center min-w-[120px]"
+      >
+        <span *ngIf="loading" class="mr-2 animate-spin">&#9696;</span>
+        Validate
+      </button>
+    </form>
+  </div>
+
+  <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+    {{ error }}
+  </div>
+
+  <div *ngIf="result" class="space-y-6">
+    <!-- Status Banner -->
+    <div
+      [ngClass]="result.valid ? 'bg-green-100 border-green-400 text-green-700' : 'bg-yellow-100 border-yellow-400 text-yellow-700'"
+      class="border-l-4 p-4 rounded"
+    >
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <svg *ngIf="result.valid" class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+          </svg>
+          <svg *ngIf="!result.valid" class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm font-medium">
+            {{ result.valid ? 'Record is valid' : 'Record has issues' }} for {{ result.domain }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Errors/Warnings -->
+    <div *ngIf="result.errors && result.errors.length > 0" class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+      <h2 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Issues Found</h2>
+      <ul class="list-disc list-inside space-y-2 text-red-600 dark:text-red-400">
+        <li *ngFor="let err of result.errors">{{ err }}</li>
+      </ul>
+    </div>
+
+    <!-- Parsed Tags -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Parsed Record Tags</h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead class="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/4">Tag</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Value</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            <tr *ngFor="let tag of getRecordTags()" class="hover:bg-gray-50 dark:hover:bg-gray-700">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-600 dark:text-blue-400">{{ tag.key }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-200">{{ tag.value }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

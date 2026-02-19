@@ -1,14 +1,17 @@
 import { Component, OnInit, OnDestroy, inject, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { ApiService } from '@core/services/api.service';
 import { AuthStore } from '@core/state/auth.store';
+import { StatusBadgeComponent } from '../status-badge/status-badge.component';
 import { interval, of, Subscription } from 'rxjs';
 import { switchMap, startWith, catchError } from 'rxjs/operators';
 
 @Component({
     selector: 'app-header',
+    standalone: true,
+    imports: [CommonModule, StatusBadgeComponent],
     templateUrl: './header.component.html',
-    styleUrls: ['./header.component.scss'],
-    standalone: false
+    styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   serverStatus: 'UP' | 'DOWN' | 'UNKNOWN' = 'UNKNOWN';

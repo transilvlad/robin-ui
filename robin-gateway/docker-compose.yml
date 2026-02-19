@@ -1,0 +1,84 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: robin-postgres
+    environment:
+      POSTGRES_DB: robin
+      POSTGRES_USER: robin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U robin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - robin-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: robin-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - robin-network
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: robin-gateway
+    environment:
+      # Spring profiles
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+
+      # Database
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/robin
+      SPRING_DATASOURCE_USERNAME: robin
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+
+      # Redis
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET environment variable is required}
+
+      # MTA API
+      ROBIN_MTA_CLIENT_API_URL: ${ROBIN_MTA_CLIENT_API_URL:-http://robin-mta:8090}
+      ROBIN_MTA_SERVICE_API_URL: ${ROBIN_MTA_SERVICE_API_URL:-http://robin-mta:8080}
+
+      # JVM settings
+      JAVA_OPTS: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 60s
+    networks:
+      - robin-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  robin-network:
+    driver: bridge

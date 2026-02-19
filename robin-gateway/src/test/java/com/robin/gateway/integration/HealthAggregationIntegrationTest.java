@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
 @Testcontainers
+@Tag("docker-integration")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class HealthAggregationIntegrationTest {
@@ -153,7 +154,8 @@ class HealthAggregationIntegrationTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.status").isIn("DEGRADED", "DOWN");
+                .jsonPath("$.status").value(status ->
+                    assertThat(status).isIn("DEGRADED", "DOWN"));
     }
 
     @Test

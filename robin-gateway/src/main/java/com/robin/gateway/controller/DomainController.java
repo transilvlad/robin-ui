@@ -1,198 +1,160 @@
 package com.robin.gateway.controller;
 
-import com.robin.gateway.model.Alias;
 import com.robin.gateway.model.Domain;
-import com.robin.gateway.model.dto.AliasRequest;
-import com.robin.gateway.model.dto.DomainRequest;
+import com.robin.gateway.model.dto.InitialRecordRequest;
+import com.robin.gateway.repository.DnsRecordRepository;
 import com.robin.gateway.service.DomainService;
+import com.robin.gateway.service.DomainSyncService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/domains")
 @RequiredArgsConstructor
-@Slf4j
-@Tag(name = "Domain Management", description = "Endpoints for managing email domains and aliases")
-@SecurityRequirement(name = "Bearer Authentication")
+@Tag(name = "Domain Management", description = "APIs for managing mail domains and DNS configuration")
 public class DomainController {
 
     private final DomainService domainService;
-
-    // ===== Domain Endpoints =====
+    private final DomainSyncService domainSyncService;
+    private final DnsRecordRepository dnsRecordRepository;
+    private final com.robin.gateway.service.DnsDiscoveryService dnsDiscoveryService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @Operation(summary = "List all domains", description = "Get all email domains with pagination")
-    public Mono<ResponseEntity<Page<Domain>>> listDomains(@PageableDefault(size = 20) Pageable pageable) {
-        log.info("Listing domains - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
+    @Operation(summary = "List all domains", description = "Returns a paginated list of managed domains")
+    public Mono<Page<Domain>> getAllDomains(
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
         return domainService.getAllDomains(pageable)
-                .map(ResponseEntity::ok)
-                .onErrorResume(e -> {
-                    log.error("Error listing domains", e);
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-                });
+                .doOnError(e -> System.err.println("Error in getAllDomains controller: " + e.getMessage()));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @Operation(summary = "Get domain by ID", description = "Retrieve a specific domain by its ID")
-    public Mono<ResponseEntity<Domain>> getDomain(@PathVariable Long id) {
-        log.info("Getting domain with id: {}", id);
-        return domainService.getDomainById(id)
-                .map(ResponseEntity::ok)
-                .onErrorResume(e -> {
-                    log.error("Error getting domain with id: {}", id, e);
-                    if (e.getMessage().contains("not found")) {
-                        return Mono.just(ResponseEntity.notFound().build());
-                    }
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-                });
+    @Operation(summary = "Get domain by ID", description = "Returns detailed information about a specific domain")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved domain"),
+        @ApiResponse(responseCode = "404", description = "Domain not found")
+    })
+    public Mono<Domain> getDomain(@Parameter(description = "Internal domain ID") @PathVariable Long id) {
+        return domainService.getDomainById(id);
+    }
+
+    @PostMapping("/discover")
+    @Operation(summary = "Discover domain settings", description = "Performs DNS lookup and API discovery to detect existing domain configuration")
+    public Mono<com.robin.gateway.service.DnsDiscoveryService.DiscoveryResult> discoverDomain(@Valid @RequestBody DiscoverDomainRequest request) {
+        return dnsDiscoveryService.discover(request.getDomain(), request.getDnsProviderId());
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Create domain", description = "Create a new email domain")
-    public Mono<ResponseEntity<Domain>> createDomain(@Valid @RequestBody DomainRequest request) {
-        log.info("Creating domain: {}", request.getDomain());
-        return domainService.createDomain(request.getDomain())
-                .map(domain -> ResponseEntity.status(HttpStatus.CREATED).body(domain))
-                .onErrorResume(e -> {
-                    log.error("Error creating domain: {}", request.getDomain(), e);
-                    if (e instanceof IllegalArgumentException) {
-                        return Mono.just(ResponseEntity.badRequest().build());
-                    }
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-                });
+    @Operation(summary = "Create a new domain", description = "Registers a new domain and optionally sets initial DNS records")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Domain created successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid input data")
+    })
+    public Mono<Domain> createDomain(@Valid @RequestBody CreateDomainRequest request) {
+        return domainService.createDomain(
+            request.getDomain(), 
+            request.getDnsProviderId(), 
+            request.getRegistrarProviderId(),
+            request.getEmailProviderId(),
+            request.getConfig(),
+            request.getInitialRecords()
+        );
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Update domain", description = "Updates domain configuration settings (DMARC, SPF, etc.)")
+    public Mono<Domain> updateDomain(@PathVariable Long id, @Valid @RequestBody Domain domain) {
+        return domainService.updateDomain(id, domain);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Delete domain", description = "Delete an email domain and all its aliases")
-    public Mono<ResponseEntity<Map<String, String>>> deleteDomain(@PathVariable Long id) {
-        log.info("Deleting domain with id: {}", id);
-        return domainService.deleteDomain(id)
-                .then(Mono.just(ResponseEntity.ok(Map.of("message", "Domain deleted successfully"))))
-                .onErrorResume(e -> {
-                    log.error("Error deleting domain with id: {}", id, e);
-                    if (e.getMessage().contains("not found")) {
-                        return Mono.just(ResponseEntity.notFound().build());
-                    }
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-                });
+    @Operation(summary = "Delete domain", description = "Removes a domain from management")
+    public Mono<Void> deleteDomain(@PathVariable Long id) {
+        return domainService.deleteDomain(id);
     }
 
-    // ===== Alias Endpoints =====
-
-    @GetMapping("/{domainId}/aliases")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @Operation(summary = "List domain aliases", description = "Get all aliases for a specific domain")
-    public Mono<ResponseEntity<List<Alias>>> listDomainAliases(@PathVariable Long domainId) {
-        log.info("Listing aliases for domain id: {}", domainId);
-        return domainService.getAliasesByDomain(domainId)
-                .map(ResponseEntity::ok)
-                .onErrorResume(e -> {
-                    log.error("Error listing aliases for domain id: {}", domainId, e);
-                    if (e.getMessage().contains("not found")) {
-                        return Mono.just(ResponseEntity.notFound().build());
-                    }
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-                });
+    @Schema(description = "Request for domain discovery")
+    @Data
+    public static class DiscoverDomainRequest {
+        @Schema(description = "Domain name to discover", example = "example.com")
+        @NotBlank(message = "Domain is required")
+        private String domain;
+        
+        @Schema(description = "ID of the DNS provider to use for API discovery")
+        @NotNull(message = "DNS Provider ID is required")
+        private Long dnsProviderId;
     }
 
-    @GetMapping("/aliases")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @Operation(summary = "List all aliases", description = "Get all email aliases with pagination")
-    public Mono<ResponseEntity<Page<Alias>>> listAllAliases(@PageableDefault(size = 20) Pageable pageable) {
-        log.info("Listing all aliases - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        return domainService.getAllAliases(pageable)
-                .map(ResponseEntity::ok)
-                .onErrorResume(e -> {
-                    log.error("Error listing aliases", e);
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-                });
+    @Schema(description = "Request for creating a new domain")
+    @Data
+    public static class CreateDomainRequest {
+        @Schema(description = "Domain name", example = "newdomain.com")
+        @NotBlank(message = "Domain is required")
+        private String domain;
+        
+        @Schema(description = "ID of the DNS provider for this domain")
+        @NotNull(message = "DNS Provider ID is required")
+        private Long dnsProviderId;
+        
+        @Schema(description = "Optional ID of the registrar provider")
+        private Long registrarProviderId;
+
+        @Schema(description = "Optional ID of the email provider")
+        private Long emailProviderId;
+
+        @Schema(description = "Optional initial domain configuration")
+        private Domain config;
+
+        @Schema(description = "Optional list of initial DNS records to create")
+        private List<InitialRecordRequest> initialRecords;
     }
 
-    @GetMapping("/aliases/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @Operation(summary = "Get alias by ID", description = "Retrieve a specific alias by its ID")
-    public Mono<ResponseEntity<Alias>> getAlias(@PathVariable Long id) {
-        log.info("Getting alias with id: {}", id);
-        return domainService.getAliasById(id)
-                .map(ResponseEntity::ok)
-                .onErrorResume(e -> {
-                    log.error("Error getting alias with id: {}", id, e);
-                    if (e.getMessage().contains("not found")) {
-                        return Mono.just(ResponseEntity.notFound().build());
-                    }
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-                });
+    @GetMapping("/{id}/records")
+    @Operation(summary = "Get domain DNS records", description = "Returns all DNS records associated with this domain")
+    public Mono<List<com.robin.gateway.model.DnsRecord>> getRecords(@PathVariable Long id) {
+        return Mono.fromCallable(() -> dnsRecordRepository.findByDomain_Id(id))
+                .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic());
     }
 
-    @PostMapping("/aliases")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Create alias", description = "Create a new email alias")
-    public Mono<ResponseEntity<Alias>> createAlias(@Valid @RequestBody AliasRequest request) {
-        log.info("Creating alias: {} -> {}", request.getSource(), request.getDestination());
-        return domainService.createAlias(request.getSource(), request.getDestination())
-                .map(alias -> ResponseEntity.status(HttpStatus.CREATED).body(alias))
-                .onErrorResume(e -> {
-                    log.error("Error creating alias: {} -> {}", request.getSource(), request.getDestination(), e);
-                    if (e instanceof IllegalArgumentException) {
-                        return Mono.just(ResponseEntity.badRequest().build());
-                    }
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-                });
+    @PostMapping("/{id}/sync")
+    @Operation(summary = "Sync domain with provider", description = "Pushes local DNS changes to the remote DNS provider")
+    public Mono<Void> syncDomain(@PathVariable Long id) {
+        return domainSyncService.syncDomain(id);
     }
 
-    @PutMapping("/aliases/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Update alias", description = "Update the destination of an existing alias")
-    public Mono<ResponseEntity<Alias>> updateAlias(
-            @PathVariable Long id,
-            @RequestParam String destination) {
-        log.info("Updating alias id: {} with new destination: {}", id, destination);
-        return domainService.updateAlias(id, destination)
-                .map(ResponseEntity::ok)
-                .onErrorResume(e -> {
-                    log.error("Error updating alias with id: {}", id, e);
-                    if (e.getMessage().contains("not found")) {
-                        return Mono.just(ResponseEntity.notFound().build());
-                    }
-                    if (e instanceof IllegalArgumentException) {
-                        return Mono.just(ResponseEntity.badRequest().build());
-                    }
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-                });
+    @GetMapping("/{id}/dnssec")
+    @Operation(summary = "Get DNSSEC status", description = "Returns current DNSSEC configuration and DS records")
+    public Mono<List<com.robin.gateway.model.DnsRecord>> getDnssecStatus(@PathVariable Long id) {
+        return domainService.getDnssecStatus(id);
     }
 
-    @DeleteMapping("/aliases/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Delete alias", description = "Delete an email alias")
-    public Mono<ResponseEntity<Map<String, String>>> deleteAlias(@PathVariable Long id) {
-        log.info("Deleting alias with id: {}", id);
-        return domainService.deleteAlias(id)
-                .then(Mono.just(ResponseEntity.ok(Map.of("message", "Alias deleted successfully"))))
-                .onErrorResume(e -> {
-                    log.error("Error deleting alias with id: {}", id, e);
-                    if (e.getMessage().contains("not found")) {
-                        return Mono.just(ResponseEntity.notFound().build());
-                    }
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-                });
+    @PostMapping("/{id}/dnssec/enable")
+    @Operation(summary = "Enable DNSSEC", description = "Triggers DNSSEC enablement on the provider")
+    public Mono<Void> enableDnssec(@PathVariable Long id) {
+        return domainService.enableDnssec(id);
+    }
+
+    @PostMapping("/{id}/dnssec/disable")
+    @Operation(summary = "Disable DNSSEC", description = "Triggers DNSSEC disablement on the provider")
+    public Mono<Void> disableDnssec(@PathVariable Long id) {
+        return domainService.disableDnssec(id);
     }
 }

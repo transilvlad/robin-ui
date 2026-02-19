@@ -322,6 +322,24 @@ $robin-theme: mat.m2-define-light-theme((
   .separator-vertical {
     @apply separator h-full w-[1px];
   }
+
+  /* Toggle component */
+  .toggle {
+    @apply appearance-none h-6 w-11 rounded-full bg-input border-transparent relative cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    
+    &::after {
+      content: "";
+      @apply absolute top-0.5 left-0.5 bg-background border border-border rounded-full h-5 w-5 shadow-sm transition-transform;
+    }
+
+    &:checked {
+      @apply bg-primary;
+      
+      &::after {
+        @apply translate-x-5 border-transparent;
+      }
+    }
+  }
 }
 
 /* Utility classes for Robin theme */

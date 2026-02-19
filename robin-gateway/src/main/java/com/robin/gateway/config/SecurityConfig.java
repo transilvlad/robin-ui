@@ -3,6 +3,7 @@ package com.robin.gateway.config;
 import com.robin.gateway.auth.JwtTokenProvider;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -46,6 +47,9 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
 
+    @Value("${cors.allowed-origins:http://localhost:4200,http://localhost:8080}")
+    private String corsAllowedOrigins;
+
     /**
      * Configure security filter chain.
      *
@@ -58,8 +62,19 @@ public class SecurityConfig {
                 // Disable CSRF (using stateless JWT)
                 .csrf(csrf -> csrf.disable())
 
+                // Disable session creation
+                .requestCache(cache -> cache.disable())
+
                 // Configure CORS
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+                // Configure security headers
+                .headers(headers -> headers
+                        .frameOptions(frameOptions -> frameOptions.disable())
+                        .contentTypeOptions(contentTypeOptions -> {})
+                        .xssProtection(xss -> xss.disable())
+                        .cache(cache -> cache.disable())
+                )
 
                 // Stateless session (no session cookies)
                 .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
@@ -107,7 +122,9 @@ public class SecurityConfig {
                 if (jwtTokenProvider.validateToken(token)) {
                     Claims claims = jwtTokenProvider.getAllClaimsFromToken(token);
                     String username = claims.getSubject();
-                    
+
+                    // [GAP-006] JWT claims are inherently untyped - this is a justified use of unchecked cast
+                    // because the JWT library doesn't provide type-safe access to custom claims
                     @SuppressWarnings("unchecked")
                     List<String> roles = claims.get("roles", List.class);
                     
@@ -136,12 +153,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allow origins
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:4200",
-                "http://localhost:8080",
-                "https://robin-ui.example.com"
-        ));
+        // Allow origins from environment variable (comma-separated)
+        configuration.setAllowedOrigins(Arrays.asList(corsAllowedOrigins.split(",")));
 
         // Allow methods
         configuration.setAllowedMethods(Arrays.asList(

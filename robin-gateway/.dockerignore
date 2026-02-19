@@ -1,0 +1,61 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/
+mvnw
+mvnw.cmd
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.eclipse/
+.settings/
+.classpath
+.project
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+docs/
+
+# Test and quality
+*.log
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.jar
+*.war
+*.ear
+*.class
+
+# Security
+*.pem
+*.key
+*.crt
+.env
+.env.*
+*.env
+
+# Compliance and scanning
+dependency-check-report.html
+dependency-check-report.json
+spotbugs.xml
+pmd.xml
+checkstyle-result.xml
+jacoco.exec
+.jacoco/
+
+# Scripts
+*.sh
+Makefile

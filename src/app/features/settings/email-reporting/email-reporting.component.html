@@ -1,0 +1,127 @@
+<div class="p-10 min-h-screen bg-background">
+  <div class="max-w-[1400px] mx-auto space-y-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-foreground">Email Reporting</h1>
+        <p class="text-muted-foreground mt-1">Configure global email reporting, DMARC, and SPF settings.</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button class="btn-primary btn-md" (click)="save()" [disabled]="form.invalid || saving || loading">
+          <span *ngIf="saving" class="loading loading-spinner loading-xs mr-2"></span>
+          Save Changes
+        </button>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      <span>{{ successMessage }}</span>
+    </div>
+    <div *ngIf="errorMessage" class="alert alert-error">
+      <span>{{ errorMessage }}</span>
+    </div>
+
+    <form [formGroup]="form" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- General Reporting -->
+      <div class="lg:col-span-3 space-y-6">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">General Reporting</h2>
+            <p class="card-description">Where should DMARC and failure reports be sent?</p>
+          </div>
+          <div class="card-content space-y-4">
+            <div class="space-y-2 max-w-md">
+              <label for="reportingEmail" class="text-sm font-medium leading-none">Reporting Email Address (RUA)</label>
+              <input id="reportingEmail" type="email" class="input" formControlName="reportingEmail" placeholder="reports@yourdomain.com">
+              <p class="text-xs text-muted-foreground">This email will be used in the 'rua' tag of generated DMARC records.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DMARC Settings -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">DMARC Configuration</h2>
+            <p class="card-description">Define the default DMARC policy for your domains.</p>
+          </div>
+          <div class="card-content space-y-4" formGroupName="dmarc">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              <div class="space-y-2">
+                <label class="text-sm font-medium leading-none">Policy (p)</label>
+                <select class="input bg-background" formControlName="policy">
+                  <option value="none">None (Monitor Only)</option>
+                  <option value="quarantine">Quarantine</option>
+                  <option value="reject">Reject</option>
+                </select>
+                <p class="text-xs text-muted-foreground">Action to take when both SPF and DKIM fail.</p>
+              </div>
+
+              <div class="space-y-2">
+                <label class="text-sm font-medium leading-none">Subdomain Policy (sp)</label>
+                <select class="input bg-background" formControlName="subdomainPolicy">
+                  <option value="none">None</option>
+                  <option value="quarantine">Quarantine</option>
+                  <option value="reject">Reject</option>
+                </select>
+                <p class="text-xs text-muted-foreground">Policy for subdomains (optional).</p>
+              </div>
+
+              <div class="space-y-2">
+                <label class="text-sm font-medium leading-none">Percentage (pct)</label>
+                <div class="flex items-center gap-2">
+                    <input type="range" min="0" max="100" class="range range-primary range-sm" formControlName="percentage" />
+                    <span class="badge badge-neutral w-12">{{ form.get('dmarc.percentage')?.value }}%</span>
+                </div>
+                <p class="text-xs text-muted-foreground">Percentage of messages to subject to filtering.</p>
+              </div>
+
+              <div class="space-y-2">
+                <label class="text-sm font-medium leading-none">Alignment (adkim/aspf)</label>
+                <select class="input bg-background" formControlName="alignment">
+                  <option value="r">Relaxed (Recommended)</option>
+                  <option value="s">Strict</option>
+                </select>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SPF Settings -->
+      <div class="lg:col-span-1 space-y-6">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">SPF Configuration</h2>
+            <p class="card-description">Sender Policy Framework defaults.</p>
+          </div>
+          <div class="card-content space-y-4" formGroupName="spf">
+            
+            <div class="space-y-2">
+              <label class="text-sm font-medium leading-none">Default Includes</label>
+              <input type="text" class="input" formControlName="includes" placeholder="spf.google.com, sendgrid.net">
+              <p class="text-xs text-muted-foreground">Comma-separated list of domains to include in SPF record.</p>
+            </div>
+
+            <div class="flex items-center justify-between p-3 border rounded-lg">
+              <div class="space-y-0.5">
+                <label class="text-sm font-medium">Soft Fail (~all)</label>
+                <p class="text-xs text-muted-foreground">Use ~all instead of -all</p>
+              </div>
+              <div class="relative inline-flex h-6 w-11 items-center rounded-full bg-primary/10">
+                 <input type="checkbox" class="toggle toggle-primary" formControlName="softFail" />
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</div>

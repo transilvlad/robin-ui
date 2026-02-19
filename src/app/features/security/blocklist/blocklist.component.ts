@@ -1,8 +1,21 @@
-import { Component, OnInit, inject, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatPaginator, PageEvent } from '@angular/material/paginator';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialog } from '@angular/material/dialog';
+import { Component, OnInit, OnDestroy, inject, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { Subject, takeUntil } from 'rxjs';
+import { MatPaginator, PageEvent, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCardModule } from '@angular/material/card';
+import { MatTableModule } from '@angular/material/table';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatChipsModule } from '@angular/material/chips';
 import { SecurityService } from '../../../core/services/security.service';
 import {
   BlocklistEntry,
@@ -10,18 +23,42 @@ import {
   BlocklistEntryType,
   validateBlocklistValue,
 } from '../../../core/models/security.model';
+import { LoggingService } from '@core/services/logging.service';
+import { StatusBadgeComponent } from '@shared/components/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-blocklist',
   templateUrl: './blocklist.component.html',
   styleUrls: ['./blocklist.component.scss'],
-  standalone: false
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatCardModule,
+    MatTableModule,
+    MatSlideToggleModule,
+    MatProgressSpinnerModule,
+    MatPaginatorModule,
+    MatSnackBarModule,
+    MatDialogModule,
+    MatMenuModule,
+    MatChipsModule,
+    StatusBadgeComponent,
+  ]
 })
-export class BlocklistComponent implements OnInit {
+export class BlocklistComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly securityService = inject(SecurityService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
+  private readonly loggingService = inject(LoggingService);
+  private destroy$ = new Subject<void>();
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -50,6 +87,11 @@ export class BlocklistComponent implements OnInit {
     this.loadEntries();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   private initializeForm(): void {
     this.entryForm = this.fb.group({
       type: [BlocklistEntryType.IP, Validators.required],
@@ -60,42 +102,46 @@ export class BlocklistComponent implements OnInit {
     });
 
     // Add custom validator for value based on type
-    this.entryForm.get('type')?.valueChanges.subscribe(() => {
-      this.entryForm.get('value')?.updateValueAndValidity();
-    });
+    this.entryForm.get('type')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.entryForm.get('value')?.updateValueAndValidity();
+      });
   }
 
   loadEntries(): void {
     this.loading = true;
 
-    const params: any = {
+    const params: Record<string, string | number | boolean> = {
       page: this.currentPage,
       limit: this.pageSize,
     };
 
     if (this.filterType) {
-      params.type = this.filterType;
+      params['type'] = this.filterType;
     }
 
     if (this.filterActive !== null) {
-      params.active = this.filterActive;
+      params['active'] = this.filterActive;
     }
 
-    this.securityService.getBlocklistEntries(params).subscribe({
-      next: (response) => {
-        this.entries = response.items;
-        this.totalEntries = response.total;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Failed to load blocklist entries:', error);
-        this.snackBar.open('Failed to load blocklist entries', 'Close', {
-          duration: 5000,
-          panelClass: ['error-snackbar']
-        });
-        this.loading = false;
-      }
-    });
+    this.securityService.getBlocklistEntries(params)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.entries = response.items;
+          this.totalEntries = response.total;
+          this.loading = false;
+        },
+        error: (error) => {
+          this.loggingService.error('Failed to load blocklist entries:', error);
+          this.snackBar.open('Failed to load blocklist entries', 'Close', {
+            duration: 5000,
+            panelClass: ['error-snackbar']
+          });
+          this.loading = false;
+        }
+      });
   }
 
   onPageChange(event: PageEvent): void {
@@ -154,26 +200,28 @@ export class BlocklistComponent implements OnInit {
       active: formValue.active ?? true,
     };
 
-    this.securityService.createBlocklistEntry(entry).subscribe({
-      next: (created) => {
-        this.snackBar.open('✓ Blocklist entry added successfully', 'Close', {
-          duration: 3000,
-          panelClass: ['success-snackbar']
-        });
-        this.loadEntries();
-        this.toggleAddForm();
-      },
-      error: (error) => {
-        this.snackBar.open(
-          `✗ Failed to add entry: ${error.message || 'Unknown error'}`,
-          'Close',
-          {
-            duration: 7000,
-            panelClass: ['error-snackbar']
-          }
-        );
-      }
-    });
+    this.securityService.createBlocklistEntry(entry)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (created) => {
+          this.snackBar.open('✓ Blocklist entry added successfully', 'Close', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+          this.loadEntries();
+          this.toggleAddForm();
+        },
+        error: (error) => {
+          this.snackBar.open(
+            `✗ Failed to add entry: ${error.message || 'Unknown error'}`,
+            'Close',
+            {
+              duration: 7000,
+              panelClass: ['error-snackbar']
+            }
+          );
+        }
+      });
   }
 
   deleteEntry(entry: BlocklistEntry): void {
@@ -185,25 +233,27 @@ export class BlocklistComponent implements OnInit {
 
     if (!confirmed) return;
 
-    this.securityService.deleteBlocklistEntry(entry.id).subscribe({
-      next: () => {
-        this.snackBar.open('✓ Blocklist entry deleted successfully', 'Close', {
-          duration: 3000,
-          panelClass: ['success-snackbar']
-        });
-        this.loadEntries();
-      },
-      error: (error) => {
-        this.snackBar.open(
-          `✗ Failed to delete entry: ${error.message || 'Unknown error'}`,
-          'Close',
-          {
-            duration: 7000,
-            panelClass: ['error-snackbar']
-          }
-        );
-      }
-    });
+    this.securityService.deleteBlocklistEntry(entry.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.snackBar.open('✓ Blocklist entry deleted successfully', 'Close', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+          this.loadEntries();
+        },
+        error: (error) => {
+          this.snackBar.open(
+            `✗ Failed to delete entry: ${error.message || 'Unknown error'}`,
+            'Close',
+            {
+              duration: 7000,
+              panelClass: ['error-snackbar']
+            }
+          );
+        }
+      });
   }
 
   toggleActive(entry: BlocklistEntry): void {
@@ -211,63 +261,68 @@ export class BlocklistComponent implements OnInit {
 
     const newStatus = !entry.active;
 
-    this.securityService.updateBlocklistEntry(entry.id, { active: newStatus }).subscribe({
-      next: (updated) => {
-        this.snackBar.open(
-          `✓ Entry ${newStatus ? 'activated' : 'deactivated'} successfully`,
-          'Close',
-          {
-            duration: 3000,
-            panelClass: ['success-snackbar']
-          }
-        );
-        this.loadEntries();
-      },
-      error: (error) => {
-        this.snackBar.open(
-          `✗ Failed to update entry: ${error.message || 'Unknown error'}`,
-          'Close',
-          {
-            duration: 7000,
-            panelClass: ['error-snackbar']
-          }
-        );
-      }
-    });
+    this.securityService.updateBlocklistEntry(entry.id, { active: newStatus })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updated) => {
+          this.snackBar.open(
+            `✓ Entry ${newStatus ? 'activated' : 'deactivated'} successfully`,
+            'Close',
+            {
+              duration: 3000,
+              panelClass: ['success-snackbar']
+            }
+          );
+          this.loadEntries();
+        },
+        error: (error) => {
+          this.snackBar.open(
+            `✗ Failed to update entry: ${error.message || 'Unknown error'}`,
+            'Close',
+            {
+              duration: 7000,
+              panelClass: ['error-snackbar']
+            }
+          );
+        }
+      });
   }
 
   exportBlocklist(format: 'csv' | 'json'): void {
-    this.securityService.exportBlocklist(format).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `blocklist-${new Date().toISOString().split('T')[0]}.${format}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+    this.securityService.exportBlocklist(format)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `blocklist-${new Date().toISOString().split('T')[0]}.${format}`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
 
-        this.snackBar.open(`✓ Blocklist exported as ${format.toUpperCase()}`, 'Close', {
-          duration: 3000,
-          panelClass: ['success-snackbar']
-        });
-      },
-      error: (error) => {
-        this.snackBar.open(
-          `✗ Failed to export: ${error.message || 'Unknown error'}`,
-          'Close',
-          {
-            duration: 7000,
-            panelClass: ['error-snackbar']
-          }
-        );
-      }
-    });
+          this.snackBar.open(`✓ Blocklist exported as ${format.toUpperCase()}`, 'Close', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+        },
+        error: (error) => {
+          this.snackBar.open(
+            `✗ Failed to export: ${error.message || 'Unknown error'}`,
+            'Close',
+            {
+              duration: 7000,
+              panelClass: ['error-snackbar']
+            }
+          );
+        }
+      });
   }
 
-  onFileSelected(event: any): void {
-    const file: File = event.target.files[0];
+  onFileSelected(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const file: File | undefined = target.files?.[0];
     if (!file) return;
 
     // Validate file type
@@ -280,37 +335,39 @@ export class BlocklistComponent implements OnInit {
       return;
     }
 
-    this.securityService.importBlocklist(file).subscribe({
-      next: (result) => {
-        let message = `✓ Import complete: ${result.imported} entries added`;
-        if (result.failed > 0) {
-          message += `, ${result.failed} failed`;
-        }
-
-        this.snackBar.open(message, 'Close', {
-          duration: 7000,
-          panelClass: result.failed > 0 ? ['error-snackbar'] : ['success-snackbar']
-        });
-
-        if (result.errors && result.errors.length > 0) {
-          console.error('Import errors:', result.errors);
-        }
-
-        this.loadEntries();
-        event.target.value = ''; // Reset file input
-      },
-      error: (error) => {
-        this.snackBar.open(
-          `✗ Import failed: ${error.message || 'Unknown error'}`,
-          'Close',
-          {
-            duration: 7000,
-            panelClass: ['error-snackbar']
+    this.securityService.importBlocklist(file)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result) => {
+          let message = `✓ Import complete: ${result.imported} entries added`;
+          if (result.failed > 0) {
+            message += `, ${result.failed} failed`;
           }
-        );
-        event.target.value = ''; // Reset file input
-      }
-    });
+
+          this.snackBar.open(message, 'Close', {
+            duration: 7000,
+            panelClass: result.failed > 0 ? ['error-snackbar'] : ['success-snackbar']
+          });
+
+          if (result.errors && result.errors.length > 0) {
+            this.loggingService.error('Import errors:', result.errors);
+          }
+
+          this.loadEntries();
+          target.value = ''; // Reset file input
+        },
+        error: (error) => {
+          this.snackBar.open(
+            `✗ Import failed: ${error.message || 'Unknown error'}`,
+            'Close',
+            {
+              duration: 7000,
+              panelClass: ['error-snackbar']
+            }
+          );
+          target.value = ''; // Reset file input
+        }
+      });
   }
 
   formatDate(dateString: string | undefined): string {

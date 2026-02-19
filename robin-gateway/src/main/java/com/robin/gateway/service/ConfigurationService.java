@@ -118,6 +118,7 @@ public class ConfigurationService {
                 .toBodilessEntity()
                 .doOnSuccess(v -> log.info("Triggered config reload on Robin Server"))
                 .doOnError(e -> log.error("Failed to trigger config reload: {}", e.getMessage()))
+                .onErrorResume(e -> Mono.empty())
                 .then();
     }
 }

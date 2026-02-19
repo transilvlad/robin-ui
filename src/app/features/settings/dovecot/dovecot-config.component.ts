@@ -1,19 +1,46 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormArray, FormControl } from '@angular/forms';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, FormArray, FormControl, ReactiveFormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatCardModule } from '@angular/material/card';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatChipsModule } from '@angular/material/chips';
+import { Subject, takeUntil } from 'rxjs';
 import { ConfigService } from '@core/services/config.service';
 import { DovecotConfig } from '@core/models/config.model';
+import { LoggingService } from '@core/services/logging.service';
 
 @Component({
   selector: 'app-dovecot-config',
   templateUrl: './dovecot-config.component.html',
   styleUrls: [],
-  standalone: false
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatCardModule,
+    MatSlideToggleModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule,
+    MatChipsModule,
+  ]
 })
-export class DovecotConfigComponent implements OnInit {
+export class DovecotConfigComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
   private readonly configService = inject(ConfigService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly loggingService = inject(LoggingService);
+  private readonly destroy$ = new Subject<void>();
 
   configForm!: FormGroup;
   loading = false;
@@ -22,6 +49,11 @@ export class DovecotConfigComponent implements OnInit {
   ngOnInit(): void {
     this.initializeForm();
     this.loadConfig();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private initializeForm(): void {
@@ -59,20 +91,22 @@ export class DovecotConfigComponent implements OnInit {
 
   private loadConfig(): void {
     this.loading = true;
-    this.configService.getConfig<DovecotConfig>('dovecot').subscribe({
-      next: (config) => {
-        this.patchForm(config);
-        this.loading = false;
-      },
-      error: (error: any) => {
-        console.error('Failed to load Dovecot config:', error);
-        this.snackBar.open('Failed to load Dovecot configuration', 'Close', {
-          duration: 5000,
-          panelClass: ['error-snackbar']
-        });
-        this.loading = false;
-      }
-    });
+    this.configService.getConfig<DovecotConfig>('dovecot')
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (config) => {
+          this.patchForm(config);
+          this.loading = false;
+        },
+        error: (error: HttpErrorResponse) => {
+          this.loggingService.error('Failed to load Dovecot config:', error);
+          this.snackBar.open('Failed to load Dovecot configuration', 'Close', {
+            duration: 5000,
+            panelClass: ['error-snackbar']
+          });
+          this.loading = false;
+        }
+      });
   }
 
   private patchForm(config: DovecotConfig): void {
@@ -130,26 +164,28 @@ export class DovecotConfigComponent implements OnInit {
     this.saving = true;
     const config = this.configForm.value as DovecotConfig;
 
-    this.configService.updateConfig('dovecot', config).subscribe({
-      next: (updatedConfig) => {
-        this.saving = false;
-        this.patchForm(updatedConfig);
-        this.snackBar.open('✓ Dovecot configuration saved successfully', 'Close', {
-          duration: 3000,
-          panelClass: ['success-snackbar']
-        });
-      },
-      error: (error: any) => {
-        this.saving = false;
-        this.snackBar.open(
-          `✗ Failed to save configuration: ${error.message || 'Unknown error'}`,
-          'Close',
-          {
-            duration: 7000,
-            panelClass: ['error-snackbar']
-          }
-        );
-      }
-    });
+    this.configService.updateConfig('dovecot', config)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (updatedConfig) => {
+          this.saving = false;
+          this.patchForm(updatedConfig);
+          this.snackBar.open('✓ Dovecot configuration saved successfully', 'Close', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
+        },
+        error: (error: HttpErrorResponse) => {
+          this.saving = false;
+          this.snackBar.open(
+            `✗ Failed to save configuration: ${error.message || 'Unknown error'}`,
+            'Close',
+            {
+              duration: 7000,
+              panelClass: ['error-snackbar']
+            }
+          );
+        }
+      });
   }
 }

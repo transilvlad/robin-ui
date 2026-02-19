@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
 @Testcontainers
+@Tag("docker-integration")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuthIntegrationTest {
@@ -97,27 +98,26 @@ class AuthIntegrationTest {
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().exists("Set-Cookie") // Refresh token cookie
-                .expectBody(AuthResponse.class)
-                .value(response -> {
-                    // Verify response structure
-                    assertThat(response).isNotNull();
-                    assertThat(response.getUser()).isNotNull();
-                    assertThat(response.getUser().getUsername()).isEqualTo("admin@robin.local");
-                    assertThat(response.getUser().getRoles()).isNotEmpty();
-                    assertThat(response.getUser().getRoles()).contains("ROLE_ADMIN");
-
-                    // Verify tokens
-                    assertThat(response.getTokens()).isNotNull();
-                    assertThat(response.getTokens().getAccessToken()).isNotBlank();
-                    assertThat(response.getTokens().getRefreshToken()).isNotBlank();
-                    assertThat(response.getTokens().getExpiresIn()).isEqualTo(1800); // 30 minutes
-                    assertThat(response.getTokens().getTokenType()).isEqualTo("Bearer");
-
-                    // Store tokens for subsequent tests
-                    this.accessToken = response.getTokens().getAccessToken();
-                });
-    }
-
+                            .expectBody(AuthResponse.class)
+                            .value(response -> {
+                                // Verify response structure
+                                assertThat(response).isNotNull();
+                                assertThat(response.user()).isNotNull();
+                                assertThat(response.user().username()).isEqualTo("admin@robin.local");
+                                assertThat(response.user().roles()).isNotEmpty();
+                                assertThat(response.user().roles()).contains("ROLE_ADMIN");
+                
+                                // Verify tokens
+                                assertThat(response.tokens()).isNotNull();
+                                assertThat(response.tokens().accessToken()).isNotBlank();
+                                assertThat(response.tokens().refreshToken()).isNotBlank();
+                                assertThat(response.tokens().expiresIn()).isEqualTo(1800); // 30 minutes
+                                assertThat(response.tokens().tokenType()).isEqualTo("Bearer");
+                
+                                // Store tokens for subsequent tests
+                                this.accessToken = response.tokens().accessToken();
+                            });
+                    }
     @Test
     @Order(2)
     @DisplayName("Test 2: Login with invalid credentials should return 401")
@@ -271,8 +271,8 @@ class AuthIntegrationTest {
                 .expectBody(AuthResponse.class)
                 .returnResult()
                 .getResponseBody()
-                .getTokens()
-                .getAccessToken();
+                .tokens()
+                .accessToken();
 
         assertThat(newAccessToken).isNotBlank();
 

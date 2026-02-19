@@ -1,14 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Subject, takeUntil } from 'rxjs';
 import { DashboardService } from './services/dashboard.service';
 import { HealthResponse } from '@core/models/health.model';
 
 @Component({
     selector: 'app-dashboard',
+    standalone: true,
+    imports: [CommonModule],
     templateUrl: './dashboard.component.html',
-    styleUrls: ['./dashboard.component.scss'],
-    standalone: false
+    styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   health?: HealthResponse;
   loading = true;
 
@@ -18,18 +22,25 @@ export class DashboardComponent implements OnInit {
     this.loadHealth();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   loadHealth(): void {
     this.loading = true;
-    this.dashboardService.getHealth().subscribe({
-      next: (health) => {
-        this.health = health;
-        this.loading = false;
-      },
-      error: () => {
-        this.health = undefined;
-        this.loading = false;
-      },
-    });
+    this.dashboardService.getHealth()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (health) => {
+          this.health = health;
+          this.loading = false;
+        },
+        error: () => {
+          this.health = undefined;
+          this.loading = false;
+        },
+      });
   }
 
   refresh(): void {

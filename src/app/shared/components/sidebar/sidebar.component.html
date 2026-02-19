@@ -29,6 +29,7 @@
         stroke-width="2"
         stroke-linecap="round"
         stroke-linejoin="round"
+        aria-hidden="true"
         >
         <polyline points="15 18 9 12 15 6"></polyline>
       </svg>
@@ -126,6 +127,48 @@
           }
         </li>
       }
+      <li class="pt-3 mt-2 border-t border-sidebar-border/60">
+        <div
+          class="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/50"
+          [class.sr-only]="isCollapsed"
+        >
+          DMARC
+        </div>
+        <div class="space-y-1">
+          <a
+            routerLink="/dmarc"
+            routerLinkActive="bg-sidebar-accent text-sidebar-primary"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+            [title]="isCollapsed ? 'DMARC Dashboard' : ''"
+          >
+            <span class="truncate">{{ isCollapsed ? 'D' : 'Dashboard' }}</span>
+          </a>
+          <a
+            routerLink="/dmarc/reports"
+            routerLinkActive="bg-sidebar-accent text-sidebar-primary"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+            [title]="isCollapsed ? 'DMARC Reports' : ''"
+          >
+            <span class="truncate">{{ isCollapsed ? 'R' : 'Reports' }}</span>
+          </a>
+          <a
+            routerLink="/dmarc/validate"
+            routerLinkActive="bg-sidebar-accent text-sidebar-primary"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+            [title]="isCollapsed ? 'DMARC Validate' : ''"
+          >
+            <span class="truncate">{{ isCollapsed ? 'V' : 'Validate' }}</span>
+          </a>
+          <a
+            routerLink="/dmarc/ingest"
+            routerLinkActive="bg-sidebar-accent text-sidebar-primary"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+            [title]="isCollapsed ? 'DMARC Ingest' : ''"
+          >
+            <span class="truncate">{{ isCollapsed ? 'I' : 'Ingest' }}</span>
+          </a>
+        </div>
+      </li>
     </ul>
   </nav>
 </aside>
