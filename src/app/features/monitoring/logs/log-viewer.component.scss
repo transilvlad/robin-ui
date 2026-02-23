@@ -48,9 +48,23 @@ pre {
 
 // ===== Phase 4: Glassmorphic Overrides — Log Viewer =====
 .page-root {
-  background: var(--bg-blur);
+  background: transparent;
   min-height: 100vh;
   color: var(--text-main);
+}
+
+.terminal-bg {
+  background: var(--bg-panel) !important;
+}
+
+.terminal-header {
+  background: var(--bg-layer-1) !important;
+  border-color: var(--border-dim) !important;
+}
+
+.terminal-footer {
+  background: var(--bg-layer-1) !important;
+  border-color: var(--border-dim) !important;
 }
 
 .card {
