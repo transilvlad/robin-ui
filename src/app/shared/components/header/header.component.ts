@@ -68,9 +68,4 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
     await this.authStore.logout();
   }
-
-  toggleThemePicker(): void {
-    // Placeholder — will open ThemePickerComponent in p2-t11
-    console.log('Theme picker — coming in next task');
-  }
 }

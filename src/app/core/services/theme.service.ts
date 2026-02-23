@@ -14,9 +14,11 @@ export class ThemeService {
 
   readonly currentTheme = signal<Theme | null>(null);
   readonly currentThemeId = signal<string>('hybrid-enterprise-palette');
+  readonly bundledThemes = signal<ThemeCatalogEntry[]>([]);
 
   /** Load and apply the last-saved theme from localStorage, falling back to default. */
   async loadSavedTheme(): Promise<void> {
+    this.listBundledThemes().then(list => this.bundledThemes.set(list)).catch(() => {});
     const savedUrl = localStorage.getItem(STORAGE_URL_KEY);
     const savedId = localStorage.getItem(STORAGE_KEY);
 
