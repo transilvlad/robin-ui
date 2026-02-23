@@ -31,7 +31,7 @@ export class ThemePickerComponent {
     this.loading.set(true);
     this.error.set('');
     try {
-      await this.themeService.loadTheme(id);
+      await this.themeService.loadTheme(`assets/themes/${id}.json5`);
       this.open.set(false);
     } catch {
       this.error.set('Failed to load theme.');
