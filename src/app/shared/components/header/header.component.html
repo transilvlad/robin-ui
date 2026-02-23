@@ -1,82 +1,87 @@
-<header class="sticky top-0 z-50 w-full border-b border-sidebar-border bg-sidebar transition-colors duration-300">
-  <div class="flex h-16 items-center justify-between px-6">
-    <!-- Page Title -->
-    <div class="flex items-center gap-4">
-      <h1 class="text-lg font-semibold text-sidebar-foreground">System Dashboard</h1>
-    </div>
+<header class="top-bar">
+  <div class="top-bar-left">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="breadcrumb">
+      <span class="breadcrumb-item">Robin MTA</span>
+      <span class="breadcrumb-sep">/</span>
+      <span class="breadcrumb-item active">{{ pageTitle }}</span>
+    </nav>
+  </div>
 
-    <!-- Right side controls -->
-    <div class="flex items-center gap-6">
-      <!-- Server Status -->
-      <div class="flex items-center gap-3">
-        <div class="flex items-center gap-2">
-          <span class="text-sm text-sidebar-foreground/70">Server:</span>
-          <app-status-badge [status]="serverStatus"></app-status-badge>
-        </div>
+  <div class="top-bar-right">
+    <!-- Server Status -->
+    @if (authStore.isAuthenticated()) {
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        <span class="status-label">Server</span>
+        <app-status-badge [status]="serverStatus"></app-status-badge>
       </div>
+    }
 
-      <!-- Theme Toggle -->
-      <button
-        class="p-2 rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
-        aria-label="Toggle theme"
-        >
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="4"></circle>
-          <path d="M12 2v2"></path>
-          <path d="M12 20v2"></path>
-          <path d="m4.93 4.93 1.41 1.41"></path>
-          <path d="m17.66 17.66 1.41 1.41"></path>
-          <path d="M2 12h2"></path>
-          <path d="M20 12h2"></path>
-          <path d="m6.34 17.66-1.41 1.41"></path>
-          <path d="m19.07 4.93-1.41 1.41"></path>
-        </svg>
-      </button>
+    <!-- Theme Picker trigger -->
+    <button
+      class="icon-btn"
+      aria-label="Switch theme"
+      title="Switch theme"
+      (click)="toggleThemePicker()">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2"></path><path d="M12 20v2"></path>
+        <path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path>
+        <path d="M2 12h2"></path><path d="M20 12h2"></path>
+        <path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path>
+      </svg>
+    </button>
 
-      <!-- User Menu -->
-      @if (authStore.isAuthenticated()) {
-        <div class="relative">
-          <button
-            (click)="toggleUserMenu($event)"
-            class="flex items-center gap-3 text-sm font-medium focus:outline-none"
-            aria-label="User menu"
-          >
-            <div class="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-foreground/10 text-sidebar-foreground">
-              @if (authStore.username()) {
-                <span class="text-xs font-bold">{{ authStore.username().charAt(0).toUpperCase() }}</span>
-              } @else {
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-              }
-            </div>
-          </button>
+    <!-- Notifications -->
+    <button class="icon-btn" aria-label="Notifications" title="Notifications">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+      </svg>
+    </button>
 
-          <!-- Dropdown Menu -->
-          @if (showUserMenu) {
-            <div class="absolute right-0 mt-2 w-56 rounded-md border border-border bg-popover shadow-lg z-50 animate-fade-in">
-              <div class="px-4 py-3 border-b border-border">
-                <p class="text-sm font-medium text-foreground">{{ authStore.username() }}</p>
-                <p class="text-xs text-muted-foreground">{{ authStore.userEmail() }}</p>
-              </div>
-              <div class="py-1">
-                <button
-                  (click)="logout()"
-                  class="flex w-full items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                  </svg>
-                  Logout
-                </button>
-              </div>
-            </div>
+    <!-- User menu -->
+    @if (authStore.isAuthenticated()) {
+      <div class="user-menu-wrap">
+        <button
+          (click)="toggleUserMenu($event)"
+          class="avatar-btn"
+          aria-label="User menu">
+          <div class="avatar">
+            @if (authStore.username()) {
+              <span>{{ authStore.username().charAt(0).toUpperCase() }}</span>
+            } @else {
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            }
+          </div>
+          @if (authStore.username()) {
+            <span class="username">{{ authStore.username() }}</span>
           }
-        </div>
-      }
-    </div>
+        </button>
+
+        @if (showUserMenu) {
+          <div class="user-dropdown" (click)="$event.stopPropagation()">
+            <div class="dropdown-header">
+              <p class="dropdown-name">{{ authStore.username() }}</p>
+              <p class="dropdown-email">{{ authStore.userEmail() }}</p>
+            </div>
+            <div class="dropdown-body">
+              <button (click)="logout()" class="dropdown-item">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                Logout
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
   </div>
 </header>

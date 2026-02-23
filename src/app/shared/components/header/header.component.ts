@@ -14,6 +14,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   serverStatus: 'UP' | 'DOWN' | 'UNKNOWN' = 'UNKNOWN';
   uptime = '';
   showUserMenu = false;
+  pageTitle = 'Dashboard';
   private healthSubscription?: Subscription;
   protected authStore = inject(AuthStore);
   private elementRef = inject(ElementRef);
@@ -66,5 +67,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.showUserMenu = false;
     this.cdr.markForCheck();
     await this.authStore.logout();
+  }
+
+  toggleThemePicker(): void {
+    // Placeholder — will open ThemePickerComponent in p2-t11
+    console.log('Theme picker — coming in next task');
   }
 }
