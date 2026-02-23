@@ -1,0 +1,126 @@
+<div class="themes-page">
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="page-header__icon">
+      <span class="material-icons">palette</span>
+    </div>
+    <div class="page-header__text">
+      <h1 class="page-header__title">Themes</h1>
+      <p class="page-header__subtitle">Customize the look and feel of Robin UI</p>
+    </div>
+  </div>
+
+  <!-- Status messages -->
+  @if (success) {
+    <div class="status-banner status-banner--success">
+      <span class="material-icons">check_circle</span>
+      <span>{{ success }}</span>
+    </div>
+  }
+  @if (error) {
+    <div class="status-banner status-banner--error">
+      <span class="material-icons">error</span>
+      <span>{{ error }}</span>
+    </div>
+  }
+
+  <!-- Section 1: Bundled Themes -->
+  <section class="themes-section">
+    <div class="section-header">
+      <h2 class="section-title">Bundled Themes</h2>
+      <p class="section-subtitle">Choose from the built-in glassmorphic themes</p>
+    </div>
+
+    <div class="themes-grid">
+      @for (theme of bundledThemes; track theme.id) {
+        <div
+          class="theme-card"
+          [class.theme-card--active]="theme.id === currentThemeId"
+          (click)="selectTheme(theme.id)"
+          role="button"
+          [attr.aria-pressed]="theme.id === currentThemeId"
+          tabindex="0"
+          (keydown.enter)="selectTheme(theme.id)"
+          (keydown.space)="selectTheme(theme.id)"
+        >
+          <div class="theme-card__header">
+            <div
+              class="theme-card__swatch"
+              [style.background]="theme.preview_color"
+            ></div>
+            @if (theme.id === currentThemeId) {
+              <span class="theme-card__check material-icons">check_circle</span>
+            }
+          </div>
+          <div class="theme-card__body">
+            <span class="theme-card__name">{{ theme.name }}</span>
+            <p class="theme-card__desc">{{ theme.description }}</p>
+          </div>
+          <div class="theme-card__footer">
+            <button
+              class="btn-apply"
+              [class.btn-apply--active]="theme.id === currentThemeId"
+              [disabled]="loading"
+              (click)="$event.stopPropagation(); selectTheme(theme.id)"
+            >
+              @if (loading && theme.id === currentThemeId) {
+                <span class="material-icons spin">refresh</span>
+              } @else if (theme.id === currentThemeId) {
+                <span class="material-icons">check</span> Active
+              } @else {
+                Apply
+              }
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (bundledThemes.length === 0) {
+        <div class="themes-empty">
+          <span class="material-icons">palette</span>
+          <p>Loading themes…</p>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Section 2: Load from URL -->
+  <section class="themes-section">
+    <div class="section-header">
+      <h2 class="section-title">Load from URL</h2>
+      <p class="section-subtitle">Apply a custom theme from a remote JSON5 file</p>
+    </div>
+
+    <div class="url-panel">
+      <div class="url-input-row">
+        <div class="url-input-wrapper">
+          <span class="material-icons url-input-icon">link</span>
+          <input
+            class="url-input"
+            type="url"
+            placeholder="https://example.com/my-theme.json5"
+            [(ngModel)]="remoteUrl"
+            (keydown.enter)="loadFromUrl()"
+            [disabled]="loading"
+          />
+        </div>
+        <button
+          class="btn-load"
+          [disabled]="loading || !remoteUrl.trim()"
+          (click)="loadFromUrl()"
+        >
+          @if (loading) {
+            <span class="material-icons spin">refresh</span>
+          } @else {
+            <span class="material-icons">cloud_download</span>
+          }
+          Load Theme
+        </button>
+      </div>
+      <p class="url-hint">
+        <span class="material-icons">info</span>
+        Must be a publicly accessible JSON5 file matching the Robin theme schema. The server must allow CORS from this origin.
+      </p>
+    </div>
+  </section>
+</div>

@@ -7,7 +7,7 @@ import { DovecotConfig } from '@core/models/config.model';
 @Component({
   selector: 'app-dovecot-config',
   templateUrl: './dovecot-config.component.html',
-  styleUrls: [],
+  styleUrls: ['./dovecot-config.component.scss'],
   standalone: false
 })
 export class DovecotConfigComponent implements OnInit {

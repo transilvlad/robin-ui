@@ -133,3 +133,73 @@ button {
   margin-bottom: 20px;
   font-size: 14px;
 }
+
+// ===== Phase 4: Glassmorphic Overrides =====
+.login-container {
+  background: var(--bg-blur) !important;
+}
+
+.login-card {
+  background: var(--bg-panel) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-dim) !important;
+  border-radius: var(--radius-panel) !important;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6) !important;
+  color: var(--text-main);
+}
+
+.brand-name {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: -10px 0 18px;
+}
+
+h1 {
+  color: var(--text-main) !important;
+}
+
+label {
+  color: var(--text-dim) !important;
+}
+
+input {
+  background: var(--bg-layer-1) !important;
+  border-color: var(--border-mid) !important;
+  color: var(--text-main) !important;
+
+  &::placeholder {
+    color: var(--text-muted) !important;
+  }
+
+  &:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 2px var(--accent-dim) !important;
+  }
+}
+
+button[type="submit"] {
+  background: var(--accent) !important;
+  color: #1a1a1a !important;
+  border-radius: var(--radius-button) !important;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.footer-links a {
+  color: var(--text-dim) !important;
+  &:hover { color: var(--accent) !important; }
+}
+
+.error-message {
+  color: var(--status-danger, #ff453a) !important;
+}
+
+.server-error {
+  background: rgba(255, 69, 58, 0.1) !important;
+  border-color: rgba(255, 69, 58, 0.4) !important;
+  color: #ff453a !important;
+}

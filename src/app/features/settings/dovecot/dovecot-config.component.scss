@@ -1,59 +1,10 @@
+// ===== Phase 4: Glassmorphic Overrides — Dovecot Config =====
 :host {
   display: block;
-  min-height: 100vh;
-  background: var(--bg-blur);
 }
 
-mat-card {
-  margin-bottom: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-
-  &:hover {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    transition: box-shadow 0.3s ease;
-  }
-}
-
-mat-form-field {
-  width: 100%;
-}
-
-code {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.875rem;
-}
-
-.prose {
-  h4 {
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
-  }
-
-  p {
-    margin-bottom: 0.5rem;
-  }
-
-  ol {
-    margin-top: 0.5rem;
-  }
-}
-
-// Custom snackbar styles
-::ng-deep {
-  .success-snackbar {
-    background-color: #10b981 !important;
-    color: white !important;
-  }
-
-  .error-snackbar {
-    background-color: #ef4444 !important;
-    color: white !important;
-  }
-}
-
-// ===== Phase 4: Glassmorphic Overrides — ClamAV =====
 .page-root {
-  background: transparent;
+  background: var(--bg-blur);
   min-height: 100vh;
   color: var(--text-main);
 }
@@ -82,16 +33,18 @@ code {
   }
 }
 
-// Status badge
-.bg-card.border.border-border {
-  background: var(--bg-panel) !important;
+// Protocol checkboxes
+.border.rounded-md {
   border-color: var(--border-dim) !important;
+  color: var(--text-main) !important;
+  &:hover { background: var(--accent-dim) !important; }
 }
 
-// Toggle row
-.bg-muted\/30.rounded-lg {
-  background: var(--bg-layer-1) !important;
+// Auth mechanism pills
+.border.rounded-full {
   border-color: var(--border-dim) !important;
+  color: var(--text-dim) !important;
+  &:hover { background: var(--accent-dim) !important; }
 }
 
 .btn-primary {
@@ -109,4 +62,10 @@ code {
     border-color: var(--accent) !important;
     color: var(--accent) !important;
   }
+}
+
+// Restart required card
+.card.bg-orange-50 {
+  background: rgba(255, 159, 10, 0.08) !important;
+  border-color: rgba(255, 159, 10, 0.25) !important;
 }

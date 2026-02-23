@@ -3,10 +3,13 @@ import { Component } from '@angular/core';
 @Component({
     selector: 'app-webhooks',
     template: `
-    <div class="p-6">
-      <h1 class="text-3xl font-bold text-gray-900 mb-4">Webhooks</h1>
-      <div class="bg-white shadow rounded-lg p-6">
-        <p class="text-gray-600">Webhook configuration for email events will be implemented here.</p>
+    <div class="page-root">
+      <div class="page-header">
+        <h1>Webhooks</h1>
+        <p class="page-subtitle">Configure webhook endpoints for email events</p>
+      </div>
+      <div class="glass-panel p-6">
+        <p style="color:var(--text-dim)">Webhook configuration for email events will be implemented here.</p>
       </div>
     </div>
   `,

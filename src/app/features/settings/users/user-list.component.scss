@@ -1,4 +1,4 @@
-// ===== Phase 4: Glassmorphic Overrides — Storage Browser =====
+// ===== Phase 4: Glassmorphic Overrides — User List =====
 :host {
   display: block;
 }
@@ -18,46 +18,50 @@
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
 }
 
-// Breadcrumb bar
-.border-b.border-border.bg-muted\/30 {
+.table {
+  color: var(--text-main);
+}
+
+thead tr {
   background: var(--bg-layer-1) !important;
   border-color: var(--border-dim) !important;
 }
 
-.table-header {
-  background: var(--bg-layer-1) !important;
-}
-
-.table-head {
+th {
   color: var(--text-dim) !important;
-  border-color: var(--border-dim) !important;
 }
 
-.table-row {
+tbody tr {
   border-color: var(--border-dim) !important;
-  cursor: pointer;
-  &:hover {
-    background: var(--accent-dim) !important;
+  &:hover { background: var(--accent-dim) !important; }
+}
+
+td { color: var(--text-main); }
+
+.input {
+  background: var(--bg-layer-1) !important;
+  border-color: var(--border-mid) !important;
+  color: var(--text-main) !important;
+  border-radius: var(--radius-button) !important;
+  &::placeholder { color: var(--text-muted) !important; }
+  &:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 2px var(--accent-dim) !important;
+    outline: none;
   }
 }
 
-.table-cell {
-  color: var(--text-main) !important;
-  border-color: var(--border-dim) !important;
-}
-
-.badge-outline {
-  border: 1px solid var(--border-mid) !important;
-  color: var(--text-muted) !important;
-  border-radius: var(--radius-badge) !important;
-  background: transparent !important;
+.btn-primary {
+  background: var(--accent) !important;
+  color: #1a1a1a !important;
+  border-radius: var(--radius-button) !important;
 }
 
 .btn-outline {
   border-color: var(--border-mid) !important;
   color: var(--text-dim) !important;
-  border-radius: var(--radius-button) !important;
   background: transparent !important;
+  border-radius: var(--radius-button) !important;
   &:hover:not(:disabled) {
     border-color: var(--accent) !important;
     color: var(--accent) !important;

@@ -8,3 +8,36 @@
   width: 100%;
 }
 
+// ===== Phase 4: Glassmorphic Overrides — Metrics Dashboard =====
+.page-root {
+  background: var(--bg-blur);
+  min-height: 100vh;
+  color: var(--text-main);
+}
+
+.card {
+  background: var(--bg-panel) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-dim) !important;
+  border-radius: var(--radius-panel) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+.btn-primary {
+  background: var(--accent) !important;
+  color: #1a1a1a !important;
+  border-radius: var(--radius-button) !important;
+}
+
+.btn-outline {
+  border-color: var(--border-mid) !important;
+  color: var(--text-dim) !important;
+  background: transparent !important;
+  border-radius: var(--radius-button) !important;
+  &:hover:not(:disabled) {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+  }
+}
+

@@ -424,3 +424,27 @@ body {
     pointer-events: none;
   }
 }
+
+/* ── Feature page layout helpers ───────────────────────────────────────────── */
+.page-root {
+  padding: 32px;
+  color: var(--text-main);
+}
+
+.page-header {
+  margin-bottom: 24px;
+
+  h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0 0 4px;
+    letter-spacing: -0.02em;
+  }
+}
+
+.page-subtitle {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0;
+}

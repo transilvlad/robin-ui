@@ -1,59 +1,10 @@
+// ===== Phase 4: Glassmorphic Overrides — Server Config =====
 :host {
   display: block;
-  min-height: 100vh;
-  background: var(--bg-blur);
 }
 
-mat-card {
-  margin-bottom: 1.5rem;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-
-  &:hover {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    transition: box-shadow 0.3s ease;
-  }
-}
-
-mat-form-field {
-  width: 100%;
-}
-
-code {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 0.875rem;
-}
-
-.prose {
-  h4 {
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
-  }
-
-  p {
-    margin-bottom: 0.5rem;
-  }
-
-  ol {
-    margin-top: 0.5rem;
-  }
-}
-
-// Custom snackbar styles
-::ng-deep {
-  .success-snackbar {
-    background-color: #10b981 !important;
-    color: white !important;
-  }
-
-  .error-snackbar {
-    background-color: #ef4444 !important;
-    color: white !important;
-  }
-}
-
-// ===== Phase 4: Glassmorphic Overrides — ClamAV =====
 .page-root {
-  background: transparent;
+  background: var(--bg-blur);
   min-height: 100vh;
   color: var(--text-main);
 }
@@ -82,18 +33,6 @@ code {
   }
 }
 
-// Status badge
-.bg-card.border.border-border {
-  background: var(--bg-panel) !important;
-  border-color: var(--border-dim) !important;
-}
-
-// Toggle row
-.bg-muted\/30.rounded-lg {
-  background: var(--bg-layer-1) !important;
-  border-color: var(--border-dim) !important;
-}
-
 .btn-primary {
   background: var(--accent) !important;
   color: #1a1a1a !important;
@@ -109,4 +48,16 @@ code {
     border-color: var(--accent) !important;
     color: var(--accent) !important;
   }
+}
+
+// Danger zone card
+.card.bg-destructive\/10 {
+  background: rgba(255, 69, 58, 0.08) !important;
+  border-color: rgba(255, 69, 58, 0.25) !important;
+}
+
+// Toggle switch rows
+.border.rounded-lg {
+  border-color: var(--border-dim) !important;
+  background: var(--bg-layer-1) !important;
 }
