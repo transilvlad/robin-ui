@@ -1,0 +1,96 @@
+{
+  // Robin UI — Dark Theme
+  // Maps current styles.scss .dark block to ThemeModel interface.
+
+  meta: {
+    id: "robin-dark",
+    name: "Robin Dark",
+    version: "1.0.0",
+    description: "Deep dark theme with Robin Orange primary. Solid backgrounds, no glassmorphism.",
+    author: "Robin UI",
+  },
+
+  colors: {
+    backgrounds: {
+      base: "hsl(240, 3%, 6%)",           // --background: #0F0F10
+      blur: "hsl(240, 3%, 6%)",
+      layer_1: "hsl(240, 3%, 11%)",       // --card: #1C1C1E
+      panel: "hsl(240, 3%, 11%)",
+    },
+    borders: {
+      dim: "rgba(255,255,255,0.04)",
+      mid: "hsl(240, 4%, 18%)",           // --border dark
+      bright: "rgba(255,255,255,0.15)",
+    },
+    text: {
+      main: "hsl(30, 18%, 96%)",          // --foreground: #F9F6F3
+      dim: "hsl(240, 5%, 55%)",           // --muted-foreground dark
+    },
+    accents: {
+      primary: "#FE8502",                 // Robin Orange
+      dim: "rgba(254, 133, 2, 0.15)",
+    },
+    status: {
+      success: "#44A83A",
+      warning: "#F59E0B",
+      danger: "#EF4444",
+    },
+  },
+
+  typography: {
+    fonts: {
+      primary: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      mono: "'Courier New', monospace",
+    },
+    weights: {
+      regular: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700,
+    },
+    sizes: {
+      base: "14px",
+      small: "11px",
+      large: "24px",
+      hero: "28px",
+    },
+  },
+
+  layout: {
+    structure: {
+      type: "CSS Grid",
+      columns: "260px 1fr",
+      rows: "64px 1fr",
+    },
+    spacing: {
+      header_padding: "0 24px",
+      sidebar_padding: "24px 0",
+      main_padding: "32px 40px",
+      panel_padding: "24px",
+      grid_gap: "24px",
+    },
+    radii: {
+      panel: "12px",
+      button: "8px",
+      badge: "6px",
+      avatar: "8px",
+    },
+  },
+
+  effects: {
+    glassmorphism: {
+      global_blur: "none",
+      panel_blur: "none",
+      header_blur: "none",
+      sidebar_blur: "none",
+    },
+    shadows: {
+      panel: "0 4px 16px rgba(0,0,0,0.4)",
+      button: "0 2px 8px rgba(0,0,0,0.3)",
+    },
+  },
+
+  assets: {
+    background_image: "",                 // no background image for dark theme
+  },
+}

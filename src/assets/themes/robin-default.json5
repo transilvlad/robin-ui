@@ -1,0 +1,96 @@
+{
+  // Robin UI — Default Light Theme
+  // Maps current styles.scss :root block to ThemeModel interface.
+
+  meta: {
+    id: "robin-default",
+    name: "Robin Default",
+    version: "1.0.0",
+    description: "Clean light theme with Robin Orange primary and Robin Green accent. No glassmorphism.",
+    author: "Robin UI",
+  },
+
+  colors: {
+    backgrounds: {
+      base: "hsl(210, 40%, 96%)",         // --background: #F8FAFC
+      blur: "hsl(210, 40%, 96%)",
+      layer_1: "hsl(0, 0%, 100%)",        // --sidebar-background / header: white
+      panel: "hsl(0, 0%, 100%)",          // --card: white
+    },
+    borders: {
+      dim: "hsl(214, 32%, 96%)",
+      mid: "hsl(214, 32%, 91%)",          // --border: #E2E8F0
+      bright: "hsl(214, 32%, 80%)",
+    },
+    text: {
+      main: "hsl(250, 3%, 27%)",          // --foreground: #424146
+      dim: "hsl(240, 4%, 46%)",           // --muted-foreground
+    },
+    accents: {
+      primary: "#FE8502",                 // Robin Orange
+      dim: "rgba(254, 133, 2, 0.1)",
+    },
+    status: {
+      success: "#44A83A",                 // Robin Green
+      warning: "#F59E0B",
+      danger: "#EF4444",
+    },
+  },
+
+  typography: {
+    fonts: {
+      primary: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      mono: "'Courier New', monospace",
+    },
+    weights: {
+      regular: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700,
+    },
+    sizes: {
+      base: "14px",
+      small: "11px",
+      large: "24px",
+      hero: "28px",
+    },
+  },
+
+  layout: {
+    structure: {
+      type: "CSS Grid",
+      columns: "260px 1fr",
+      rows: "64px 1fr",
+    },
+    spacing: {
+      header_padding: "0 24px",
+      sidebar_padding: "24px 0",
+      main_padding: "32px 40px",
+      panel_padding: "24px",
+      grid_gap: "24px",
+    },
+    radii: {
+      panel: "12px",
+      button: "8px",
+      badge: "6px",
+      avatar: "8px",
+    },
+  },
+
+  effects: {
+    glassmorphism: {
+      global_blur: "none",
+      panel_blur: "none",
+      header_blur: "none",
+      sidebar_blur: "none",
+    },
+    shadows: {
+      panel: "0 1px 3px rgba(0,0,0,0.1)",
+      button: "0 1px 2px rgba(0,0,0,0.05)",
+    },
+  },
+
+  assets: {
+    background_image: "",                 // no background image for light theme
+  },
+}

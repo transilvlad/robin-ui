@@ -1,0 +1,25 @@
+[
+  // Bundled theme catalogue — loaded by ThemeService.listBundledThemes()
+  // Add entries here to register new bundled themes.
+  {
+    id: "hybrid-enterprise-palette",
+    name: "Hybrid Enterprise Palette",
+    description: "Dark glassmorphic theme with amber accents and blurred photo background.",
+    path: "assets/themes/hybrid-enterprise-palette.json5",
+    preview_color: "#ff9f0a",
+  },
+  {
+    id: "robin-default",
+    name: "Robin Default",
+    description: "Clean light theme with Robin Orange and Green.",
+    path: "assets/themes/robin-default.json5",
+    preview_color: "#FE8502",
+  },
+  {
+    id: "robin-dark",
+    name: "Robin Dark",
+    description: "Deep dark theme with Robin Orange primary.",
+    path: "assets/themes/robin-dark.json5",
+    preview_color: "#FE8502",
+  },
+]
