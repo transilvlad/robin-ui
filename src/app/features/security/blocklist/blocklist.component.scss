@@ -81,7 +81,7 @@ mat-chip {
 
 // ===== Phase 4: Glassmorphic Overrides — Blocklist =====
 :host {
-  background: var(--bg-blur) !important;
+  background: transparent !important;
   background-image: none !important;
 }
 
