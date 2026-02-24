@@ -30,6 +30,16 @@ export class SidebarComponent {
       ],
     },
     {
+      label: 'Domains',
+      icon: 'globe',
+      route: '/domains',
+      children: [
+        { label: 'Domain List',   icon: 'list',     route: '/domains' },
+        { label: 'DNS Providers', icon: 'server',   route: '/domains/dns-providers' },
+        { label: 'DNS Templates', icon: 'template', route: '/domains/dns-templates' },
+      ],
+    },
+    {
       label: 'Security',
       icon: 'shield',
       route: '/security',
@@ -62,9 +72,11 @@ export class SidebarComponent {
       icon: 'settings',
       route: '/settings',
       children: [
-        { label: 'Server', icon: 'server', route: '/settings/server' },
-        { label: 'Users', icon: 'people', route: '/settings/users' },
-        { label: 'Dovecot', icon: 'dovecot', route: '/settings/dovecot' },
+        { label: 'Server',        icon: 'server',   route: '/settings/server' },
+        { label: 'Users',         icon: 'people',   route: '/settings/users' },
+        { label: 'Dovecot',       icon: 'dovecot',  route: '/settings/dovecot' },
+        { label: 'DNS Providers', icon: 'server',   route: '/domains/dns-providers' },
+        { label: 'DNS Templates', icon: 'template', route: '/domains/dns-templates' },
       ],
     },
   ];
@@ -90,7 +102,7 @@ export class SidebarComponent {
 
   // Map icon names to SVG paths (Lucide icons)
   getIconPath(icon: string): string {
-    const icons: { [key: string]: string } = {
+    const icons: Record<string, string> = {
       dashboard:
         'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10',
       mail: 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z M22 6l-10 7L2 6',
@@ -103,7 +115,7 @@ export class SidebarComponent {
       security:
         'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M9 12l2 2 4-4',
       filter: 'M22 3H2l8 9.46V19l4 2v-8.54L22 3z',
-      block: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 0L2 12 M4.93 4.93l14.14 14.14',
+      block: 'M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 0L2 12 M4.93 4.93l14.14 14.14',
       route: 'M3 17h18 M3 12l4-4 4 4 4-4 4 4',
       send: 'M22 2L11 13 M22 2l-7 20-4-9-9-4 20-7z',
       webhook:
@@ -121,7 +133,19 @@ export class SidebarComponent {
         'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75',
       dovecot:
         'M22 11.08V12a10 10 0 1 1-5.93-9.14 M22 4L12 14.01l-3-3',
+      palette:
+        'M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm-1 17.93V18a1 1 0 0 0-1-1H8a2 2 0 0 1-2-2v-.5a2.5 2.5 0 0 1 5 0V15h4v-1.5a2.5 2.5 0 0 1 5 0V14a6 6 0 0 1-9 5.93z',
+      globe:
+        'M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z M2 12h20 M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z',
+      template:
+        'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8',
+      key:
+        'M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4',
+      'check-circle':
+        'M22 11.08V12a10 10 0 1 1-5.93-9.14 M22 4L12 14.01l-3-3',
+      dkim:
+        'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M9 12l2 2 4-4',
     };
-    return icons[icon] || icons['dashboard'];
+    return icons[icon] ?? icons['dashboard'];
   }
 }

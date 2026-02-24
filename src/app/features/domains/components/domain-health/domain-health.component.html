@@ -1,0 +1,55 @@
+<div>
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Domain Health</h2>
+    <button
+      (click)="runVerification()"
+      [disabled]="verifying || loading"
+      class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium">
+      {{ verifying ? 'Running...' : 'Run Verification' }}
+    </button>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm">
+    {{ error }}
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex justify-center items-center py-12">
+    <mat-spinner diameter="36"></mat-spinner>
+  </div>
+
+  <!-- Health check grid -->
+  <div *ngIf="!loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div
+      *ngFor="let check of healthChecks"
+      class="rounded-xl border p-5 transition-colors"
+      [ngClass]="getStatusCardClass(check.status)">
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+             [ngClass]="getStatusIconClass(check.status)">
+          {{ getStatusIcon(check.status) }}
+        </div>
+        <div class="flex-1 min-w-0">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-white">{{ check.checkType }}</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            {{ check.status }}
+          </p>
+          <p *ngIf="check.message" class="text-xs text-gray-600 dark:text-gray-300 mt-2 leading-relaxed">
+            {{ check.message }}
+          </p>
+          <p *ngIf="check.lastChecked" class="text-xs text-gray-400 dark:text-gray-500 mt-2">
+            Checked: {{ check.lastChecked | date:'short' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="healthChecks.length === 0" class="col-span-full">
+      <div class="text-center py-12 text-gray-500 dark:text-gray-400 text-sm">
+        No health checks available. Run a verification to check domain health.
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { AuthStore } from './core/state/auth.store';
 
 /**
  * Root Application Component
@@ -15,4 +16,5 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'Robin MTA Management';
+  authStore = inject(AuthStore);
 }

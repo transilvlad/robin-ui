@@ -1,0 +1,104 @@
+<div>
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">MTA-STS</h2>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm">
+    {{ error }}
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex justify-center items-center py-12">
+    <mat-spinner diameter="36"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading" class="space-y-6">
+    <!-- Current worker status -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+      <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4">Worker Status</h3>
+
+      <div *ngIf="worker; else noWorker">
+        <dl class="space-y-3">
+          <div class="flex justify-between">
+            <dt class="text-sm text-gray-500 dark:text-gray-400">Status</dt>
+            <dd>
+              <span class="px-2 py-0.5 text-xs font-medium rounded-full" [ngClass]="getStatusClass(worker.status)">
+                {{ worker.status }}
+              </span>
+            </dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-sm text-gray-500 dark:text-gray-400">Worker Name</dt>
+            <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ worker.workerName }}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-sm text-gray-500 dark:text-gray-400">Worker ID</dt>
+            <dd class="text-sm font-mono text-gray-900 dark:text-white">{{ worker.workerId ?? '—' }}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-sm text-gray-500 dark:text-gray-400">Policy Mode</dt>
+            <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ worker.policyMode }}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-sm text-gray-500 dark:text-gray-400">Policy Version</dt>
+            <dd class="text-sm text-gray-900 dark:text-white">{{ worker.policyVersion ?? '—' }}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-sm text-gray-500 dark:text-gray-400">Deployed At</dt>
+            <dd class="text-sm text-gray-900 dark:text-white">
+              {{ worker.deployedAt ? (worker.deployedAt | date:'medium') : '—' }}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <ng-template #noWorker>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          No MTA-STS worker deployed. Configure a policy mode and click Deploy.
+        </p>
+      </ng-template>
+    </div>
+
+    <!-- Policy mode configuration -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+      <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-4">Policy Configuration</h3>
+      <div class="space-y-3 mb-6">
+        <div
+          *ngFor="let mode of policyModes"
+          (click)="selectedPolicyMode = mode.value"
+          class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
+          [class.border-blue-500]="selectedPolicyMode === mode.value"
+          [class.bg-blue-50]="selectedPolicyMode === mode.value"
+          [class.dark:bg-blue-900/20]="selectedPolicyMode === mode.value"
+          [class.border-gray-200]="selectedPolicyMode !== mode.value"
+          [class.dark:border-gray-700]="selectedPolicyMode !== mode.value">
+          <div class="w-4 h-4 mt-0.5 rounded-full border-2 flex-shrink-0"
+               [class.border-blue-500]="selectedPolicyMode === mode.value"
+               [class.bg-blue-500]="selectedPolicyMode === mode.value"
+               [class.border-gray-300]="selectedPolicyMode !== mode.value"></div>
+          <div>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ mode.label }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ mode.description }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button
+          *ngIf="worker"
+          (click)="updatePolicy()"
+          class="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          Update Policy
+        </button>
+        <button
+          (click)="deploy()"
+          [disabled]="deploying"
+          class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+          {{ deploying ? 'Deploying...' : (worker ? 'Re-deploy' : 'Deploy') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

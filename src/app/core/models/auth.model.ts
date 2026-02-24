@@ -47,6 +47,9 @@ export enum Permission {
   // Domains
   VIEW_DOMAINS = 'VIEW_DOMAINS',
   MANAGE_DOMAINS = 'MANAGE_DOMAINS',
+  MANAGE_DNS_RECORDS = 'MANAGE_DNS_RECORDS',
+  MANAGE_DNS_PROVIDERS = 'MANAGE_DNS_PROVIDERS',
+  MANAGE_DKIM = 'MANAGE_DKIM',
 }
 
 // Zod schemas for runtime validation

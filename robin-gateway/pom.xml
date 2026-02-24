@@ -23,6 +23,7 @@
         <spring-cloud.version>2023.0.0</spring-cloud.version>
         <jwt.version>0.12.3</jwt.version>
         <testcontainers.version>1.19.3</testcontainers.version>
+        <lombok.version>1.18.36</lombok.version>
     </properties>
 
     <dependencies>
@@ -134,6 +135,19 @@
             <version>2.15.1</version>
         </dependency>
 
+        <!-- WebFlux (WebClient for future DNS/API integrations) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
+        <!-- dnsjava (DNS resolution for health checks) -->
+        <dependency>
+            <groupId>dnsjava</groupId>
+            <artifactId>dnsjava</artifactId>
+            <version>3.5.3</version>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -190,6 +204,19 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

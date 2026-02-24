@@ -1,0 +1,103 @@
+<div class="p-6">
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Domains</h1>
+    <button
+      (click)="openAddModal()"
+      class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+      + Add Domain
+    </button>
+  </div>
+
+  <!-- Error banner -->
+  <div *ngIf="error" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm">
+    {{ error }}
+  </div>
+
+  <!-- Loading spinner -->
+  <div *ngIf="loading" class="flex justify-center items-center py-16">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <!-- Domain table -->
+  <div *ngIf="!loading" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50 dark:bg-gray-700">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Domain</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">DNS Provider</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Health Check</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+        <tr
+          *ngFor="let domain of domains"
+          (click)="viewDomain(domain)"
+          class="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
+          <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+            {{ domain.domain }}
+          </td>
+          <td class="px-6 py-4">
+            <span class="px-2 py-1 text-xs font-medium rounded-full"
+                  [ngClass]="getStatusClass(domain.status)">
+              {{ domain.status || 'PENDING' }}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+            {{ domain.dnsProviderId ? 'Provider #' + domain.dnsProviderId : '—' }}
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+            {{ domain.lastHealthCheck ? (domain.lastHealthCheck | date:'short') : '—' }}
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+            {{ domain.createdAt ? (domain.createdAt | date:'mediumDate') : '—' }}
+          </td>
+          <td class="px-6 py-4 text-right">
+            <button
+              (click)="deleteDomain(domain, $event)"
+              class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+              Delete
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="domains.length === 0">
+          <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400 text-sm">
+            No domains found. Add your first domain to get started.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Domain Modal -->
+<div *ngIf="showAddModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-xl">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add Domain</h2>
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Domain Name</label>
+      <input
+        type="text"
+        [(ngModel)]="newDomainName"
+        placeholder="example.com"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        (keyup.enter)="addDomain()" />
+    </div>
+    <div class="flex gap-3 justify-end mt-6">
+      <button
+        (click)="closeAddModal()"
+        class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        Cancel
+      </button>
+      <button
+        (click)="addDomain()"
+        [disabled]="!newDomainName.trim()"
+        class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+        Add Domain
+      </button>
+    </div>
+  </div>
+</div>
