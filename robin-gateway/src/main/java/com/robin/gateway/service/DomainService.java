@@ -5,6 +5,8 @@ import com.robin.gateway.model.Domain;
 import com.robin.gateway.repository.AliasRepository;
 import com.robin.gateway.repository.DomainRepository;
 import com.robin.gateway.model.dto.DomainRequest;
+import com.robin.gateway.model.dto.DomainSummary;
+import com.robin.gateway.repository.DomainHealthRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -25,6 +27,7 @@ public class DomainService {
     private final DomainRepository domainRepository;
     private final AliasRepository aliasRepository;
     private final MtaStsService mtaStsService;
+    private final DomainHealthRepository domainHealthRepository;
 
     /**
      * Get all domains with pagination
@@ -47,6 +50,20 @@ public class DomainService {
                         .orElse(Mono.error(new RuntimeException("Domain not found: " + id))))
                 .doOnSuccess(domain -> log.debug("Retrieved domain: {}", domain.getDomain()))
                 .doOnError(e -> log.error("Error retrieving domain with id: {}", id, e));
+    }
+
+    /**
+     * Get domain summary by ID
+     */
+    public Mono<DomainSummary> getDomainSummary(Long id) {
+        return Mono.fromCallable(() -> {
+            Domain domain = domainRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Domain not found: " + id));
+            return DomainSummary.builder()
+                    .domain(domain)
+                    .healthChecks(domainHealthRepository.findByDomainId(id))
+                    .build();
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     /**
