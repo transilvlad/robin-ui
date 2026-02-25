@@ -30,7 +30,7 @@ public class DomainDnsController {
     private final DomainDnsRecordRepository domainDnsRecordRepository;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("hasAnyAuthority('VIEW_DOMAINS', 'MANAGE_DNS_RECORDS') or hasRole('ADMIN')")
     @Operation(summary = "List DNS records", description = "Get all DNS records for a specific domain")
     public Mono<ResponseEntity<List<DomainDnsRecord>>> listRecords(@PathVariable Long domainId) {
         log.info("Listing DNS records for domain id: {}", domainId);
@@ -44,7 +44,7 @@ public class DomainDnsController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DNS_RECORDS') or hasRole('ADMIN')")
     @Operation(summary = "Create DNS record", description = "Add a new DNS record to a domain")
     public Mono<ResponseEntity<DomainDnsRecord>> createRecord(
             @PathVariable Long domainId,
@@ -71,7 +71,7 @@ public class DomainDnsController {
     }
 
     @PutMapping("/{recordId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DNS_RECORDS') or hasRole('ADMIN')")
     @Operation(summary = "Update DNS record", description = "Update an existing DNS record")
     public Mono<ResponseEntity<DomainDnsRecord>> updateRecord(
             @PathVariable Long domainId,
@@ -103,7 +103,7 @@ public class DomainDnsController {
     }
 
     @DeleteMapping("/{recordId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DNS_RECORDS') or hasRole('ADMIN')")
     @Operation(summary = "Delete DNS record", description = "Remove a DNS record from a domain")
     public Mono<ResponseEntity<Map<String, String>>> deleteRecord(
             @PathVariable Long domainId,

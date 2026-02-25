@@ -29,7 +29,7 @@ public class DomainDkimController {
     private final DkimService dkimService;
 
     @GetMapping("/keys")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DKIM') or hasRole('ADMIN')")
     @Operation(summary = "List DKIM keys", description = "Get all DKIM keys for a domain (private key masked)")
     public Mono<ResponseEntity<List<DkimKey>>> listKeys(@PathVariable Long domainId) {
         log.info("Listing DKIM keys for domain id: {}", domainId);
@@ -42,7 +42,7 @@ public class DomainDkimController {
     }
 
     @PostMapping("/generate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DKIM') or hasRole('ADMIN')")
     @Operation(summary = "Generate DKIM key", description = "Generate a new DKIM key pair for a domain")
     public Mono<ResponseEntity<DkimKey>> generateKey(
             @PathVariable Long domainId,
@@ -60,7 +60,7 @@ public class DomainDkimController {
     }
 
     @PostMapping("/rotate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DKIM') or hasRole('ADMIN')")
     @Operation(summary = "Rotate DKIM key", description = "Initiate DKIM key rotation; returns the new key")
     public Mono<ResponseEntity<DkimKey>> rotateKey(@PathVariable Long domainId) {
         log.info("Initiating DKIM key rotation for domain id: {}", domainId);
@@ -76,7 +76,7 @@ public class DomainDkimController {
     }
 
     @DeleteMapping("/keys/{keyId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DKIM') or hasRole('ADMIN')")
     @Operation(summary = "Retire DKIM key", description = "Mark a DKIM key as retired")
     public Mono<ResponseEntity<Map<String, String>>> retireKey(
             @PathVariable Long domainId,

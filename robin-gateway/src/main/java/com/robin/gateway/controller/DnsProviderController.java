@@ -29,7 +29,7 @@ public class DnsProviderController {
     private final DnsProviderService dnsProviderService;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_DNS_PROVIDERS') or hasRole('ADMIN')")
     @Operation(summary = "List DNS providers", description = "Get all configured DNS providers with masked credentials")
     public Mono<ResponseEntity<List<DnsProvider>>> listProviders() {
         log.info("Listing DNS providers");
@@ -42,7 +42,7 @@ public class DnsProviderController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('MANAGE_DNS_PROVIDERS') or hasRole('ADMIN')")
     @Operation(summary = "Get DNS provider", description = "Retrieve a specific DNS provider by its ID")
     public Mono<ResponseEntity<DnsProvider>> getProvider(@PathVariable Long id) {
         log.info("Getting DNS provider with id: {}", id);
@@ -58,7 +58,7 @@ public class DnsProviderController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DNS_PROVIDERS') or hasRole('ADMIN')")
     @Operation(summary = "Create DNS provider", description = "Register a new DNS provider with encrypted credentials")
     public Mono<ResponseEntity<DnsProvider>> createProvider(@Valid @RequestBody DnsProviderRequest request) {
         log.info("Creating DNS provider: {}", request.getName());
@@ -74,7 +74,7 @@ public class DnsProviderController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DNS_PROVIDERS') or hasRole('ADMIN')")
     @Operation(summary = "Update DNS provider", description = "Update an existing DNS provider's configuration")
     public Mono<ResponseEntity<DnsProvider>> updateProvider(
             @PathVariable Long id,
@@ -92,7 +92,7 @@ public class DnsProviderController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DNS_PROVIDERS') or hasRole('ADMIN')")
     @Operation(summary = "Delete DNS provider", description = "Remove a DNS provider (fails if in use by a domain)")
     public Mono<ResponseEntity<Map<String, String>>> deleteProvider(@PathVariable Long id) {
         log.info("Deleting DNS provider with id: {}", id);
@@ -112,7 +112,7 @@ public class DnsProviderController {
     }
 
     @PostMapping("/{id}/test")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DNS_PROVIDERS') or hasRole('ADMIN')")
     @Operation(summary = "Test DNS provider connection", description = "Verify connectivity to the DNS provider API")
     public Mono<ResponseEntity<Map<String, Boolean>>> testConnection(@PathVariable Long id) {
         log.info("Testing connection for DNS provider with id: {}", id);

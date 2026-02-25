@@ -28,7 +28,7 @@ public class MtaStsController {
     private final MtaStsService mtaStsService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("hasAnyAuthority('VIEW_DOMAINS', 'MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "Get MTA-STS worker status", description = "Retrieve the MTA-STS worker deployment status for a domain")
     public Mono<ResponseEntity<MtaStsWorker>> getWorkerStatus(@PathVariable Long domainId) {
         log.info("Getting MTA-STS worker status for domain id: {}", domainId);
@@ -43,7 +43,7 @@ public class MtaStsController {
     }
 
     @PostMapping("/deploy")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "Deploy MTA-STS worker", description = "Initiate the deployment of a Cloudflare Worker for MTA-STS")
     public Mono<ResponseEntity<MtaStsWorker>> deployWorker(@PathVariable Long domainId) {
         log.info("Deploying MTA-STS worker for domain id: {}", domainId);
@@ -59,7 +59,7 @@ public class MtaStsController {
     }
 
     @PutMapping("/policy-mode")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "Update MTA-STS policy mode", description = "Change the MTA-STS policy mode (testing/enforce/none)")
     public Mono<ResponseEntity<MtaStsWorker>> updatePolicyMode(
             @PathVariable Long domainId,

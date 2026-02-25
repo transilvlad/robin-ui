@@ -36,7 +36,7 @@ public class DomainController {
     // ===== Domain Endpoints =====
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("hasAnyAuthority('VIEW_DOMAINS', 'MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "List all domains", description = "Get all email domains with pagination")
     public Mono<ResponseEntity<Page<Domain>>> listDomains(@PageableDefault(size = 20) Pageable pageable) {
         log.info("Listing domains - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
@@ -49,7 +49,7 @@ public class DomainController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("hasAnyAuthority('VIEW_DOMAINS', 'MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "Get domain by ID", description = "Retrieve a specific domain by its ID")
     public Mono<ResponseEntity<Domain>> getDomain(@PathVariable Long id) {
         log.info("Getting domain with id: {}", id);
@@ -64,8 +64,24 @@ public class DomainController {
                 });
     }
 
+    @GetMapping("/{id}/summary")
+    @PreAuthorize("hasAnyAuthority('VIEW_DOMAINS', 'MANAGE_DOMAINS') or hasRole('ADMIN')")
+    @Operation(summary = "Get domain summary", description = "Retrieve a domain overview with health summary")
+    public Mono<ResponseEntity<com.robin.gateway.model.dto.DomainSummary>> getDomainSummary(@PathVariable Long id) {
+        log.info("Getting domain summary with id: {}", id);
+        return domainService.getDomainSummary(id)
+                .map(ResponseEntity::ok)
+                .onErrorResume(e -> {
+                    log.error("Error getting domain summary with id: {}", id, e);
+                    if (e.getMessage().contains("not found")) {
+                        return Mono.just(ResponseEntity.notFound().build());
+                    }
+                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+                });
+    }
+
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "Create domain", description = "Create a new email domain")
     public Mono<ResponseEntity<Domain>> createDomain(@Valid @RequestBody DomainRequest request) {
         log.info("Creating domain: {}", request.getDomain());
@@ -81,7 +97,7 @@ public class DomainController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "Delete domain", description = "Delete an email domain and all its aliases")
     public Mono<ResponseEntity<Map<String, String>>> deleteDomain(@PathVariable Long id) {
         log.info("Deleting domain with id: {}", id);
@@ -99,7 +115,7 @@ public class DomainController {
     // ===== Alias Endpoints =====
 
     @GetMapping("/{domainId}/aliases")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("hasAnyAuthority('VIEW_DOMAINS', 'MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "List domain aliases", description = "Get all aliases for a specific domain")
     public Mono<ResponseEntity<List<Alias>>> listDomainAliases(@PathVariable Long domainId) {
         log.info("Listing aliases for domain id: {}", domainId);
@@ -115,7 +131,7 @@ public class DomainController {
     }
 
     @GetMapping("/aliases")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("hasAnyAuthority('VIEW_DOMAINS', 'MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "List all aliases", description = "Get all email aliases with pagination")
     public Mono<ResponseEntity<Page<Alias>>> listAllAliases(@PageableDefault(size = 20) Pageable pageable) {
         log.info("Listing all aliases - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
@@ -128,7 +144,7 @@ public class DomainController {
     }
 
     @GetMapping("/aliases/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("hasAnyAuthority('VIEW_DOMAINS', 'MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "Get alias by ID", description = "Retrieve a specific alias by its ID")
     public Mono<ResponseEntity<Alias>> getAlias(@PathVariable Long id) {
         log.info("Getting alias with id: {}", id);
@@ -144,7 +160,7 @@ public class DomainController {
     }
 
     @PostMapping("/aliases")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "Create alias", description = "Create a new email alias")
     public Mono<ResponseEntity<Alias>> createAlias(@Valid @RequestBody AliasRequest request) {
         log.info("Creating alias: {} -> {}", request.getSource(), request.getDestination());
@@ -160,7 +176,7 @@ public class DomainController {
     }
 
     @PutMapping("/aliases/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "Update alias", description = "Update the destination of an existing alias")
     public Mono<ResponseEntity<Alias>> updateAlias(
             @PathVariable Long id,
@@ -181,7 +197,7 @@ public class DomainController {
     }
 
     @DeleteMapping("/aliases/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "Delete alias", description = "Delete an email alias")
     public Mono<ResponseEntity<Map<String, String>>> deleteAlias(@PathVariable Long id) {
         log.info("Deleting alias with id: {}", id);

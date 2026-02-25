@@ -26,7 +26,7 @@ public class DomainHealthController {
     private final DomainHealthService domainHealthService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @PreAuthorize("hasAnyAuthority('VIEW_DOMAINS', 'MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "Get domain health", description = "Retrieve the latest health check results for a domain")
     public Mono<ResponseEntity<List<DomainHealth>>> getHealth(@PathVariable Long domainId) {
         log.info("Getting health status for domain id: {}", domainId);
@@ -39,7 +39,7 @@ public class DomainHealthController {
     }
 
     @PostMapping("/verify")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "Trigger health verification", description = "Run all health checks for a domain immediately")
     public Mono<ResponseEntity<List<DomainHealth>>> triggerVerification(@PathVariable Long domainId) {
         log.info("Triggering health verification for domain id: {}", domainId);

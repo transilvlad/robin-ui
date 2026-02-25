@@ -30,7 +30,7 @@ public class DnsTemplateController {
     private final DnsTemplateRepository dnsTemplateRepository;
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DNS_RECORDS') or hasRole('ADMIN')")
     @Operation(summary = "List DNS templates", description = "Get all DNS record templates")
     public Mono<ResponseEntity<List<DnsTemplate>>> listTemplates() {
         log.info("Listing DNS templates");
@@ -44,7 +44,7 @@ public class DnsTemplateController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DNS_RECORDS') or hasRole('ADMIN')")
     @Operation(summary = "Get DNS template", description = "Retrieve a specific DNS template by its ID")
     public Mono<ResponseEntity<DnsTemplate>> getTemplate(@PathVariable Long id) {
         log.info("Getting DNS template with id: {}", id);
@@ -60,7 +60,7 @@ public class DnsTemplateController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DNS_RECORDS') or hasRole('ADMIN')")
     @Operation(summary = "Create DNS template", description = "Create a new reusable DNS record template")
     public Mono<ResponseEntity<DnsTemplate>> createTemplate(@Valid @RequestBody DnsTemplateRequest request) {
         log.info("Creating DNS template: {}", request.getName());
@@ -81,7 +81,7 @@ public class DnsTemplateController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DNS_RECORDS') or hasRole('ADMIN')")
     @Operation(summary = "Update DNS template", description = "Update an existing DNS record template")
     public Mono<ResponseEntity<DnsTemplate>> updateTemplate(
             @PathVariable Long id,
@@ -107,7 +107,7 @@ public class DnsTemplateController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('MANAGE_DNS_RECORDS') or hasRole('ADMIN')")
     @Operation(summary = "Delete DNS template", description = "Remove a DNS record template")
     public Mono<ResponseEntity<Map<String, String>>> deleteTemplate(@PathVariable Long id) {
         log.info("Deleting DNS template with id: {}", id);
