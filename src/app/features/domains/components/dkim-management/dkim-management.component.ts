@@ -101,10 +101,10 @@ export class DkimManagementComponent implements OnInit, OnChanges {
 
   getStatusClass(status: string): string {
     switch (status) {
-      case 'ACTIVE':   return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
-      case 'ROTATING': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
-      case 'RETIRED':  return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
-      default:         return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
+      case 'ACTIVE':   return 'badge-success';
+      case 'ROTATING': return 'badge-warning';
+      case 'RETIRED':  return 'badge-secondary opacity-50';
+      default:         return 'badge-secondary';
     }
   }
 }

@@ -57,27 +57,36 @@ export class DomainHealthComponent implements OnInit, OnChanges {
   getStatusIcon(status: string): string {
     switch (status) {
       case 'OK':      return '✓';
-      case 'WARN':    return '!';
-      case 'ERROR':   return '✗';
+      case 'WARN':    return '⚠';
+      case 'ERROR':   return '✕';
       default:        return '?';
     }
   }
 
   getStatusCardClass(status: string): string {
     switch (status) {
-      case 'OK':      return 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20';
-      case 'WARN':    return 'border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20';
-      case 'ERROR':   return 'border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20';
-      default:        return 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800';
+      case 'OK':      return 'border-success/20';
+      case 'WARN':    return 'border-warning/20';
+      case 'ERROR':   return 'border-error/20';
+      default:        return 'border-muted';
     }
   }
 
   getStatusIconClass(status: string): string {
     switch (status) {
-      case 'OK':      return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/40';
-      case 'WARN':    return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/40';
-      case 'ERROR':   return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/40';
-      default:        return 'text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700';
+      case 'OK':      return 'text-white bg-success';
+      case 'WARN':    return 'text-white bg-warning';
+      case 'ERROR':   return 'text-white bg-error';
+      default:        return 'text-muted-foreground bg-muted';
+    }
+  }
+
+  getStatusBadgeClass(status: string): string {
+    switch (status) {
+      case 'OK':      return 'text-success bg-success/10';
+      case 'WARN':    return 'text-warning bg-warning/10';
+      case 'ERROR':   return 'text-error bg-error/10';
+      default:        return 'text-muted-foreground bg-muted';
     }
   }
 }

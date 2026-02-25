@@ -1,24 +1,27 @@
 <div>
   <!-- Header -->
   <div class="flex justify-between items-center mb-4">
-    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">DKIM Keys</h2>
+    <h2 class="text-lg font-semibold">DKIM Keys</h2>
     <div class="flex gap-2">
       <button
         (click)="rotateKey()"
-        class="px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        class="btn btn-outline">
         Rotate Key
       </button>
       <button
         (click)="openGenerateModal()"
-        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+        class="btn btn-primary">
         + Generate Key
       </button>
     </div>
   </div>
 
   <!-- Error -->
-  <div *ngIf="error" class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300 text-sm">
-    {{ error }}
+  <div *ngIf="error" class="alert alert-destructive mb-4">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+    <div>
+      {{ error }}
+    </div>
   </div>
 
   <!-- Loading -->
@@ -27,83 +30,89 @@
   </div>
 
   <!-- Keys table -->
-  <div *ngIf="!loading" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-    <table class="w-full">
-      <thead class="bg-gray-50 dark:bg-gray-700">
-        <tr>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Selector</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Algorithm</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">CNAME Selector</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
-          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-        <tr *ngFor="let key of keys" class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-          <td class="px-6 py-4 text-sm font-mono font-medium text-gray-900 dark:text-gray-100">{{ key.selector }}</td>
-          <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{{ key.algorithm }}</td>
-          <td class="px-6 py-4">
-            <span class="px-2 py-1 text-xs font-medium rounded-full" [ngClass]="getStatusClass(key.status)">
-              {{ key.status }}
-            </span>
-          </td>
-          <td class="px-6 py-4 text-sm font-mono text-gray-600 dark:text-gray-400">{{ key.cnameSelector ?? '—' }}</td>
-          <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-            {{ key.createdAt ? (key.createdAt | date:'mediumDate') : '—' }}
-          </td>
-          <td class="px-6 py-4 text-right">
-            <button
-              *ngIf="key.status !== 'RETIRED'"
-              (click)="retireKey(key)"
-              class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-              Retire
-            </button>
-          </td>
-        </tr>
-        <tr *ngIf="keys.length === 0">
-          <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400 text-sm">
-            No DKIM keys configured. Generate a key to enable DKIM signing.
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <div *ngIf="!loading" class="card overflow-hidden">
+    <div class="card-content p-0">
+      <table class="table">
+        <thead class="table-header">
+          <tr>
+            <th class="table-head">Selector</th>
+            <th class="table-head">Algorithm</th>
+            <th class="table-head">Status</th>
+            <th class="table-head">CNAME Selector</th>
+            <th class="table-head">Created</th>
+            <th class="table-head text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="table-body">
+          <tr *ngFor="let key of keys" class="table-row">
+            <td class="table-cell font-mono font-medium">{{ key.selector }}</td>
+            <td class="table-cell">{{ key.algorithm }}</td>
+            <td class="table-cell">
+              <span class="badge" [ngClass]="getStatusClass(key.status)">
+                {{ key.status }}
+              </span>
+            </td>
+            <td class="table-cell font-mono text-muted-foreground">{{ key.cnameSelector ?? '—' }}</td>
+            <td class="table-cell text-muted-foreground">
+              {{ key.createdAt ? (key.createdAt | date:'mediumDate') : '—' }}
+            </td>
+            <td class="table-cell text-right">
+              <button
+                *ngIf="key.status !== 'RETIRED'"
+                (click)="retireKey(key)"
+                class="btn btn-ghost text-destructive hover:text-destructive/90">
+                Retire
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="keys.length === 0" class="table-row hover:bg-transparent">
+            <td colspan="6" class="table-cell text-center py-12 text-muted-foreground">
+              No DKIM keys configured. Generate a key to enable DKIM signing.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
 <!-- Generate Key Modal -->
-<div *ngIf="showGenerateModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-  <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-xl">
-    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Generate DKIM Key</h2>
-    <div class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Selector</label>
-        <input
-          type="text"
-          [(ngModel)]="generateRequest.selector"
-          placeholder="default"
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Used in the DNS TXT record name (e.g., default._domainkey)</p>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Algorithm</label>
-        <select
-          [(ngModel)]="generateRequest.algorithm"
-          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option *ngFor="let alg of algorithms" [value]="alg.value">{{ alg.label }}</option>
-        </select>
+<div *ngIf="showGenerateModal" class="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+  <div class="card w-full max-w-md shadow-lg border-border">
+    <div class="card-header border-b border-border">
+      <h3 class="card-title text-lg">Generate DKIM Key</h3>
+    </div>
+    <div class="card-content pt-6">
+      <div class="space-y-4">
+        <div class="space-y-2">
+          <label class="text-sm font-medium leading-none">Selector</label>
+          <input
+            type="text"
+            [(ngModel)]="generateRequest.selector"
+            placeholder="default"
+            class="input" />
+          <p class="text-xs text-muted-foreground">Used in the DNS TXT record name (e.g., default._domainkey)</p>
+        </div>
+        <div class="space-y-2">
+          <label class="text-sm font-medium leading-none">Algorithm</label>
+          <select
+            [(ngModel)]="generateRequest.algorithm"
+            class="input">
+            <option *ngFor="let alg of algorithms" [value]="alg.value">{{ alg.label }}</option>
+          </select>
+        </div>
       </div>
     </div>
-    <div class="flex gap-3 justify-end mt-6">
+    <div class="card-footer justify-end space-x-2 border-t border-border pt-6 mt-6">
       <button
         (click)="closeGenerateModal()"
-        class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+        class="btn btn-outline">
         Cancel
       </button>
       <button
         (click)="generateKey()"
         [disabled]="generating || !generateRequest.selector"
-        class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+        class="btn btn-primary">
         {{ generating ? 'Generating...' : 'Generate Key' }}
       </button>
     </div>
