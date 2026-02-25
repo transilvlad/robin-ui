@@ -4,7 +4,7 @@
     <h2 class="text-lg font-semibold">DNS Records</h2>
     <button
       (click)="openAddForm()"
-      class="btn btn-primary">
+      class="btn-primary btn-md">
       + Add Record
     </button>
   </div>
@@ -67,12 +67,12 @@
     <div class="flex gap-3 justify-end mt-6">
       <button
         (click)="cancelForm()"
-        class="btn btn-outline">
+        class="btn-outline btn-md">
         Cancel
       </button>
       <button
         (click)="saveRecord()"
-        class="btn btn-primary">
+        class="btn-primary btn-md">
         {{ editingRecord ? 'Update' : 'Create' }}
       </button>
     </div>
@@ -118,12 +118,12 @@
               <div class="flex gap-2 justify-end">
                 <button
                   (click)="editRecord(record)"
-                  class="btn btn-ghost btn-sm text-primary">
+                  class="btn-ghost btn-sm text-primary">
                   Edit
                 </button>
                 <button
                   (click)="deleteRecord(record)"
-                  class="btn btn-ghost btn-sm text-destructive hover:text-destructive/90">
+                  class="btn-ghost btn-sm text-destructive hover:text-destructive/90">
                   Delete
                 </button>
               </div>

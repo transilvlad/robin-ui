@@ -7,7 +7,7 @@
     </div>
     <button
       (click)="openAddModal()"
-      class="btn btn-primary">
+      class="btn-primary btn-md">
       + Add Domain
     </button>
   </div>
@@ -64,7 +64,7 @@
             <td class="table-cell text-right">
               <button
                 (click)="deleteDomain(domain, $event)"
-                class="btn btn-ghost text-destructive hover:text-destructive/90">
+                class="btn-ghost text-destructive hover:text-destructive/90">
                 Delete
               </button>
             </td>
@@ -102,13 +102,13 @@
     <div class="card-footer justify-end space-x-2 border-t border-border pt-6 mt-6">
       <button
         (click)="closeAddModal()"
-        class="btn btn-outline">
+        class="btn-outline btn-md">
         Cancel
       </button>
       <button
         (click)="addDomain()"
         [disabled]="!newDomainName.trim()"
-        class="btn btn-primary">
+        class="btn-primary btn-md">
         Add Domain
       </button>
     </div>

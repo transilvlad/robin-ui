@@ -5,12 +5,12 @@
     <div class="flex gap-2">
       <button
         (click)="rotateKey()"
-        class="btn btn-outline">
+        class="btn-outline btn-md">
         Rotate Key
       </button>
       <button
         (click)="openGenerateModal()"
-        class="btn btn-primary">
+        class="btn-primary btn-md">
         + Generate Key
       </button>
     </div>
@@ -60,7 +60,7 @@
               <button
                 *ngIf="key.status !== 'RETIRED'"
                 (click)="retireKey(key)"
-                class="btn btn-ghost text-destructive hover:text-destructive/90">
+                class="btn-ghost text-destructive hover:text-destructive/90">
                 Retire
               </button>
             </td>
@@ -106,13 +106,13 @@
     <div class="card-footer justify-end space-x-2 border-t border-border pt-6 mt-6">
       <button
         (click)="closeGenerateModal()"
-        class="btn btn-outline">
+        class="btn-outline btn-md">
         Cancel
       </button>
       <button
         (click)="generateKey()"
         [disabled]="generating || !generateRequest.selector"
-        class="btn btn-primary">
+        class="btn-primary btn-md">
         {{ generating ? 'Generating...' : 'Generate Key' }}
       </button>
     </div>

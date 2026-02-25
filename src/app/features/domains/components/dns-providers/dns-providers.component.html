@@ -7,7 +7,7 @@
     </div>
     <button
       (click)="openAddForm()"
-      class="btn btn-primary">
+      class="btn-primary btn-md">
       + Add Provider
     </button>
   </div>
@@ -65,13 +65,13 @@
     <div class="flex gap-3 justify-end mt-8 pt-6 border-t border-border/50">
       <button
         (click)="cancelForm()"
-        class="btn btn-outline">
+        class="btn-outline btn-md">
         Cancel
       </button>
       <button
         (click)="saveProvider()"
         [disabled]="!formData.name"
-        class="btn btn-primary">
+        class="btn-primary btn-md">
         {{ editingProvider ? 'Update Provider' : 'Create Provider' }}
       </button>
     </div>
@@ -112,17 +112,17 @@
                 <button
                   (click)="testConnection(provider)"
                   [disabled]="testing === provider.id"
-                  class="btn btn-ghost btn-sm text-robin-green">
+                  class="btn-ghost btn-sm text-robin-green">
                   {{ testing === provider.id ? 'Testing...' : 'Test' }}
                 </button>
                 <button
                   (click)="editProvider(provider)"
-                  class="btn btn-ghost btn-sm text-primary">
+                  class="btn-ghost btn-sm text-primary">
                   Edit
                 </button>
                 <button
                   (click)="deleteProvider(provider)"
-                  class="btn btn-ghost btn-sm text-destructive hover:text-destructive/90">
+                  class="btn-ghost btn-sm text-destructive hover:text-destructive/90">
                   Delete
                 </button>
               </div>

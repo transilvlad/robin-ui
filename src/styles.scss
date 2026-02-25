@@ -264,7 +264,16 @@ $robin-theme: mat.m2-define-light-theme((
   }
 
   .alert-destructive {
-    @apply alert border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    @apply alert backdrop-blur-md [&>svg]:text-error;
+  }
+
+  .dark .alert-destructive {
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid rgba(248, 113, 113, 0.2);
+    color: #f87171;
   }
 
   /* Table component */

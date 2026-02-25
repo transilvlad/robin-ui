@@ -7,7 +7,7 @@
     </div>
     <button
       (click)="openAddForm()"
-      class="btn btn-primary">
+      class="btn-primary btn-md">
       + New Template
     </button>
   </div>
@@ -71,13 +71,13 @@
     <div class="flex gap-3 justify-end mt-8 pt-6 border-t border-border/50">
       <button
         (click)="cancelForm()"
-        class="btn btn-outline">
+        class="btn-outline btn-md">
         Cancel
       </button>
       <button
         (click)="saveTemplate()"
         [disabled]="!formData.name || !isValidJson(formData.records)"
-        class="btn btn-primary">
+        class="btn-primary btn-md">
         {{ editingTemplate ? 'Update Template' : 'Create Template' }}
       </button>
     </div>
@@ -117,12 +117,12 @@
               <div class="flex gap-2 justify-end">
                 <button
                   (click)="editTemplate(template)"
-                  class="btn btn-ghost btn-sm text-primary">
+                  class="btn-ghost btn-sm text-primary">
                   Edit
                 </button>
                 <button
                   (click)="deleteTemplate(template)"
-                  class="btn btn-ghost btn-sm text-destructive hover:text-destructive/90">
+                  class="btn-ghost btn-sm text-destructive hover:text-destructive/90">
                   Delete
                 </button>
               </div>
