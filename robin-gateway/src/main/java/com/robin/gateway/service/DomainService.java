@@ -4,6 +4,7 @@ import com.robin.gateway.model.Alias;
 import com.robin.gateway.model.Domain;
 import com.robin.gateway.repository.AliasRepository;
 import com.robin.gateway.repository.DomainRepository;
+import com.robin.gateway.model.dto.DomainRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -23,6 +24,7 @@ public class DomainService {
 
     private final DomainRepository domainRepository;
     private final AliasRepository aliasRepository;
+    private final MtaStsService mtaStsService;
 
     /**
      * Get all domains with pagination
@@ -61,8 +63,9 @@ public class DomainService {
      * Create a new domain
      */
     @Transactional
-    public Mono<Domain> createDomain(String domainName) {
+    public Mono<Domain> createDomain(DomainRequest request) {
         return Mono.fromCallable(() -> {
+            String domainName = request.getDomain();
             // Check if domain already exists
             if (domainRepository.existsByDomain(domainName)) {
                 throw new IllegalArgumentException("Domain already exists: " + domainName);
@@ -70,13 +73,27 @@ public class DomainService {
 
             Domain domain = Domain.builder()
                     .domain(domainName)
+                    .dnsProviderId(request.getDnsProviderId())
+                    .nsProviderId(request.getNsProviderId())
+                    .status(request.isExistingDomain() ? "PENDING_VERIFICATION" : "PENDING")
                     .build();
 
             return domainRepository.save(domain);
         })
                 .subscribeOn(Schedulers.boundedElastic())
-                .doOnSuccess(domain -> log.info("Created domain: {}", domain.getDomain()))
-                .doOnError(e -> log.error("Error creating domain: {}", domainName, e));
+                .flatMap(domain -> {
+                    log.info("Created domain: {}", domain.getDomain());
+                    if (domain.getDnsProviderId() != null) {
+                        return mtaStsService.initiateWorkerDeployment(domain.getId())
+                                .thenReturn(domain)
+                                .onErrorResume(e -> {
+                                    log.error("Failed to trigger MTA-STS worker deployment for domain {}", domain.getId(), e);
+                                    return Mono.just(domain);
+                                });
+                    }
+                    return Mono.just(domain);
+                })
+                .doOnError(e -> log.error("Error creating domain: {}", request.getDomain(), e));
     }
 
     /**

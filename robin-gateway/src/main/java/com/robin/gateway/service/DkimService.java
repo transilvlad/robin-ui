@@ -1,23 +1,42 @@
 package com.robin.gateway.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.robin.gateway.integration.aws.Route53ApiClient;
+import com.robin.gateway.integration.cloudflare.CloudflareApiClient;
 import com.robin.gateway.model.DkimAlgorithm;
 import com.robin.gateway.model.DkimKey;
 import com.robin.gateway.model.DkimKeyStatus;
+import com.robin.gateway.model.DnsProvider;
+import com.robin.gateway.model.DnsProviderType;
+import com.robin.gateway.model.Domain;
+import com.robin.gateway.model.DomainDnsRecord;
 import com.robin.gateway.repository.DkimKeyRepository;
+import com.robin.gateway.repository.DnsProviderRepository;
 import com.robin.gateway.repository.DomainRepository;
+import com.robin.gateway.repository.DomainDnsRecordRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import software.amazon.awssdk.services.route53.model.Change;
+import software.amazon.awssdk.services.route53.model.ChangeAction;
+import software.amazon.awssdk.services.route53.model.ResourceRecord;
+import software.amazon.awssdk.services.route53.model.ResourceRecordSet;
+import software.amazon.awssdk.services.route53.model.RRType;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,13 +47,21 @@ public class DkimService {
     private final DkimKeyRepository dkimKeyRepository;
     private final DomainRepository domainRepository;
     private final EncryptionService encryptionService;
+    private final DnsProviderRepository dnsProviderRepository;
+    private final CloudflareApiClient cloudflareApiClient;
+    private final Route53ApiClient route53ApiClient;
+    private final DomainDnsRecordRepository dnsRecordRepository;
+    private final WebClient.Builder webClientBuilder;
+    private final ObjectMapper objectMapper;
+
+    @Value("${robin.service-url:http://localhost:8080}")
+    private String robinServiceUrl;
 
     @Transactional
     public Mono<DkimKey> generateKeyPair(Long domainId, DkimAlgorithm algorithm, String selectorOverride) {
         return Mono.fromCallable(() -> {
-            if (!domainRepository.existsById(domainId)) {
-                throw new RuntimeException("Domain not found: " + domainId);
-            }
+            Domain domain = domainRepository.findById(domainId)
+                    .orElseThrow(() -> new RuntimeException("Domain not found: " + domainId));
 
             String selector = selectorOverride != null ? selectorOverride : buildAutoSelector(algorithm);
 
@@ -56,11 +83,15 @@ public class DkimService {
             DkimKey saved = dkimKeyRepository.save(dkimKey);
             log.info("Generated DKIM key for domain {} with selector '{}' and algorithm {}", domainId, selector, algorithm);
 
-            DkimKey masked = copyWithMaskedPrivateKey(saved);
-            return masked;
+            return saved;
         })
-                .subscribeOn(Schedulers.boundedElastic())
-                .doOnError(e -> log.error("Error generating DKIM key for domain: {}", domainId, e));
+        .subscribeOn(Schedulers.boundedElastic())
+        .flatMap(saved -> publishToDns(saved)
+                .then(configureMtaSigning(saved))
+                .thenReturn(saved)
+        )
+        .map(this::copyWithMaskedPrivateKey)
+        .doOnError(e -> log.error("Error generating DKIM key for domain: {}", domainId, e));
     }
 
     @Transactional
@@ -168,5 +199,120 @@ public class DkimService {
                 .createdAt(key.getCreatedAt())
                 .retiredAt(key.getRetiredAt())
                 .build();
+    }
+
+    public Mono<Void> publishToDns(DkimKey dkimKey) {
+        return Mono.fromCallable(() -> {
+            Domain domain = domainRepository.findById(dkimKey.getDomainId())
+                    .orElseThrow(() -> new RuntimeException("Domain not found"));
+            return domain;
+        })
+        .subscribeOn(Schedulers.boundedElastic())
+        .flatMap(domain -> {
+            if (domain.getDnsProviderId() == null) {
+                log.info("No DNS provider configured for domain {}, skipping DNS publish", domain.getDomain());
+                return Mono.empty();
+            }
+
+            return Mono.fromCallable(() -> dnsProviderRepository.findById(domain.getDnsProviderId())
+                    .orElseThrow(() -> new RuntimeException("Provider not found")))
+                    .subscribeOn(Schedulers.boundedElastic())
+                    .flatMap(provider -> {
+                        String recordName = dkimKey.getSelector() + "._domainkey";
+                        String algorithmTag = dkimKey.getAlgorithm() == DkimAlgorithm.RSA_2048 ? "rsa" : "ed25519";
+                        String recordValue = "v=DKIM1; k=" + algorithmTag + "; p=" + dkimKey.getPublicKey();
+                        
+                        String decryptedCreds = encryptionService.decrypt(provider.getCredentials());
+
+                        return doPublishToDns(domain, provider, decryptedCreds, recordName, recordValue);
+                    });
+        });
+    }
+
+    private Mono<Void> doPublishToDns(Domain domain, DnsProvider provider, String credentialsJson, String recordName, String recordValue) {
+        try {
+            JsonNode creds = objectMapper.readTree(credentialsJson);
+            
+            if (provider.getType() == DnsProviderType.CLOUDFLARE) {
+                String apiToken = creds.get("apiToken").asText();
+                return cloudflareApiClient.getZoneId(domain.getDomain(), apiToken)
+                        .flatMap(zoneId -> cloudflareApiClient.createDnsRecord(zoneId, "TXT", recordName, recordValue, 1, apiToken))
+                        .flatMap(recordId -> saveDnsRecordLocally(domain.getId(), "TXT", recordName, recordValue, recordId))
+                        .then();
+            } else if (provider.getType() == DnsProviderType.AWS_ROUTE53) {
+                String accessKey = creds.get("accessKeyId").asText();
+                String secretKey = creds.get("secretAccessKey").asText();
+                String region = creds.has("region") ? creds.get("region").asText() : "us-east-1";
+                
+                return Mono.fromFuture(() -> route53ApiClient.getHostedZoneId(domain.getDomain(), accessKey, secretKey, region))
+                        .flatMap(zoneId -> {
+                            ResourceRecord record = ResourceRecord.builder().value("\"" + recordValue + "\"").build();
+                            ResourceRecordSet recordSet = ResourceRecordSet.builder()
+                                    .name(recordName + "." + domain.getDomain() + ".")
+                                    .type(RRType.TXT)
+                                    .ttl(3600L)
+                                    .resourceRecords(record)
+                                    .build();
+                                    
+                            Change change = Change.builder()
+                                    .action(ChangeAction.UPSERT)
+                                    .resourceRecordSet(recordSet)
+                                    .build();
+                                    
+                            return Mono.fromFuture(() -> route53ApiClient.changeResourceRecordSets(zoneId, Collections.singletonList(change), accessKey, secretKey, region))
+                                    .flatMap(changeInfo -> saveDnsRecordLocally(domain.getId(), "TXT", recordName, recordValue, changeInfo.id()))
+                                    .then();
+                        });
+            }
+        } catch (Exception e) {
+            log.error("Failed to publish DNS record", e);
+            return Mono.error(e);
+        }
+        return Mono.empty();
+    }
+    
+    private Mono<DomainDnsRecord> saveDnsRecordLocally(Long domainId, String type, String name, String value, String providerRecordId) {
+        return Mono.fromCallable(() -> {
+            DomainDnsRecord record = DomainDnsRecord.builder()
+                    .domainId(domainId)
+                    .recordType(type)
+                    .name(name)
+                    .value(value)
+                    .ttl(3600)
+                    .providerRecordId(providerRecordId)
+                    .managed(true)
+                    .build();
+            return dnsRecordRepository.save(record);
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    public Mono<Void> configureMtaSigning(DkimKey dkimKey) {
+        return Mono.fromCallable(() -> {
+            Domain domain = domainRepository.findById(dkimKey.getDomainId())
+                    .orElseThrow(() -> new RuntimeException("Domain not found"));
+            return domain;
+        })
+        .subscribeOn(Schedulers.boundedElastic())
+        .flatMap(domain -> {
+            String privateKeyBase64 = encryptionService.decrypt(dkimKey.getPrivateKey());
+            String algorithmTag = dkimKey.getAlgorithm() == DkimAlgorithm.RSA_2048 ? "rsa" : "ed25519";
+
+            Map<String, Object> body = Map.of(
+                    "domain", domain.getDomain(),
+                    "selector", dkimKey.getSelector(),
+                    "privateKey", privateKeyBase64,
+                    "algorithm", algorithmTag
+            );
+
+            return webClientBuilder.build()
+                    .post()
+                    .uri(robinServiceUrl + "/config/dkim")
+                    .bodyValue(body)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .doOnSuccess(r -> log.info("Configured MTA signing for domain {} with selector {}", domain.getDomain(), dkimKey.getSelector()))
+                    .doOnError(e -> log.error("Failed to configure MTA signing for domain {}: {}", domain.getDomain(), e.getMessage()))
+                    .then();
+        });
     }
 }

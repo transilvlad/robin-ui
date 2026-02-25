@@ -69,7 +69,7 @@ public class DomainController {
     @Operation(summary = "Create domain", description = "Create a new email domain")
     public Mono<ResponseEntity<Domain>> createDomain(@Valid @RequestBody DomainRequest request) {
         log.info("Creating domain: {}", request.getDomain());
-        return domainService.createDomain(request.getDomain())
+        return domainService.createDomain(request)
                 .map(domain -> ResponseEntity.status(HttpStatus.CREATED).body(domain))
                 .onErrorResume(e -> {
                     log.error("Error creating domain: {}", request.getDomain(), e);

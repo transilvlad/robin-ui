@@ -19,4 +19,11 @@ public class DomainRequest {
             message = "Invalid domain name format"
     )
     private String domain;
+
+    private Long dnsProviderId;
+    
+    private Long nsProviderId;
+    
+    @Builder.Default
+    private boolean existingDomain = false;
 }
