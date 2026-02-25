@@ -19,6 +19,10 @@ export const environment = {
     store: '/storage',
     logs: '/logs',
 
+    domains: '/domains',
+    dnsProviders: '/dns-providers',
+    dnsTemplates: '/dns-templates',
+
     // Auth endpoints (Robin Gateway)
     auth: {
       login: '/api/v1/auth/login',
