@@ -55,12 +55,12 @@
         </div>
         <textarea
           [(ngModel)]="formData.records"
-          rows="12"
+          rows="20"
           class="input font-mono resize-y min-h-[200px]"
           [class.border-destructive]="formData.records && !isValidJson(formData.records)"></textarea>
         <div class="flex justify-between items-start">
           <p class="text-xs text-muted-foreground max-w-md">
-            Array of DNS record objects with fields: type, name, value, ttl, priority (optional).
+            Array of DNS record objects. Fields: <code class="font-mono">type</code>, <code class="font-mono">name</code>, <code class="font-mono">value</code>, <code class="font-mono">ttl</code>, <code class="font-mono">priority</code> (MX only), <code class="font-mono">_comment</code> (ignored at apply time).
           </p>
           <p *ngIf="formData.records && !isValidJson(formData.records)" class="text-xs text-destructive font-semibold">
             Invalid JSON format
@@ -117,12 +117,12 @@
               <div class="flex gap-2 justify-end">
                 <button
                   (click)="editTemplate(template)"
-                  class="btn-ghost btn-sm text-primary">
+                  class="btn-outline btn-sm text-primary">
                   Edit
                 </button>
                 <button
                   (click)="deleteTemplate(template)"
-                  class="btn-ghost btn-sm text-destructive hover:text-destructive/90">
+                  class="btn-outline btn-sm text-destructive hover:text-destructive/90">
                   Delete
                 </button>
               </div>
