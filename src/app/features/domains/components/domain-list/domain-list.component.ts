@@ -114,7 +114,7 @@ export class DomainListComponent implements OnInit {
     this.lookupResult = {
       domain: this.newDomainName.trim(), nsRecords: [], mxRecords: [],
       spfRecords: [], dmarcRecords: [], mtaStsRecords: [], smtpTlsRecords: [],
-      detectedNsProviderType: 'UNKNOWN', suggestedProvider: null, availableProviders: [],
+      detectedNsProviderType: 'UNKNOWN', suggestedProvider: null, availableProviders: [], allRecords: [],
     };
     this.dnsProviderService.getProviders().subscribe(r => {
       if (r.ok) this.availableProviders = r.value;
