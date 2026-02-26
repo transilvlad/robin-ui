@@ -1,9 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 interface MenuItem {
   label: string;
   icon: string;
   route: string;
+  exactMatch?: boolean;
   children?: MenuItem[];
 }
 
@@ -13,7 +16,7 @@ interface MenuItem {
     styleUrls: ['./sidebar.component.scss'],
     standalone: false
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit {
   menuItems: MenuItem[] = [
     {
       label: 'Dashboard',
@@ -34,7 +37,7 @@ export class SidebarComponent {
       icon: 'globe',
       route: '/domains',
       children: [
-        { label: 'Domain List',   icon: 'list',     route: '/domains' },
+        { label: 'Domain List',   icon: 'list',     route: '/domains',               exactMatch: true },
         { label: 'DNS Providers', icon: 'server',   route: '/domains/dns-providers' },
         { label: 'DNS Templates', icon: 'template', route: '/domains/dns-templates' },
       ],
@@ -83,6 +86,25 @@ export class SidebarComponent {
 
   expandedItems: Set<string> = new Set();
   isCollapsed = false;
+
+  constructor(private router: Router) {}
+
+  ngOnInit(): void {
+    this.autoExpand(this.router.url);
+    this.router.events
+      .pipe(filter(e => e instanceof NavigationEnd))
+      .subscribe((e: NavigationEnd) => this.autoExpand(e.urlAfterRedirects));
+  }
+
+  /** Auto-expand any parent item whose children cover the given URL. */
+  private autoExpand(url: string): void {
+    const path = url.split('?')[0];
+    for (const item of this.menuItems) {
+      if (item.children?.some(child => path === child.route || path.startsWith(child.route + '/'))) {
+        this.expandedItems.add(item.label);
+      }
+    }
+  }
 
   toggleExpand(item: MenuItem): void {
     if (this.expandedItems.has(item.label)) {

@@ -114,6 +114,7 @@
                       <a
                         [routerLink]="child.route"
                         routerLinkActive="text-sidebar-primary font-semibold"
+                        [routerLinkActiveOptions]="{ exact: child.exactMatch ?? false }"
                         class="flex items-center gap-3 pl-11 pr-3 py-2 rounded-md text-sm text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors"
                         >
                         {{ child.label }}
