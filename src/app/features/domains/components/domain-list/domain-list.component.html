@@ -80,15 +80,29 @@
   </div>
 </div>
 
+
 <!-- Add Domain Modal -->
-<div *ngIf="showAddModal" class="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-  <div class="card w-full max-w-2xl shadow-lg border-border max-h-[90vh] overflow-y-auto">
-    <div class="card-header border-b border-border">
-      <h3 class="card-title text-lg">Add Domain</h3>
-      <p class="text-sm text-muted-foreground mt-1">Detect existing DNS records and pick a provider before adding.</p>
+<div *ngIf="showAddModal"
+     class="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+     (click)="closeAddModal()">
+
+  <!-- Card — stop click from propagating to backdrop -->
+  <div class="card w-full max-w-2xl shadow-xl border-border flex flex-col max-h-[90vh]"
+       (click)="$event.stopPropagation()">
+
+    <!-- Sticky header -->
+    <div class="card-header border-b border-border flex items-start justify-between shrink-0 pb-4">
+      <div>
+        <h3 class="card-title text-lg">Add Domain</h3>
+        <p class="text-sm text-muted-foreground mt-1">Detect existing DNS records and pick a provider before adding.</p>
+      </div>
+      <button (click)="closeAddModal()" class="btn-ghost btn-sm p-1 rounded-md -mt-1 -mr-1" title="Close">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
 
-    <div class="card-content pt-6 space-y-6">
+    <!-- Scrollable body -->
+    <div class="card-content flex-1 overflow-y-auto pt-6 space-y-6">
 
       <!-- Domain input row -->
       <div class="space-y-2">
@@ -111,7 +125,7 @@
           </button>
           <button
             *ngIf="lookupResult"
-            (click)="openAddModal()"
+            (click)="resetDetection()"
             class="btn-outline btn-md whitespace-nowrap">
             ↩ Change
           </button>
@@ -128,7 +142,7 @@
         <div>{{ lookupError }}</div>
       </div>
 
-      <!-- Detected info panel -->
+      <!-- Detected info + provider selection -->
       <ng-container *ngIf="lookupResult">
 
         <!-- NS detection badge -->
@@ -137,79 +151,167 @@
             <span class="text-sm font-semibold">Nameservers Detected</span>
             <span class="badge"
               [ngClass]="{
-                'badge-success': lookupResult.detectedNsProviderType === 'CLOUDFLARE' || lookupResult.detectedNsProviderType === 'AWS_ROUTE53',
+                'badge-success':   lookupResult.detectedNsProviderType !== 'UNKNOWN',
                 'badge-secondary': lookupResult.detectedNsProviderType === 'UNKNOWN'
               }">
               {{ lookupResult.detectedNsProviderType === 'UNKNOWN' ? 'Unknown provider' : getProviderLabel(lookupResult.detectedNsProviderType) }}
             </span>
           </div>
           <div *ngIf="lookupResult.nsRecords.length > 0" class="flex flex-wrap gap-1">
-            <code *ngFor="let ns of lookupResult.nsRecords" class="text-xs bg-background/60 border border-border/50 rounded px-2 py-0.5 font-mono">{{ ns }}</code>
+            <code *ngFor="let ns of lookupResult.nsRecords"
+                  class="text-xs bg-background/60 border border-border/50 rounded px-2 py-0.5 font-mono">{{ ns }}</code>
           </div>
-          <p *ngIf="lookupResult.nsRecords.length === 0" class="text-xs text-muted-foreground">No NS records found (domain may not exist yet).</p>
+          <p *ngIf="lookupResult.nsRecords.length === 0" class="text-xs text-muted-foreground">
+            No NS records found (domain may not exist yet).
+          </p>
           <p *ngIf="lookupResult.suggestedProvider" class="text-xs text-muted-foreground">
-            💡 We detected <strong>{{ getProviderLabel(lookupResult.detectedNsProviderType) }}</strong> nameservers.
-            Your registered provider <strong>{{ lookupResult.suggestedProvider.name }}</strong> has been pre-selected below.
+            💡 Detected <strong>{{ getProviderLabel(lookupResult.detectedNsProviderType) }}</strong> nameservers —
+            provider <strong>{{ lookupResult.suggestedProvider.name }}</strong> pre-selected below.
           </p>
         </div>
 
-        <!-- Existing DNS records summary -->
-        <div *ngIf="hasDetectedRecords()" class="rounded-lg border border-border p-4 space-y-3 bg-layer-1">
+        <!-- Existing DNS records -->
+        <div *ngIf="hasDetectedRecords()" class="rounded-lg border border-border p-4 space-y-2 bg-layer-1">
           <span class="text-sm font-semibold">Existing DNS Records Found</span>
-          <div class="space-y-2 text-xs font-mono">
+          <div class="space-y-1.5 text-xs font-mono mt-2">
             <div *ngFor="let mx of lookupResult.mxRecords" class="flex gap-2 items-start">
-              <span class="badge badge-secondary shrink-0">MX</span>
+              <span class="badge badge-secondary shrink-0 mt-0.5">MX</span>
               <span class="text-muted-foreground break-all">{{ mx }}</span>
             </div>
             <div *ngFor="let spf of lookupResult.spfRecords" class="flex gap-2 items-start">
-              <span class="badge badge-secondary shrink-0">SPF</span>
+              <span class="badge badge-secondary shrink-0 mt-0.5">SPF</span>
               <span class="text-muted-foreground break-all">{{ spf }}</span>
             </div>
             <div *ngFor="let d of lookupResult.dmarcRecords" class="flex gap-2 items-start">
-              <span class="badge badge-secondary shrink-0">DMARC</span>
+              <span class="badge badge-secondary shrink-0 mt-0.5">DMARC</span>
               <span class="text-muted-foreground break-all">{{ d }}</span>
             </div>
             <div *ngFor="let m of lookupResult.mtaStsRecords" class="flex gap-2 items-start">
-              <span class="badge badge-secondary shrink-0">MTA-STS</span>
+              <span class="badge badge-secondary shrink-0 mt-0.5">MTA-STS</span>
               <span class="text-muted-foreground break-all">{{ m }}</span>
             </div>
             <div *ngFor="let t of lookupResult.smtpTlsRecords" class="flex gap-2 items-start">
-              <span class="badge badge-secondary shrink-0">TLS-RPT</span>
+              <span class="badge badge-secondary shrink-0 mt-0.5">TLS-RPT</span>
               <span class="text-muted-foreground break-all">{{ t }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Provider selection -->
+        <!-- ── Provider selectors ── -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <!-- DNS Provider -->
           <div class="space-y-2">
-            <label class="text-sm font-medium leading-none">DNS Provider
-              <span class="text-muted-foreground font-normal text-xs ml-1">(manages DNS records)</span>
-            </label>
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium leading-none">DNS Provider
+                <span class="text-muted-foreground font-normal text-xs ml-1">(manages records)</span>
+              </label>
+              <button *ngIf="newProviderTarget !== 'dns'"
+                      (click)="openNewProviderForm('dns')"
+                      class="btn-outline btn-sm text-primary text-xs">+ New</button>
+              <button *ngIf="newProviderTarget === 'dns'"
+                      (click)="cancelNewProvider()"
+                      class="btn-ghost btn-sm text-xs text-muted-foreground">✕ Cancel</button>
+            </div>
             <select [(ngModel)]="selectedDnsProviderId" class="input">
               <option [ngValue]="null">— None / Manual —</option>
-              <option *ngFor="let p of lookupResult.availableProviders" [ngValue]="p.id">
+              <option *ngFor="let p of availableProviders" [ngValue]="p.id">
                 {{ p.name }} ({{ getProviderLabel(p.type) }})
               </option>
             </select>
           </div>
+
+          <!-- NS Provider -->
           <div class="space-y-2">
-            <label class="text-sm font-medium leading-none">NS Provider
-              <span class="text-muted-foreground font-normal text-xs ml-1">(manages nameservers)</span>
-            </label>
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium leading-none">NS Provider
+                <span class="text-muted-foreground font-normal text-xs ml-1">(manages nameservers)</span>
+              </label>
+              <button *ngIf="newProviderTarget !== 'ns'"
+                      (click)="openNewProviderForm('ns')"
+                      class="btn-outline btn-sm text-primary text-xs">+ New</button>
+              <button *ngIf="newProviderTarget === 'ns'"
+                      (click)="cancelNewProvider()"
+                      class="btn-ghost btn-sm text-xs text-muted-foreground">✕ Cancel</button>
+            </div>
             <select [(ngModel)]="selectedNsProviderId" class="input">
               <option [ngValue]="null">— None / Manual —</option>
-              <option *ngFor="let p of lookupResult.availableProviders" [ngValue]="p.id">
+              <option *ngFor="let p of availableProviders" [ngValue]="p.id">
                 {{ p.name }} ({{ getProviderLabel(p.type) }})
               </option>
             </select>
           </div>
         </div>
 
-      </ng-container>
-    </div>
+        <!-- Inline new-provider form -->
+        <div *ngIf="newProviderTarget" class="rounded-lg border border-primary/30 bg-layer-1 p-4 space-y-4">
+          <h4 class="text-sm font-semibold">
+            New {{ newProviderTarget === 'dns' ? 'DNS' : 'NS' }} Provider
+          </h4>
 
-    <div class="card-footer justify-end space-x-2 border-t border-border pt-6 mt-2">
+          <!-- Error -->
+          <div *ngIf="newProviderError" class="alert alert-destructive text-xs py-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div>{{ newProviderError }}</div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="text-xs font-medium">Name</label>
+              <input type="text" [(ngModel)]="newProviderForm.name" placeholder="My Cloudflare" class="input" />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium">Type</label>
+              <select [(ngModel)]="newProviderForm.type" class="input">
+                <option value="CLOUDFLARE">Cloudflare</option>
+                <option value="AWS_ROUTE53">AWS Route 53</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Cloudflare credentials -->
+          <ng-container *ngIf="newProviderForm.type === 'CLOUDFLARE'">
+            <div class="space-y-1">
+              <label class="text-xs font-medium">API Token</label>
+              <input type="password" [(ngModel)]="newProviderForm.cfApiToken"
+                     placeholder="Cloudflare API Token (Edit DNS permission)" class="input" autocomplete="off" />
+              <p class="text-xs text-muted-foreground">Create a scoped token at cloudflare.com → My Profile → API Tokens.</p>
+            </div>
+          </ng-container>
+
+          <!-- Route 53 credentials -->
+          <ng-container *ngIf="newProviderForm.type === 'AWS_ROUTE53'">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-1">
+                <label class="text-xs font-medium">Access Key ID</label>
+                <input type="text" [(ngModel)]="newProviderForm.r53AccessKeyId" placeholder="AKIAIOSFODNN7EXAMPLE" class="input" autocomplete="off" />
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-medium">Secret Access Key</label>
+                <input type="password" [(ngModel)]="newProviderForm.r53SecretAccessKey" placeholder="Secret key" class="input" autocomplete="off" />
+              </div>
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-medium">Region</label>
+              <input type="text" [(ngModel)]="newProviderForm.r53Region" placeholder="us-east-1" class="input" />
+            </div>
+          </ng-container>
+
+          <div class="flex gap-2 justify-end pt-2 border-t border-border/50">
+            <button (click)="cancelNewProvider()" class="btn-outline btn-sm">Cancel</button>
+            <button (click)="saveNewProvider()"
+                    [disabled]="!newProviderForm.name || newProviderLoading"
+                    class="btn-primary btn-sm">
+              {{ newProviderLoading ? 'Saving…' : 'Save Provider' }}
+            </button>
+          </div>
+        </div>
+
+      </ng-container>
+    </div><!-- /scrollable body -->
+
+    <!-- Sticky footer -->
+    <div class="flex justify-end gap-3 border-t border-border px-6 py-4 shrink-0">
       <button (click)="closeAddModal()" class="btn-outline btn-md">Cancel</button>
       <button
         (click)="addDomain()"
@@ -218,5 +320,6 @@
         Add Domain
       </button>
     </div>
-  </div>
-</div>
+
+  </div><!-- /card -->
+</div><!-- /modal backdrop -->

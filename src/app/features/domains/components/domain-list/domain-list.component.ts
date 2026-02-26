@@ -1,7 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { DomainService } from '../../services/domain.service';
+import { DnsProviderService, CreateDnsProviderRequest } from '../../services/dns-provider.service';
 import { Domain, DomainLookupResult, DnsProvider } from '../../models/domain.models';
+
+interface NewProviderForm {
+  name: string;
+  type: 'CLOUDFLARE' | 'AWS_ROUTE53';
+  cfApiToken: string;
+  r53AccessKeyId: string;
+  r53SecretAccessKey: string;
+  r53Region: string;
+}
 
 @Component({
   selector: 'app-domain-list',
@@ -12,20 +22,29 @@ import { Domain, DomainLookupResult, DnsProvider } from '../../models/domain.mod
 export class DomainListComponent implements OnInit {
   domains: Domain[] = [];
   loading = false;
-  showAddModal = false;
-  newDomainName = '';
   error: string | null = null;
 
-  // Add-domain modal state
+  // ── Modal state ────────────────────────────────────────────────
+  showAddModal = false;
+  newDomainName = '';
+
   lookupLoading = false;
   lookupError: string | null = null;
   lookupResult: DomainLookupResult | null = null;
+
+  availableProviders: DnsProvider[] = [];
   selectedDnsProviderId: number | null = null;
   selectedNsProviderId: number | null = null;
-  isExistingDomain = true;
+
+  // Inline new-provider form: 'dns' | 'ns' | null indicates which dropdown triggered it
+  newProviderTarget: 'dns' | 'ns' | null = null;
+  newProviderLoading = false;
+  newProviderError: string | null = null;
+  newProviderForm: NewProviderForm = this.emptyProviderForm();
 
   constructor(
     private domainService: DomainService,
+    private dnsProviderService: DnsProviderService,
     private router: Router
   ) {}
 
@@ -50,22 +69,27 @@ export class DomainListComponent implements OnInit {
     this.router.navigate(['/domains', domain.id]);
   }
 
+  // ── Modal open/close ────────────────────────────────────────────
   openAddModal(): void {
     this.showAddModal = true;
     this.newDomainName = '';
     this.lookupResult = null;
     this.lookupError = null;
     this.lookupLoading = false;
+    this.availableProviders = [];
     this.selectedDnsProviderId = null;
     this.selectedNsProviderId = null;
-    this.isExistingDomain = true;
+    this.newProviderTarget = null;
+    this.newProviderError = null;
   }
 
   closeAddModal(): void {
     this.showAddModal = false;
     this.lookupResult = null;
+    this.newProviderTarget = null;
   }
 
+  // ── DNS detection ───────────────────────────────────────────────
   detectDns(): void {
     const domain = this.newDomainName.trim();
     if (!domain) return;
@@ -76,7 +100,7 @@ export class DomainListComponent implements OnInit {
       this.lookupLoading = false;
       if (result.ok) {
         this.lookupResult = result.value;
-        // Pre-select suggested provider for both DNS and NS management
+        this.availableProviders = result.value.availableProviders;
         const sugId = result.value.suggestedProvider?.id ?? null;
         this.selectedDnsProviderId = sugId;
         this.selectedNsProviderId = sugId;
@@ -87,11 +111,67 @@ export class DomainListComponent implements OnInit {
   }
 
   skipDetection(): void {
-    this.lookupResult = { domain: this.newDomainName.trim(), nsRecords: [], mxRecords: [],
+    this.lookupResult = {
+      domain: this.newDomainName.trim(), nsRecords: [], mxRecords: [],
       spfRecords: [], dmarcRecords: [], mtaStsRecords: [], smtpTlsRecords: [],
-      detectedNsProviderType: 'UNKNOWN', suggestedProvider: null, availableProviders: [] };
+      detectedNsProviderType: 'UNKNOWN', suggestedProvider: null, availableProviders: [],
+    };
+    this.dnsProviderService.getProviders().subscribe(r => {
+      if (r.ok) this.availableProviders = r.value;
+    });
   }
 
+  resetDetection(): void {
+    this.lookupResult = null;
+    this.lookupError = null;
+    this.newProviderTarget = null;
+  }
+
+  // ── Inline new-provider form ────────────────────────────────────
+  openNewProviderForm(target: 'dns' | 'ns'): void {
+    this.newProviderTarget = target;
+    this.newProviderForm = this.emptyProviderForm();
+    this.newProviderError = null;
+  }
+
+  cancelNewProvider(): void {
+    this.newProviderTarget = null;
+    this.newProviderError = null;
+  }
+
+  saveNewProvider(): void {
+    const f = this.newProviderForm;
+    if (!f.name || !f.type) return;
+
+    let credentials: Record<string, string>;
+    if (f.type === 'CLOUDFLARE') {
+      if (!f.cfApiToken) { this.newProviderError = 'API Token is required for Cloudflare.'; return; }
+      credentials = { apiToken: f.cfApiToken };
+    } else {
+      if (!f.r53AccessKeyId || !f.r53SecretAccessKey) {
+        this.newProviderError = 'Access Key ID and Secret are required for Route 53.'; return;
+      }
+      credentials = { accessKeyId: f.r53AccessKeyId, secretAccessKey: f.r53SecretAccessKey, region: f.r53Region || 'us-east-1' };
+    }
+
+    const req: CreateDnsProviderRequest = { name: f.name, type: f.type, credentials: JSON.stringify(credentials) };
+    this.newProviderLoading = true;
+    this.newProviderError = null;
+    this.dnsProviderService.createProvider(req).subscribe(result => {
+      this.newProviderLoading = false;
+      if (result.ok) {
+        const created = result.value;
+        this.availableProviders = [...this.availableProviders, created];
+        if (this.newProviderTarget === 'dns') this.selectedDnsProviderId = created.id;
+        if (this.newProviderTarget === 'ns')  this.selectedNsProviderId  = created.id;
+        this.cancelNewProvider();
+      } else {
+        this.newProviderError = 'Failed to create provider. Check your credentials and try again.';
+      }
+    });
+  }
+
+  // ── Add domain ──────────────────────────────────────────────────
   addDomain(): void {
     const domain = this.newDomainName.trim();
     if (!domain) return;
@@ -119,6 +199,7 @@ export class DomainListComponent implements OnInit {
     });
   }
 
+  // ── Helpers ─────────────────────────────────────────────────────
   getStatusClass(status?: string): string {
     switch (status) {
       case 'ACTIVE':  return 'badge-success';
@@ -141,5 +222,9 @@ export class DomainListComponent implements OnInit {
     const r = this.lookupResult;
     return r.mxRecords.length > 0 || r.spfRecords.length > 0 ||
            r.dmarcRecords.length > 0 || r.nsRecords.length > 0;
+  }
+
+  private emptyProviderForm(): NewProviderForm {
+    return { name: '', type: 'CLOUDFLARE', cfApiToken: '', r53AccessKeyId: '', r53SecretAccessKey: '', r53Region: 'us-east-1' };
   }
 }
