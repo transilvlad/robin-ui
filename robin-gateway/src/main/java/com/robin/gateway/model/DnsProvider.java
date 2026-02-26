@@ -30,7 +30,7 @@ public class DnsProvider {
     private DnsProviderType type;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(nullable = false, columnDefinition = "jsonb")
+    @Column(nullable = false, columnDefinition = "text")
     private String credentials; // AES-256 encrypted JSON
 
     @Column(name = "created_at", nullable = false, updatable = false)
