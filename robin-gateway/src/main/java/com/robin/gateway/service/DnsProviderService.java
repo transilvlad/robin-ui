@@ -1,7 +1,5 @@
 package com.robin.gateway.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.robin.gateway.model.DnsProvider;
 import com.robin.gateway.model.dto.DnsProviderRequest;
 import com.robin.gateway.repository.DnsProviderRepository;
@@ -23,7 +21,6 @@ public class DnsProviderService {
     private final DnsProviderRepository dnsProviderRepository;
     private final DomainRepository domainRepository;
     private final EncryptionService encryptionService;
-    private final ObjectMapper objectMapper;
 
     public Mono<List<DnsProvider>> getAllProviders() {
         return Mono.fromCallable(() -> {
@@ -127,11 +124,8 @@ public class DnsProviderService {
     }
 
     private String serializeCredentials(DnsProviderRequest request) {
-        try {
-            return objectMapper.writeValueAsString(request.getCredentials());
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize credentials", e);
-        }
+        // credentials arrives as a JSON string already — encrypt as-is
+        return request.getCredentials();
     }
 
     private void maskCredentials(DnsProvider provider) {

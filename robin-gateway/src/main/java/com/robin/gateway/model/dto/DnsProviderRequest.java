@@ -8,7 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -23,5 +22,5 @@ public class DnsProviderRequest {
     private DnsProviderType type;
 
     @NotNull
-    private Map<String, String> credentials;
+    private String credentials;
 }
