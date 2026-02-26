@@ -3,6 +3,7 @@ package com.robin.gateway.controller;
 import com.robin.gateway.model.Alias;
 import com.robin.gateway.model.Domain;
 import com.robin.gateway.model.dto.AliasRequest;
+import com.robin.gateway.model.dto.DomainLookupResult;
 import com.robin.gateway.model.dto.DomainRequest;
 import com.robin.gateway.service.DomainService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,6 +32,21 @@ import java.util.Map;
 public class DomainController {
 
     private final DomainService domainService;
+
+    // ===== DNS Pre-flight Lookup =====
+
+    @GetMapping("/lookup")
+    @PreAuthorize("hasAnyAuthority('VIEW_DOMAINS', 'MANAGE_DOMAINS') or hasRole('ADMIN')")
+    @Operation(summary = "Lookup domain DNS", description = "Resolve existing DNS/NS records for a domain and suggest a provider")
+    public Mono<ResponseEntity<DomainLookupResult>> lookupDomain(@RequestParam String domain) {
+        log.info("DNS lookup requested for domain: {}", domain);
+        return domainService.lookupDomain(domain)
+                .map(ResponseEntity::ok)
+                .onErrorResume(e -> {
+                    log.error("DNS lookup failed for domain: {}", domain, e);
+                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+                });
+    }
 
     // ===== Domain Endpoints =====
 

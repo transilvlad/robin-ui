@@ -64,7 +64,7 @@
             <td class="table-cell text-right">
               <button
                 (click)="deleteDomain(domain, $event)"
-                class="btn-ghost text-destructive hover:text-destructive/90">
+                class="btn-outline btn-sm text-destructive hover:text-destructive/90">
                 Delete
               </button>
             </td>
@@ -81,33 +81,139 @@
 </div>
 
 <!-- Add Domain Modal -->
-<div *ngIf="showAddModal" class="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-  <div class="card w-full max-w-md shadow-lg border-border">
+<div *ngIf="showAddModal" class="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div class="card w-full max-w-2xl shadow-lg border-border max-h-[90vh] overflow-y-auto">
     <div class="card-header border-b border-border">
       <h3 class="card-title text-lg">Add Domain</h3>
+      <p class="text-sm text-muted-foreground mt-1">Detect existing DNS records and pick a provider before adding.</p>
     </div>
-    <div class="card-content pt-6">
-      <div class="space-y-4">
-        <div class="space-y-2">
-          <label class="text-sm font-medium leading-none">Domain Name</label>
+
+    <div class="card-content pt-6 space-y-6">
+
+      <!-- Domain input row -->
+      <div class="space-y-2">
+        <label class="text-sm font-medium leading-none">Domain Name</label>
+        <div class="flex gap-2">
           <input
             type="text"
             [(ngModel)]="newDomainName"
             placeholder="example.com"
-            class="input"
-            (keyup.enter)="addDomain()" />
+            class="input flex-1"
+            [disabled]="!!lookupResult"
+            (keyup.enter)="!lookupResult && detectDns()" />
+          <button
+            *ngIf="!lookupResult"
+            (click)="detectDns()"
+            [disabled]="!newDomainName.trim() || lookupLoading"
+            class="btn-primary btn-md whitespace-nowrap">
+            <span *ngIf="!lookupLoading">🔍 Detect DNS</span>
+            <span *ngIf="lookupLoading">Detecting…</span>
+          </button>
+          <button
+            *ngIf="lookupResult"
+            (click)="openAddModal()"
+            class="btn-outline btn-md whitespace-nowrap">
+            ↩ Change
+          </button>
         </div>
+        <p *ngIf="!lookupResult" class="text-xs text-muted-foreground">
+          We will look up existing NS and DNS records to suggest the right provider.
+          <button (click)="skipDetection()" class="text-primary underline ml-1 hover:no-underline">Skip detection</button>
+        </p>
       </div>
+
+      <!-- Lookup error -->
+      <div *ngIf="lookupError" class="alert alert-destructive">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div>{{ lookupError }}</div>
+      </div>
+
+      <!-- Detected info panel -->
+      <ng-container *ngIf="lookupResult">
+
+        <!-- NS detection badge -->
+        <div class="rounded-lg border border-border p-4 space-y-3 bg-layer-1">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-semibold">Nameservers Detected</span>
+            <span class="badge"
+              [ngClass]="{
+                'badge-success': lookupResult.detectedNsProviderType === 'CLOUDFLARE' || lookupResult.detectedNsProviderType === 'AWS_ROUTE53',
+                'badge-secondary': lookupResult.detectedNsProviderType === 'UNKNOWN'
+              }">
+              {{ lookupResult.detectedNsProviderType === 'UNKNOWN' ? 'Unknown provider' : getProviderLabel(lookupResult.detectedNsProviderType) }}
+            </span>
+          </div>
+          <div *ngIf="lookupResult.nsRecords.length > 0" class="flex flex-wrap gap-1">
+            <code *ngFor="let ns of lookupResult.nsRecords" class="text-xs bg-background/60 border border-border/50 rounded px-2 py-0.5 font-mono">{{ ns }}</code>
+          </div>
+          <p *ngIf="lookupResult.nsRecords.length === 0" class="text-xs text-muted-foreground">No NS records found (domain may not exist yet).</p>
+          <p *ngIf="lookupResult.suggestedProvider" class="text-xs text-muted-foreground">
+            💡 We detected <strong>{{ getProviderLabel(lookupResult.detectedNsProviderType) }}</strong> nameservers.
+            Your registered provider <strong>{{ lookupResult.suggestedProvider.name }}</strong> has been pre-selected below.
+          </p>
+        </div>
+
+        <!-- Existing DNS records summary -->
+        <div *ngIf="hasDetectedRecords()" class="rounded-lg border border-border p-4 space-y-3 bg-layer-1">
+          <span class="text-sm font-semibold">Existing DNS Records Found</span>
+          <div class="space-y-2 text-xs font-mono">
+            <div *ngFor="let mx of lookupResult.mxRecords" class="flex gap-2 items-start">
+              <span class="badge badge-secondary shrink-0">MX</span>
+              <span class="text-muted-foreground break-all">{{ mx }}</span>
+            </div>
+            <div *ngFor="let spf of lookupResult.spfRecords" class="flex gap-2 items-start">
+              <span class="badge badge-secondary shrink-0">SPF</span>
+              <span class="text-muted-foreground break-all">{{ spf }}</span>
+            </div>
+            <div *ngFor="let d of lookupResult.dmarcRecords" class="flex gap-2 items-start">
+              <span class="badge badge-secondary shrink-0">DMARC</span>
+              <span class="text-muted-foreground break-all">{{ d }}</span>
+            </div>
+            <div *ngFor="let m of lookupResult.mtaStsRecords" class="flex gap-2 items-start">
+              <span class="badge badge-secondary shrink-0">MTA-STS</span>
+              <span class="text-muted-foreground break-all">{{ m }}</span>
+            </div>
+            <div *ngFor="let t of lookupResult.smtpTlsRecords" class="flex gap-2 items-start">
+              <span class="badge badge-secondary shrink-0">TLS-RPT</span>
+              <span class="text-muted-foreground break-all">{{ t }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Provider selection -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label class="text-sm font-medium leading-none">DNS Provider
+              <span class="text-muted-foreground font-normal text-xs ml-1">(manages DNS records)</span>
+            </label>
+            <select [(ngModel)]="selectedDnsProviderId" class="input">
+              <option [ngValue]="null">— None / Manual —</option>
+              <option *ngFor="let p of lookupResult.availableProviders" [ngValue]="p.id">
+                {{ p.name }} ({{ getProviderLabel(p.type) }})
+              </option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <label class="text-sm font-medium leading-none">NS Provider
+              <span class="text-muted-foreground font-normal text-xs ml-1">(manages nameservers)</span>
+            </label>
+            <select [(ngModel)]="selectedNsProviderId" class="input">
+              <option [ngValue]="null">— None / Manual —</option>
+              <option *ngFor="let p of lookupResult.availableProviders" [ngValue]="p.id">
+                {{ p.name }} ({{ getProviderLabel(p.type) }})
+              </option>
+            </select>
+          </div>
+        </div>
+
+      </ng-container>
     </div>
-    <div class="card-footer justify-end space-x-2 border-t border-border pt-6 mt-6">
-      <button
-        (click)="closeAddModal()"
-        class="btn-outline btn-md">
-        Cancel
-      </button>
+
+    <div class="card-footer justify-end space-x-2 border-t border-border pt-6 mt-2">
+      <button (click)="closeAddModal()" class="btn-outline btn-md">Cancel</button>
       <button
         (click)="addDomain()"
-        [disabled]="!newDomainName.trim()"
+        [disabled]="!newDomainName.trim() || !lookupResult"
         class="btn-primary btn-md">
         Add Domain
       </button>

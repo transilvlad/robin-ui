@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, map, of } from 'rxjs';
 import { environment } from '@environments/environment';
-import { Domain, DomainDnsRecord, PageResponse } from '../models/domain.models';
+import { Domain, DomainDnsRecord, DomainLookupResult, PageResponse } from '../models/domain.models';
 import { Ok, Err, Result } from '@core/models/auth.model';
 
 @Injectable({ providedIn: 'root' })
@@ -11,8 +11,14 @@ export class DomainService {
 
   constructor(private http: HttpClient) {}
 
-  getDomains(page = 0, size = 20): Observable<Result<PageResponse<Domain>, Error>> {
-    const params = new HttpParams().set('page', page).set('size', size);
+  lookupDomain(domain: string): Observable<Result<DomainLookupResult, Error>> {
+    return this.http.get<DomainLookupResult>(`${this.base}/lookup`, { params: { domain } }).pipe(
+      map(r => Ok(r)),
+      catchError(e => of(Err(e)))
+    );
+  }
+
+  getDomains(page = 0, size = 20): Observable<Result<PageResponse<Domain>, Error>> {    const params = new HttpParams().set('page', page).set('size', size);
     return this.http.get<PageResponse<Domain>>(this.base, { params }).pipe(
       map(r => Ok(r)),
       catchError(e => of(Err(e)))

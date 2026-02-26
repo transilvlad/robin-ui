@@ -167,3 +167,19 @@ export const DnsTemplateListSchema = z.array(DnsTemplateSchema);
 export const DomainDnsRecordListSchema = z.array(DomainDnsRecordSchema);
 export const DkimKeyListSchema = z.array(DkimKeySchema);
 export const DomainHealthListSchema = z.array(DomainHealthSchema);
+
+export interface DomainLookupResult {
+  domain: string;
+  nsRecords: string[];
+  mxRecords: string[];
+  spfRecords: string[];
+  dmarcRecords: string[];
+  mtaStsRecords: string[];
+  smtpTlsRecords: string[];
+  /** 'CLOUDFLARE' | 'AWS_ROUTE53' | 'UNKNOWN' */
+  detectedNsProviderType: string;
+  /** A registered provider whose type matches the detected NS vendor, or null */
+  suggestedProvider: DnsProvider | null;
+  /** All registered DNS providers for selection dropdowns */
+  availableProviders: DnsProvider[];
+}

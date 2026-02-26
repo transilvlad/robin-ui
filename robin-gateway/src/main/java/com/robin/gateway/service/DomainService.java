@@ -2,8 +2,12 @@ package com.robin.gateway.service;
 
 import com.robin.gateway.model.Alias;
 import com.robin.gateway.model.Domain;
+import com.robin.gateway.model.DnsProvider;
+import com.robin.gateway.model.DnsProviderType;
 import com.robin.gateway.repository.AliasRepository;
+import com.robin.gateway.repository.DnsProviderRepository;
 import com.robin.gateway.repository.DomainRepository;
+import com.robin.gateway.model.dto.DomainLookupResult;
 import com.robin.gateway.model.dto.DomainRequest;
 import com.robin.gateway.model.dto.DomainSummary;
 import com.robin.gateway.repository.DomainHealthRepository;
@@ -28,6 +32,8 @@ public class DomainService {
     private final AliasRepository aliasRepository;
     private final MtaStsService mtaStsService;
     private final DomainHealthRepository domainHealthRepository;
+    private final DnsProviderRepository dnsProviderRepository;
+    private final DnsResolverService dnsResolverService;
 
     /**
      * Get all domains with pagination
@@ -255,5 +261,70 @@ public class DomainService {
                 .subscribeOn(Schedulers.boundedElastic())
                 .then()
                 .doOnError(e -> log.error("Error deleting alias with id: {}", id, e));
+    }
+
+    // ===== DNS Pre-flight Lookup =====
+
+    /**
+     * Look up existing DNS records for a domain and suggest a DNS provider
+     * based on the detected nameserver vendor.
+     */
+    public Mono<DomainLookupResult> lookupDomain(String domain) {
+        return Mono.fromCallable(() -> {
+            log.info("Performing DNS lookup for domain: {}", domain);
+
+            List<String> nsRecords    = dnsResolverService.resolveNsRecords(domain);
+            List<String> mxRecords    = dnsResolverService.resolveMxRecords(domain);
+            List<String> spfRecords   = dnsResolverService.resolveTxtRecords(domain).stream()
+                    .filter(v -> v.startsWith("v=spf1")).toList();
+            List<String> dmarcRecords = dnsResolverService.resolveTxtRecords("_dmarc." + domain);
+            List<String> mtaSts       = dnsResolverService.resolveTxtRecords("_mta-sts." + domain);
+            List<String> smtpTls      = dnsResolverService.resolveTxtRecords("_smtp._tls." + domain);
+
+            String detectedType = detectNsProviderType(nsRecords);
+
+            List<DnsProvider> allProviders = dnsProviderRepository.findAll();
+            allProviders.forEach(p -> p.setCredentials(null)); // never expose credentials
+
+            DnsProvider suggested = null;
+            if (!"UNKNOWN".equals(detectedType)) {
+                try {
+                    DnsProviderType provType = DnsProviderType.valueOf(detectedType);
+                    suggested = allProviders.stream()
+                            .filter(p -> p.getType() == provType)
+                            .findFirst()
+                            .orElse(null);
+                } catch (IllegalArgumentException ignored) {
+                    // detectedType not a known enum value – leave suggested null
+                }
+            }
+
+            return DomainLookupResult.builder()
+                    .domain(domain)
+                    .nsRecords(nsRecords)
+                    .mxRecords(mxRecords)
+                    .spfRecords(spfRecords)
+                    .dmarcRecords(dmarcRecords)
+                    .mtaStsRecords(mtaSts)
+                    .smtpTlsRecords(smtpTls)
+                    .detectedNsProviderType(detectedType)
+                    .suggestedProvider(suggested)
+                    .availableProviders(allProviders)
+                    .build();
+        }).subscribeOn(Schedulers.boundedElastic())
+          .doOnError(e -> log.error("DNS lookup failed for domain: {}", domain, e));
+    }
+
+    private String detectNsProviderType(List<String> nsRecords) {
+        for (String ns : nsRecords) {
+            String lower = ns.toLowerCase();
+            if (lower.contains(".ns.cloudflare.com")) {
+                return "CLOUDFLARE";
+            }
+            if (lower.contains(".awsdns-")) {
+                return "AWS_ROUTE53";
+            }
+        }
+        return "UNKNOWN";
     }
 }
