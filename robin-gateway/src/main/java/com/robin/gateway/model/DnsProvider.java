@@ -29,9 +29,9 @@ public class DnsProvider {
     @Column(nullable = false)
     private DnsProviderType type;
 
-    @JdbcTypeCode(SqlTypes.JSON)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     @Column(nullable = false, columnDefinition = "text")
-    private String credentials; // AES-256 encrypted JSON
+    private String credentials; // AES-256 encrypted (stored as text)
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
