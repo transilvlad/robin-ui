@@ -19,6 +19,19 @@ import java.util.List;
 @AllArgsConstructor
 public class DomainLookupResult {
 
+    /** A single DNS record row used for display in the UI. */
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class DnsRecordEntry {
+        /** Record type: A, MX, TXT, CNAME, NS. */
+        private String type;
+        /** Hostname that was queried (e.g. "example.com", "_dmarc.example.com"). */
+        private String name;
+        /** Record value. */
+        private String value;
+    }
+
     /** The domain that was queried. */
     private String domain;
 
@@ -28,7 +41,7 @@ public class DomainLookupResult {
     /** MX records in the form "priority target" (e.g. "10 mail.example.com"). */
     private List<String> mxRecords;
 
-    /** Values of TXT records at the apex (@). */
+    /** SPF TXT records at the apex. */
     private List<String> spfRecords;
 
     /** Values of TXT records at _dmarc.<domain>. */
@@ -54,4 +67,10 @@ public class DomainLookupResult {
 
     /** All registered DNS providers – used to populate provider dropdowns. */
     private List<DnsProvider> availableProviders;
+
+    /**
+     * Flat list of ALL discovered DNS records across all queried
+     * hostnames and types, used for display in the UI table.
+     */
+    private List<DnsRecordEntry> allRecords;
 }

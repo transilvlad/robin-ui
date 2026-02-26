@@ -171,29 +171,27 @@
         </div>
 
         <!-- Existing DNS records -->
-        <div *ngIf="hasDetectedRecords()" class="rounded-lg border border-border p-4 space-y-2 bg-layer-1">
-          <span class="text-sm font-semibold">Existing DNS Records Found</span>
-          <div class="space-y-1.5 text-xs font-mono mt-2">
-            <div *ngFor="let mx of lookupResult.mxRecords" class="flex gap-2 items-start">
-              <span class="badge badge-secondary shrink-0 mt-0.5">MX</span>
-              <span class="text-muted-foreground break-all">{{ mx }}</span>
-            </div>
-            <div *ngFor="let spf of lookupResult.spfRecords" class="flex gap-2 items-start">
-              <span class="badge badge-secondary shrink-0 mt-0.5">SPF</span>
-              <span class="text-muted-foreground break-all">{{ spf }}</span>
-            </div>
-            <div *ngFor="let d of lookupResult.dmarcRecords" class="flex gap-2 items-start">
-              <span class="badge badge-secondary shrink-0 mt-0.5">DMARC</span>
-              <span class="text-muted-foreground break-all">{{ d }}</span>
-            </div>
-            <div *ngFor="let m of lookupResult.mtaStsRecords" class="flex gap-2 items-start">
-              <span class="badge badge-secondary shrink-0 mt-0.5">MTA-STS</span>
-              <span class="text-muted-foreground break-all">{{ m }}</span>
-            </div>
-            <div *ngFor="let t of lookupResult.smtpTlsRecords" class="flex gap-2 items-start">
-              <span class="badge badge-secondary shrink-0 mt-0.5">TLS-RPT</span>
-              <span class="text-muted-foreground break-all">{{ t }}</span>
-            </div>
+        <div *ngIf="lookupResult.allRecords?.length" class="rounded-lg border border-border p-4 space-y-2 bg-layer-1">
+          <span class="text-sm font-semibold">Existing DNS Records Found ({{ lookupResult.allRecords.length }})</span>
+          <div class="overflow-x-auto mt-2">
+            <table class="w-full text-xs font-mono border-collapse">
+              <thead>
+                <tr class="text-left text-muted-foreground border-b border-border">
+                  <th class="pb-1 pr-3 font-medium w-16">Type</th>
+                  <th class="pb-1 pr-3 font-medium w-48">Name</th>
+                  <th class="pb-1 font-medium">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let r of lookupResult.allRecords" class="border-b border-border/40 hover:bg-layer-2/50">
+                  <td class="py-1 pr-3">
+                    <span class="badge badge-secondary shrink-0">{{ r.type }}</span>
+                  </td>
+                  <td class="py-1 pr-3 text-muted-foreground truncate max-w-[12rem]" [title]="r.name">{{ r.name }}</td>
+                  <td class="py-1 text-muted-foreground break-all">{{ r.value }}</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 

@@ -168,6 +168,12 @@ export const DomainDnsRecordListSchema = z.array(DomainDnsRecordSchema);
 export const DkimKeyListSchema = z.array(DkimKeySchema);
 export const DomainHealthListSchema = z.array(DomainHealthSchema);
 
+export interface DnsRecordEntry {
+  type: string;
+  name: string;
+  value: string;
+}
+
 export interface DomainLookupResult {
   domain: string;
   nsRecords: string[];
@@ -182,4 +188,6 @@ export interface DomainLookupResult {
   suggestedProvider: DnsProvider | null;
   /** All registered DNS providers for selection dropdowns */
   availableProviders: DnsProvider[];
+  /** Flat list of all discovered records for display */
+  allRecords: DnsRecordEntry[];
 }

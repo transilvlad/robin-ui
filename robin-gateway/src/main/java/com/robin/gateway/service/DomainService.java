@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -273,18 +274,57 @@ public class DomainService {
         return Mono.fromCallable(() -> {
             log.info("Performing DNS lookup for domain: {}", domain);
 
-            List<String> nsRecords    = dnsResolverService.resolveNsRecords(domain);
-            List<String> mxRecords    = dnsResolverService.resolveMxRecords(domain);
-            List<String> spfRecords   = dnsResolverService.resolveTxtRecords(domain).stream()
-                    .filter(v -> v.startsWith("v=spf1")).toList();
+            List<DomainLookupResult.DnsRecordEntry> allRecords = new ArrayList<>();
+
+            // NS records (apex)
+            List<String> nsRecords = dnsResolverService.resolveNsRecords(domain);
+            nsRecords.forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("NS", domain, v)));
+
+            // A records (apex and mail subdomain)
+            dnsResolverService.resolveARecords(domain)
+                    .forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("A", domain, v)));
+            dnsResolverService.resolveARecords("mail." + domain)
+                    .forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("A", "mail." + domain, v)));
+
+            // MX records (apex)
+            List<String> mxRecords = dnsResolverService.resolveMxRecords(domain);
+            mxRecords.forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("MX", domain, v)));
+
+            // TXT records – apex (ALL, not just SPF)
+            List<String> allTxt = dnsResolverService.resolveTxtRecords(domain);
+            allTxt.forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", domain, v)));
+
+            // TXT records – well-known email subdomains
             List<String> dmarcRecords = dnsResolverService.resolveTxtRecords("_dmarc." + domain);
-            List<String> mtaSts       = dnsResolverService.resolveTxtRecords("_mta-sts." + domain);
-            List<String> smtpTls      = dnsResolverService.resolveTxtRecords("_smtp._tls." + domain);
+            dmarcRecords.forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", "_dmarc." + domain, v)));
+
+            List<String> mtaSts = dnsResolverService.resolveTxtRecords("_mta-sts." + domain);
+            mtaSts.forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", "_mta-sts." + domain, v)));
+
+            List<String> smtpTls = dnsResolverService.resolveTxtRecords("_smtp._tls." + domain);
+            smtpTls.forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", "_smtp._tls." + domain, v)));
+
+            // DKIM – check common selectors
+            for (String selector : List.of("default", "google", "mail", "selector1", "selector2", "k1", "dkim", "smtp")) {
+                String dkimHost = selector + "._domainkey." + domain;
+                dnsResolverService.resolveTxtRecords(dkimHost)
+                        .forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", dkimHost, v)));
+            }
+
+            // CNAME – common email-related subdomains
+            for (String sub : List.of("autoconfig", "autodiscover", "_mta-sts", "mail", "smtp", "imap", "pop", "webmail")) {
+                String host = sub + "." + domain;
+                dnsResolverService.resolveCnameRecords(host)
+                        .forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("CNAME", host, v)));
+            }
+
+            // Derive SPF/DMARC sub-lists (still used for provider detection)
+            List<String> spfRecords = allTxt.stream().filter(v -> v.startsWith("v=spf1")).toList();
 
             String detectedType = detectNsProviderType(nsRecords);
 
             List<DnsProvider> allProviders = dnsProviderRepository.findAll();
-            allProviders.forEach(p -> p.setCredentials(null)); // never expose credentials
+            allProviders.forEach(p -> p.setCredentials(null));
 
             DnsProvider suggested = null;
             if (!"UNKNOWN".equals(detectedType)) {
@@ -294,9 +334,7 @@ public class DomainService {
                             .filter(p -> p.getType() == provType)
                             .findFirst()
                             .orElse(null);
-                } catch (IllegalArgumentException ignored) {
-                    // detectedType not a known enum value – leave suggested null
-                }
+                } catch (IllegalArgumentException ignored) {}
             }
 
             return DomainLookupResult.builder()
@@ -310,6 +348,7 @@ public class DomainService {
                     .detectedNsProviderType(detectedType)
                     .suggestedProvider(suggested)
                     .availableProviders(allProviders)
+                    .allRecords(allRecords)
                     .build();
         }).subscribeOn(Schedulers.boundedElastic())
           .doOnError(e -> log.error("DNS lookup failed for domain: {}", domain, e));

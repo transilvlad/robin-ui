@@ -217,13 +217,6 @@ export class DomainListComponent implements OnInit {
     }
   }
 
-  hasDetectedRecords(): boolean {
-    if (!this.lookupResult) return false;
-    const r = this.lookupResult;
-    return r.mxRecords.length > 0 || r.spfRecords.length > 0 ||
-           r.dmarcRecords.length > 0 || r.nsRecords.length > 0;
-  }
-
   private emptyProviderForm(): NewProviderForm {
     return { name: '', type: 'CLOUDFLARE', cfApiToken: '', r53AccessKeyId: '', r53SecretAccessKey: '', r53Region: 'us-east-1' };
   }

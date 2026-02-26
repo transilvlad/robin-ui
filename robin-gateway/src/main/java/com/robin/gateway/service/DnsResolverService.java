@@ -13,7 +13,13 @@ public class DnsResolverService {
 
     public List<String> resolveTxtRecords(String domain) {
         return resolveRecords(domain, Type.TXT).stream()
-                .map(record -> ((TXTRecord) record).getStrings().get(0)) // Basic parsing for simple TXT records
+                .map(record -> String.join("", ((TXTRecord) record).getStrings()))
+                .toList();
+    }
+
+    public List<String> resolveARecords(String domain) {
+        return resolveRecords(domain, Type.A).stream()
+                .map(record -> ((ARecord) record).getAddress().getHostAddress())
                 .toList();
     }
 
