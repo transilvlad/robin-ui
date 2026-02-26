@@ -12,8 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,9 +37,11 @@ public class DomainController {
     @GetMapping
     @PreAuthorize("hasAnyAuthority('VIEW_DOMAINS', 'MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "List all domains", description = "Get all email domains with pagination")
-    public Mono<ResponseEntity<Page<Domain>>> listDomains(@PageableDefault(size = 20) Pageable pageable) {
-        log.info("Listing domains - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        return domainService.getAllDomains(pageable)
+    public Mono<ResponseEntity<Page<Domain>>> listDomains(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        log.info("Listing domains - page: {}, size: {}", page, size);
+        return domainService.getAllDomains(PageRequest.of(page, size))
                 .map(ResponseEntity::ok)
                 .onErrorResume(e -> {
                     log.error("Error listing domains", e);
@@ -133,9 +134,11 @@ public class DomainController {
     @GetMapping("/aliases")
     @PreAuthorize("hasAnyAuthority('VIEW_DOMAINS', 'MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "List all aliases", description = "Get all email aliases with pagination")
-    public Mono<ResponseEntity<Page<Alias>>> listAllAliases(@PageableDefault(size = 20) Pageable pageable) {
-        log.info("Listing all aliases - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
-        return domainService.getAllAliases(pageable)
+    public Mono<ResponseEntity<Page<Alias>>> listAllAliases(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        log.info("Listing all aliases - page: {}, size: {}", page, size);
+        return domainService.getAllAliases(PageRequest.of(page, size))
                 .map(ResponseEntity::ok)
                 .onErrorResume(e -> {
                     log.error("Error listing aliases", e);
