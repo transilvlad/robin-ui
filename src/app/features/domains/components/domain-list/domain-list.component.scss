@@ -123,3 +123,66 @@ textarea.input:focus {
     color: var(--accent) !important;
   }
 }
+
+// ── Delete confirmation modal ────────────────────────────────────
+.delete-card {
+  border-color: hsl(var(--destructive) / 0.55) !important;
+  box-shadow: 0 0 0 1px hsl(var(--destructive) / 0.25),
+              0 20px 40px hsl(var(--destructive) / 0.18) !important;
+
+  .card-header {
+    background: hsl(var(--destructive) / 0.08) !important;
+    border-bottom-color: hsl(var(--destructive) / 0.3) !important;
+  }
+
+  .card-footer {
+    border-top-color: hsl(var(--destructive) / 0.25) !important;
+  }
+
+  .delete-icon-ring {
+    background: hsl(var(--destructive) / 0.15);
+    border: 1.5px solid hsl(var(--destructive) / 0.45);
+    color: hsl(var(--destructive));
+  }
+
+  .delete-title {
+    color: hsl(var(--destructive));
+  }
+
+  .delete-subtitle {
+    color: hsl(var(--destructive) / 0.65);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+
+  .delete-domain-pill {
+    background: hsl(var(--destructive) / 0.1);
+    color: hsl(var(--destructive));
+    border: 1px solid hsl(var(--destructive) / 0.3);
+    font-family: monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+  }
+
+  .btn-delete {
+    background: hsl(var(--destructive)) !important;
+    color: #fff !important;
+    border-color: hsl(var(--destructive)) !important;
+    font-weight: 600;
+
+    &:hover:not(:disabled) {
+      background: hsl(var(--destructive) / 0.85) !important;
+      border-color: hsl(var(--destructive)) !important;
+    }
+  }
+
+  .delete-error {
+    background: hsl(var(--destructive) / 0.1);
+    color: hsl(var(--destructive));
+    border: 1px solid hsl(var(--destructive) / 0.3);
+  }
+}
