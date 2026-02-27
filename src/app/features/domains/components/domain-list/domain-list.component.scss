@@ -125,7 +125,11 @@ textarea.input:focus {
 }
 
 // ── Delete confirmation modal ────────────────────────────────────
-.delete-card {
+// Use .card.delete-card to match specificity of .card:not([class*='border-'])
+// Angular's emulated encapsulation adds one [_ngcontent] attr, making both
+// selectors (0,3,0). Source order then decides — .card.delete-card wins
+// because it appears later in this file.
+.card.delete-card {
   border-color: hsl(var(--destructive) / 0.55) !important;
   box-shadow: 0 0 0 1px hsl(var(--destructive) / 0.25),
               0 20px 40px hsl(var(--destructive) / 0.18) !important;
