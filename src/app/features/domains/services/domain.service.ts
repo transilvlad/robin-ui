@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, catchError, map, of } from 'rxjs';
 import { environment } from '@environments/environment';
-import { Domain, DomainDnsRecord, DomainLookupResult, PageResponse } from '../models/domain.models';
+import { Domain, DomainDnsRecord, DnsRecordEntry, DomainLookupResult, PageResponse } from '../models/domain.models';
 import { Ok, Err, Result } from '@core/models/auth.model';
 
 @Injectable({ providedIn: 'root' })
@@ -32,8 +32,14 @@ export class DomainService {
     );
   }
 
-  createDomain(domain: string, dnsProviderId?: number, nsProviderId?: number): Observable<Result<Domain, Error>> {
-    return this.http.post<Domain>(this.base, { domain, dnsProviderId, nsProviderId }).pipe(
+  createDomain(domain: string, dnsProviderId?: number, nsProviderId?: number, initialDnsRecords?: DnsRecordEntry[]): Observable<Result<Domain, Error>> {
+    const initialRecords = (initialDnsRecords ?? []).map(r => ({
+      recordType: r.type,
+      name: r.name,
+      value: r.type === 'MX' ? r.value.replace(/^\d+\s+/, '') : r.value,
+      priority: r.type === 'MX' ? parseInt(r.value, 10) || null : null,
+    }));
+    return this.http.post<Domain>(this.base, { domain, dnsProviderId, nsProviderId, initialDnsRecords: initialRecords }).pipe(
       map(r => Ok(r)),
       catchError(e => of(Err(e)))
     );

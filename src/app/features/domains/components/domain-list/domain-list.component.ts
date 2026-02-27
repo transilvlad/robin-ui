@@ -178,7 +178,8 @@ export class DomainListComponent implements OnInit {
     this.domainService.createDomain(
       domain,
       this.selectedDnsProviderId ?? undefined,
-      this.selectedNsProviderId ?? undefined
+      this.selectedNsProviderId ?? undefined,
+      this.lookupResult?.allRecords ?? []
     ).subscribe(result => {
       if (result.ok) {
         this.domains = [...this.domains, result.value];

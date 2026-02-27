@@ -4,8 +4,10 @@ import com.robin.gateway.model.Alias;
 import com.robin.gateway.model.Domain;
 import com.robin.gateway.model.DnsProvider;
 import com.robin.gateway.model.DnsProviderType;
+import com.robin.gateway.model.DomainDnsRecord;
 import com.robin.gateway.repository.AliasRepository;
 import com.robin.gateway.repository.DnsProviderRepository;
+import com.robin.gateway.repository.DomainDnsRecordRepository;
 import com.robin.gateway.repository.DomainRepository;
 import com.robin.gateway.model.dto.DomainLookupResult;
 import com.robin.gateway.model.dto.DomainRequest;
@@ -34,6 +36,7 @@ public class DomainService {
     private final MtaStsService mtaStsService;
     private final DomainHealthRepository domainHealthRepository;
     private final DnsProviderRepository dnsProviderRepository;
+    private final DomainDnsRecordRepository domainDnsRecordRepository;
     private final DnsResolverService dnsResolverService;
 
     /**
@@ -102,7 +105,26 @@ public class DomainService {
                     .status(request.isExistingDomain() ? "PENDING_VERIFICATION" : "PENDING")
                     .build();
 
-            return domainRepository.save(domain);
+            Domain saved = domainRepository.save(domain);
+
+            // Persist pre-flight DNS records as an unmanaged snapshot
+            if (request.getInitialDnsRecords() != null && !request.getInitialDnsRecords().isEmpty()) {
+                List<DomainDnsRecord> records = request.getInitialDnsRecords().stream()
+                        .map(r -> DomainDnsRecord.builder()
+                                .domainId(saved.getId())
+                                .recordType(r.getRecordType())
+                                .name(r.getName())
+                                .value(r.getValue())
+                                .priority(r.getPriority())
+                                .ttl(r.getTtl())
+                                .managed(false)
+                                .build())
+                        .toList();
+                domainDnsRecordRepository.saveAll(records);
+                log.info("Saved {} initial DNS records for domain {}", records.size(), domainName);
+            }
+
+            return saved;
         })
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(domain -> {
