@@ -28,6 +28,11 @@ export class DomainListComponent implements OnInit {
   showAddModal = false;
   newDomainName = '';
 
+  // Delete confirmation
+  domainToDelete: Domain | null = null;
+  deleteLoading = false;
+  deleteError: string | null = null;
+
   lookupLoading = false;
   lookupError: string | null = null;
   lookupResult: DomainLookupResult | null = null;
@@ -190,12 +195,29 @@ export class DomainListComponent implements OnInit {
     });
   }
 
-  deleteDomain(domain: Domain, event: Event): void {
+  confirmDelete(domain: Domain, event: Event): void {
     event.stopPropagation();
-    if (!confirm(`Delete domain ${domain.domain}?`)) return;
-    this.domainService.deleteDomain(domain.id).subscribe(result => {
+    this.domainToDelete = domain;
+    this.deleteError = null;
+  }
+
+  cancelDelete(): void {
+    this.domainToDelete = null;
+    this.deleteError = null;
+    this.deleteLoading = false;
+  }
+
+  executeDelete(): void {
+    if (!this.domainToDelete) return;
+    this.deleteLoading = true;
+    this.deleteError = null;
+    this.domainService.deleteDomain(this.domainToDelete.id).subscribe(result => {
+      this.deleteLoading = false;
       if (result.ok) {
-        this.domains = this.domains.filter(d => d.id !== domain.id);
+        this.domains = this.domains.filter(d => d.id !== this.domainToDelete!.id);
+        this.cancelDelete();
+      } else {
+        this.deleteError = 'Failed to delete domain. Please try again.';
       }
     });
   }
