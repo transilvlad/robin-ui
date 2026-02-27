@@ -25,6 +25,7 @@ import reactor.core.scheduler.Schedulers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -326,11 +327,35 @@ public class DomainService {
             List<String> smtpTls = dnsResolverService.resolveTxtRecords("_smtp._tls." + domain);
             smtpTls.forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", "_smtp._tls." + domain, v)));
 
-            // DKIM – check common selectors
-            for (String selector : List.of("default", "google", "mail", "selector1", "selector2", "k1", "dkim", "smtp")) {
+            // DKIM – Phase 1: probe a broad set of common selectors
+            List<String> dkimBaseSelectors = List.of(
+                "default", "google", "mail", "selector1", "selector2",
+                "k1", "k2", "k3", "dkim", "dkim1", "dkim2",
+                "smtp", "s1", "s2", "key1", "key2",
+                "mta", "mta1", "mta2",
+                "robin", "robin1", "robin2", "robin3", "robin4", "robin5",
+                "email", "outbound", "primary", "main", "a", "b"
+            );
+            Set<String> foundDkimPrefixes = new java.util.HashSet<>();
+            for (String selector : dkimBaseSelectors) {
                 String dkimHost = selector + "._domainkey." + domain;
-                dnsResolverService.resolveTxtRecords(dkimHost)
-                        .forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", dkimHost, v)));
+                List<String> vals = dnsResolverService.resolveTxtRecords(dkimHost);
+                vals.forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", dkimHost, v)));
+                if (!vals.isEmpty()) {
+                    // Record non-numeric prefix so we can probe further in phase 2
+                    foundDkimPrefixes.add(selector.replaceAll("\\d+$", ""));
+                }
+            }
+            // DKIM – Phase 2: for every found prefix, probe up to index 20
+            for (String prefix : foundDkimPrefixes) {
+                for (int i = 1; i <= 20; i++) {
+                    String selector = prefix + i;
+                    if (dkimBaseSelectors.contains(selector)) continue; // already checked
+                    String dkimHost = selector + "._domainkey." + domain;
+                    List<String> vals = dnsResolverService.resolveTxtRecords(dkimHost);
+                    if (vals.isEmpty()) break; // stop probing this prefix once gap found
+                    vals.forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", dkimHost, v)));
+                }
             }
 
             // CNAME – common email-related subdomains
