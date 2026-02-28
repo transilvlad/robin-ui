@@ -102,7 +102,8 @@
     </div>
 
     <!-- Scrollable body -->
-    <div class="card-content flex-1 overflow-y-auto pt-6 space-y-6">
+    <div class="card-content flex-1 overflow-y-auto pt-6 space-y-6"
+         [class.hidden]="!!createdDomain">
 
       <!-- Domain input row -->
       <div class="space-y-2">
@@ -189,6 +190,49 @@
                   </td>
                   <td class="py-1 pr-3 text-muted-foreground truncate max-w-[12rem]" [title]="r.name">{{ r.name }}</td>
                   <td class="py-1 text-muted-foreground break-all">{{ r.value }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ── Detected DKIM selectors ── -->
+        <div *ngIf="lookupResult.detectedDkimSelectors?.length"
+             class="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 space-y-3"
+             data-testid="detected-dkim-panel">
+          <div class="flex items-start gap-2">
+            <svg class="h-4 w-4 text-amber-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+            </svg>
+            <div>
+              <p class="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                Existing DKIM selectors detected ({{ lookupResult.detectedDkimSelectors.length }})
+              </p>
+              <p class="text-xs text-muted-foreground mt-0.5">
+                This domain already has DKIM records in DNS. Review them before generating new keys to avoid disrupting mail delivery.
+              </p>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs font-mono border-collapse">
+              <thead>
+                <tr class="text-left text-muted-foreground border-b border-border">
+                  <th class="pb-1 pr-3 font-medium">Selector</th>
+                  <th class="pb-1 pr-3 font-medium">Algorithm</th>
+                  <th class="pb-1 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let sel of lookupResult.detectedDkimSelectors"
+                    class="border-b border-border/40"
+                    [attr.data-testid]="'detected-selector-' + sel.selector">
+                  <td class="py-1 pr-3 font-semibold">{{ sel.selector }}</td>
+                  <td class="py-1 pr-3 text-muted-foreground">{{ sel.algorithm || '—' }}</td>
+                  <td class="py-1">
+                    <span class="badge" [ngClass]="sel.revoked ? 'badge-destructive' : 'badge-success'">
+                      {{ sel.revoked ? 'Revoked' : 'Active' }}
+                    </span>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -308,8 +352,65 @@
       </ng-container>
     </div><!-- /scrollable body -->
 
+    <!-- Post-creation: DKIM generation step -->
+    <div *ngIf="createdDomain"
+         class="card-content flex-1 flex flex-col items-center justify-center py-10 space-y-6 text-center"
+         data-testid="dkim-generation-step">
+
+      <!-- Success icon -->
+      <div class="flex h-14 w-14 items-center justify-center rounded-full bg-green-500/10">
+        <svg class="h-7 w-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+
+      <div class="space-y-1">
+        <p class="text-base font-semibold">Domain added successfully!</p>
+        <p class="text-sm text-muted-foreground">
+          <span class="font-mono font-medium text-foreground">{{ createdDomain.domain }}</span>
+          is ready. Would you like to generate a DKIM signing key now?
+        </p>
+      </div>
+
+      <!-- DKIM generated success -->
+      <div *ngIf="dkimGenerated"
+           class="rounded-lg border border-green-500/30 bg-green-500/5 px-4 py-3 text-sm text-green-700 dark:text-green-400"
+           data-testid="dkim-generated-success">
+        DKIM key generated. It will appear in the DKIM management tab.
+      </div>
+
+      <!-- DKIM generate error -->
+      <div *ngIf="dkimGenerateError" class="alert alert-destructive text-sm" data-testid="dkim-generate-error">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div>{{ dkimGenerateError }}</div>
+      </div>
+
+      <!-- Actions -->
+      <div *ngIf="!dkimGenerated" class="flex flex-col sm:flex-row gap-3">
+        <button
+          (click)="generateDkimKey()"
+          [disabled]="dkimGenerating"
+          class="btn-primary btn-md"
+          data-testid="generate-dkim-btn">
+          <svg *ngIf="dkimGenerating" class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+          </svg>
+          {{ dkimGenerating ? 'Generating…' : 'Generate DKIM Key' }}
+        </button>
+        <button (click)="closeAddModal()" class="btn-outline btn-md">Skip for now</button>
+      </div>
+
+      <button *ngIf="dkimGenerated"
+              (click)="finishAndNavigate()"
+              class="btn-primary btn-md"
+              data-testid="go-to-domain-btn">
+        Go to Domain Settings
+      </button>
+    </div>
+
     <!-- Sticky footer -->
-    <div class="flex justify-end gap-3 border-t border-border px-6 py-4 shrink-0">
+    <div *ngIf="!createdDomain" class="flex justify-end gap-3 border-t border-border px-6 py-4 shrink-0">
       <button (click)="closeAddModal()" class="btn-outline btn-md">Cancel</button>
       <button
         (click)="addDomain()"
@@ -324,14 +425,14 @@
 
 <!-- Delete Confirmation Modal -->
 <div *ngIf="domainToDelete"
-     class="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+     class="delete-modal-backdrop fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
      (click)="cancelDelete()">
 
   <div class="card delete-card w-full max-w-sm"
        (click)="$event.stopPropagation()">
 
     <!-- Header -->
-    <div class="card-header pb-4">
+    <div class="card-header delete-card-header pb-4">
       <div class="flex items-center gap-3">
         <div class="delete-icon-ring flex h-11 w-11 shrink-0 items-center justify-center rounded-full">
           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -364,7 +465,7 @@
       <button class="btn btn-outline btn-sm" (click)="cancelDelete()" [disabled]="deleteLoading">
         Cancel
       </button>
-      <button class="btn btn-sm btn-delete" (click)="executeDelete()" [disabled]="deleteLoading">
+      <button class="btn btn-sm btn-delete-domain" (click)="executeDelete()" [disabled]="deleteLoading">
         <svg *ngIf="deleteLoading" class="animate-spin h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>

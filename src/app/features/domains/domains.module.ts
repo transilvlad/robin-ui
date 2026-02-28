@@ -5,6 +5,8 @@ import { DomainListComponent } from './components/domain-list/domain-list.compon
 import { DomainDetailComponent } from './components/domain-detail/domain-detail.component';
 import { DnsRecordsComponent } from './components/dns-records/dns-records.component';
 import { DkimManagementComponent } from './components/dkim-management/dkim-management.component';
+import { DkimDnsRecordComponent } from './components/dkim-dns-record/dkim-dns-record.component';
+import { DkimRotationWizardComponent } from './components/dkim-rotation-wizard/dkim-rotation-wizard.component';
 import { DomainHealthComponent } from './components/domain-health/domain-health.component';
 import { MtaStsStatusComponent } from './components/mta-sts-status/mta-sts-status.component';
 import { DnsProvidersComponent } from './components/dns-providers/dns-providers.component';
@@ -16,6 +18,8 @@ import { DnsTemplatesComponent } from './components/dns-templates/dns-templates.
     DomainDetailComponent,
     DnsRecordsComponent,
     DkimManagementComponent,
+    DkimDnsRecordComponent,
+    DkimRotationWizardComponent,
     DomainHealthComponent,
     MtaStsStatusComponent,
     DnsProvidersComponent,

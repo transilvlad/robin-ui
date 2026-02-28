@@ -9,7 +9,10 @@ import com.robin.gateway.repository.AliasRepository;
 import com.robin.gateway.repository.DnsProviderRepository;
 import com.robin.gateway.repository.DomainDnsRecordRepository;
 import com.robin.gateway.repository.DomainRepository;
+import com.robin.gateway.repository.DkimDetectedSelectorRepository;
+import com.robin.gateway.model.DkimDetectedSelector;
 import com.robin.gateway.model.dto.DomainLookupResult;
+import com.robin.gateway.model.dto.DomainLookupResult.DetectedDkimSelector;
 import com.robin.gateway.model.dto.DomainRequest;
 import com.robin.gateway.model.dto.DomainSummary;
 import com.robin.gateway.repository.DomainHealthRepository;
@@ -22,8 +25,11 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.Set;
 
@@ -39,6 +45,7 @@ public class DomainService {
     private final DnsProviderRepository dnsProviderRepository;
     private final DomainDnsRecordRepository domainDnsRecordRepository;
     private final DnsResolverService dnsResolverService;
+    private final DkimDetectedSelectorRepository dkimDetectedSelectorRepository;
 
     /**
      * Get all domains with pagination
@@ -337,10 +344,16 @@ public class DomainService {
                 "email", "outbound", "primary", "main", "a", "b"
             );
             Set<String> foundDkimPrefixes = new java.util.HashSet<>();
+            List<DetectedDkimSelector> detectedDkimSelectors = new ArrayList<>();
+            List<DkimDetectedSelector> entitiesToSave = new ArrayList<>();
+
             for (String selector : dkimBaseSelectors) {
                 String dkimHost = selector + "._domainkey." + domain;
                 List<String> vals = dnsResolverService.resolveTxtRecords(dkimHost);
-                vals.forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", dkimHost, v)));
+                vals.forEach(v -> {
+                    allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", dkimHost, v));
+                    processDkimRecord(domain, selector, v, detectedDkimSelectors, entitiesToSave);
+                });
                 if (!vals.isEmpty()) {
                     // Record non-numeric prefix so we can probe further in phase 2
                     foundDkimPrefixes.add(selector.replaceAll("\\d+$", ""));
@@ -354,7 +367,33 @@ public class DomainService {
                     String dkimHost = selector + "._domainkey." + domain;
                     List<String> vals = dnsResolverService.resolveTxtRecords(dkimHost);
                     if (vals.isEmpty()) break; // stop probing this prefix once gap found
-                    vals.forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", dkimHost, v)));
+                    vals.forEach(v -> {
+                        allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", dkimHost, v));
+                        processDkimRecord(domain, selector, v, detectedDkimSelectors, entitiesToSave);
+                    });
+                }
+            }
+            
+            // Save DKIM detected selectors into the repository
+            if (!entitiesToSave.isEmpty()) {
+                // Upsert logic
+                for (DkimDetectedSelector entity : entitiesToSave) {
+                    try {
+                        Optional<DkimDetectedSelector> existingOpt = dkimDetectedSelectorRepository.findByDomainOrderBySelectorAsc(domain).stream().filter(e -> e.getSelector().equals(entity.getSelector())).findFirst();
+                        if (existingOpt.isPresent()) {
+                            DkimDetectedSelector existing = existingOpt.get();
+                            existing.setPublicKeyDns(entity.getPublicKeyDns());
+                            existing.setAlgorithm(entity.getAlgorithm());
+                            existing.setTestMode(entity.getTestMode());
+                            existing.setRevoked(entity.isRevoked());
+                            existing.setDetectedAt(LocalDateTime.now());
+                            dkimDetectedSelectorRepository.save(existing);
+                        } else {
+                            dkimDetectedSelectorRepository.save(entity);
+                        }
+                    } catch (Exception e) {
+                        log.warn("Failed to save detected DKIM selector for {}: {}", domain, e.getMessage());
+                    }
                 }
             }
 
@@ -396,9 +435,50 @@ public class DomainService {
                     .suggestedProvider(suggested)
                     .availableProviders(allProviders)
                     .allRecords(allRecords)
+                    .detectedDkimSelectors(detectedDkimSelectors)
                     .build();
         }).subscribeOn(Schedulers.boundedElastic())
           .doOnError(e -> log.error("DNS lookup failed for domain: {}", domain, e));
+    }
+
+    private void processDkimRecord(String domain, String selector, String rdata, List<DetectedDkimSelector> dtoList, List<DkimDetectedSelector> entities) {
+        Map<String, String> tags = new HashMap<>();
+        for (String part : rdata.split(";")) {
+            int eq = part.indexOf('=');
+            if (eq > 0) {
+                tags.put(part.substring(0, eq).trim().toLowerCase(), part.substring(eq + 1).trim());
+            }
+        }
+        
+        if (!tags.containsKey("p")) {
+            return;
+        }
+        
+        String p = tags.get("p");
+        String algorithm = tags.getOrDefault("k", "rsa");
+        boolean testMode = tags.containsKey("t") && tags.get("t").contains("y");
+        boolean revoked = p.isEmpty();
+        
+        // Add to DTO
+        String preview = p.length() > 20 ? p.substring(0, 20) + "..." : p;
+        dtoList.add(DetectedDkimSelector.builder()
+                .selector(selector)
+                .algorithm(algorithm)
+                .publicKeyPreview(preview)
+                .testMode(testMode)
+                .revoked(revoked)
+                .detectedAt(LocalDateTime.now().toString())
+                .build());
+                
+        // Add to Entity
+        entities.add(DkimDetectedSelector.builder()
+                .domain(domain)
+                .selector(selector)
+                .publicKeyDns(p)
+                .algorithm(algorithm)
+                .testMode(testMode)
+                .revoked(revoked)
+                .build());
     }
 
     private String detectNsProviderType(List<String> nsRecords) {

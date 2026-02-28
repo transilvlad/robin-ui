@@ -163,7 +163,15 @@ $robin-theme: mat.m2-define-light-theme((
   }
 
   .btn-outline {
-    @apply btn border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+    @apply btn border border-input bg-transparent hover:bg-accent hover:text-accent-foreground transition-all;
+  }
+
+  .btn-outline-primary {
+    @apply btn border border-primary/50 text-primary bg-transparent hover:bg-primary hover:text-primary-foreground transition-all;
+  }
+
+  .btn-outline-secondary {
+    @apply btn border border-border text-foreground bg-transparent hover:bg-muted transition-all;
   }
 
   .btn-ghost {

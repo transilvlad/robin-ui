@@ -54,7 +54,7 @@ public class DkimService {
     private final WebClient.Builder webClientBuilder;
     private final ObjectMapper objectMapper;
 
-    @Value("${robin.service-url:http://localhost:8080}")
+    @Value("${robin.service-url:http://localhost:8090}")
     private String robinServiceUrl;
 
     @Transactional
@@ -87,7 +87,17 @@ public class DkimService {
         })
         .subscribeOn(Schedulers.boundedElastic())
         .flatMap(saved -> publishToDns(saved)
+                .onErrorResume(e -> {
+                    log.warn("DNS publish failed for key {} (domain {}), key saved but DNS record may be missing: {}",
+                            saved.getId(), domainId, e.getMessage());
+                    return Mono.empty();
+                })
                 .then(configureMtaSigning(saved))
+                .onErrorResume(e -> {
+                    log.warn("MTA signing config failed for key {} (domain {}), key saved but MTA may not sign yet: {}",
+                            saved.getId(), domainId, e.getMessage());
+                    return Mono.empty();
+                })
                 .thenReturn(saved)
         )
         .map(this::copyWithMaskedPrivateKey)
@@ -168,7 +178,8 @@ public class DkimService {
     private String buildAutoSelector(DkimAlgorithm algorithm) {
         String yearMonth = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
         String suffix = (algorithm == DkimAlgorithm.RSA_2048) ? "r" : "e";
-        return yearMonth + suffix;
+        String rand = Long.toHexString(System.currentTimeMillis()).substring(5);
+        return yearMonth + suffix + rand;
     }
 
     private KeyPair generateKeyPairForAlgorithm(DkimAlgorithm algorithm) {

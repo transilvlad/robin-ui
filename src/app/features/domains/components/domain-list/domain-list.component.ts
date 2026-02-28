@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { DomainService } from '../../services/domain.service';
 import { DnsProviderService, CreateDnsProviderRequest } from '../../services/dns-provider.service';
+import { DkimService } from '../../services/dkim.service';
 import { Domain, DomainLookupResult, DnsProvider } from '../../models/domain.models';
 
 interface NewProviderForm {
@@ -41,6 +42,12 @@ export class DomainListComponent implements OnInit {
   selectedDnsProviderId: number | null = null;
   selectedNsProviderId: number | null = null;
 
+  // Post-creation DKIM step
+  createdDomain: Domain | null = null;
+  dkimGenerating = false;
+  dkimGenerated = false;
+  dkimGenerateError: string | null = null;
+
   // Inline new-provider form: 'dns' | 'ns' | null indicates which dropdown triggered it
   newProviderTarget: 'dns' | 'ns' | null = null;
   newProviderLoading = false;
@@ -50,6 +57,7 @@ export class DomainListComponent implements OnInit {
   constructor(
     private domainService: DomainService,
     private dnsProviderService: DnsProviderService,
+    private dkimService: DkimService,
     private router: Router
   ) {}
 
@@ -92,6 +100,9 @@ export class DomainListComponent implements OnInit {
     this.showAddModal = false;
     this.lookupResult = null;
     this.newProviderTarget = null;
+    this.createdDomain = null;
+    this.dkimGenerated = false;
+    this.dkimGenerateError = null;
   }
 
   // ── DNS detection ───────────────────────────────────────────────
@@ -119,7 +130,8 @@ export class DomainListComponent implements OnInit {
     this.lookupResult = {
       domain: this.newDomainName.trim(), nsRecords: [], mxRecords: [],
       spfRecords: [], dmarcRecords: [], mtaStsRecords: [], smtpTlsRecords: [],
-      detectedNsProviderType: 'UNKNOWN', suggestedProvider: null, availableProviders: [], allRecords: [],
+      detectedNsProviderType: 'UNKNOWN', suggestedProvider: null, availableProviders: [],
+      allRecords: [], detectedDkimSelectors: [],
     };
     this.dnsProviderService.getProviders().subscribe(r => {
       if (r.ok) this.availableProviders = r.value;
@@ -188,11 +200,34 @@ export class DomainListComponent implements OnInit {
     ).subscribe(result => {
       if (result.ok) {
         this.domains = [...this.domains, result.value];
-        this.closeAddModal();
+        this.createdDomain = result.value;
       } else {
         this.error = 'Failed to create domain';
       }
     });
+  }
+
+  // ── Post-creation DKIM step ──────────────────────────────────────
+  generateDkimKey(): void {
+    if (!this.createdDomain) return;
+    this.dkimGenerating = true;
+    this.dkimGenerateError = null;
+    this.dkimService.generateKey(this.createdDomain.id, { algorithm: 'RSA_2048' }).subscribe(result => {
+      this.dkimGenerating = false;
+      if (result.ok) {
+        this.dkimGenerated = true;
+      } else {
+        this.dkimGenerateError = 'Failed to generate DKIM key. You can generate one later from the domain settings.';
+      }
+    });
+  }
+
+  finishAndNavigate(): void {
+    const id = this.createdDomain?.id;
+    this.closeAddModal();
+    if (id != null) {
+      this.router.navigate(['/domains', id]);
+    }
   }
 
   confirmDelete(domain: Domain, event: Event): void {

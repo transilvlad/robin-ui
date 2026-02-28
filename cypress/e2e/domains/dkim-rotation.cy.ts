@@ -1,136 +1,376 @@
 /**
- * Cypress E2E: DKIM key rotation
- * DM-111
+ * Cypress E2E: DKIM management – rotation wizard, DNS record copy,
+ * verify DNS flow, and revoke confirmation.
+ * DKIM-011, DKIM-012
  */
 
 const API = '**/api/v1';
 const DOMAIN_ID = 99;
+const DOMAIN_NAME = 'rotate.example.com';
+const OLD_KEY_ID = 110;
+const NEW_KEY_ID = 220;
 
-const activeKey = {
-  id: 10,
-  domainId: DOMAIN_ID,
-  selector: 'default',
-  algorithm: 'RSA_2048',
-  privateKey: '----PRIVATE----',
-  publicKey: '----PUBLIC----',
+const domainResponse = {
+  id: DOMAIN_ID,
+  domain: DOMAIN_NAME,
   status: 'ACTIVE',
   createdAt: new Date().toISOString(),
 };
 
-const rotatedKey = {
-  id: 11,
-  domainId: DOMAIN_ID,
-  selector: 'rotate-2024',
+const oldActiveKey = {
+  id: OLD_KEY_ID,
+  domain: DOMAIN_NAME,
+  selector: 'default',
   algorithm: 'RSA_2048',
-  privateKey: '----PRIVATE-NEW----',
-  publicKey: '----PUBLIC-NEW----',
-  status: 'ROTATING',
+  status: 'ACTIVE',
   createdAt: new Date().toISOString(),
 };
 
-const retiredKey = { ...activeKey, status: 'RETIRED', retiredAt: new Date().toISOString() };
+const newPendingKey = {
+  id: NEW_KEY_ID,
+  domain: DOMAIN_NAME,
+  selector: 'rotate-20260227',
+  algorithm: 'RSA_2048',
+  status: 'PENDING_PUBLISH',
+  createdAt: new Date().toISOString(),
+};
 
-describe('Domain Management – DKIM Key Rotation', () => {
+const newActiveKey = {
+  ...newPendingKey,
+  status: 'ACTIVE',
+};
+
+const oldRotatingKey = {
+  ...oldActiveKey,
+  status: 'ROTATING_OUT',
+};
+
+const oldRetiredKey = {
+  ...oldActiveKey,
+  status: 'RETIRED',
+};
+
+const activeKeyWithDnsRecord = {
+  ...oldActiveKey,
+  dnsRecord: {
+    keyId: OLD_KEY_ID,
+    name: `default._domainkey.${DOMAIN_NAME}`,
+    type: 'TXT',
+    value: 'v=DKIM1; k=rsa; p=MIGfMA0G',
+    chunks: null,
+    status: 'PUBLISHED',
+  },
+};
+
+describe('Domain Management – DKIM Rotation Wizard', () => {
   beforeEach(() => {
     cy.clearAuth();
     cy.loginAsAdmin();
 
-    cy.intercept('GET', `${API}/domains/${DOMAIN_ID}`, {
-      body: { id: DOMAIN_ID, domain: 'dkim-rotate.example.com', status: 'ACTIVE', createdAt: new Date().toISOString() },
-    }).as('getDomain');
-
+    cy.intercept('GET', `${API}/domains/${DOMAIN_ID}`, { body: domainResponse }).as('getDomain');
     cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/health`, { body: [] }).as('getHealth');
     cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/mta-sts`, { statusCode: 404, body: {} }).as('getMtaSts');
     cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/dns`, { body: [] }).as('getDnsRecords');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_NAME}/dkim/dns-records`, { body: [] }).as('getDkimDnsRecords');
+
+    let keyListCall = 0;
+    cy.intercept('GET', `${API}/domains/${DOMAIN_NAME}/dkim/keys`, req => {
+      keyListCall += 1;
+      if (keyListCall === 1) {
+        req.reply({ body: [oldActiveKey] });
+        return;
+      }
+      if (keyListCall === 2) {
+        req.reply({ body: [oldRotatingKey, newActiveKey] });
+        return;
+      }
+      req.reply({ body: [oldRetiredKey, newActiveKey] });
+    }).as('getDkimKeys');
   });
 
-  describe('Initial DKIM state', () => {
-    it('should display active DKIM key', () => {
-      cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/dkim`, { body: [activeKey] }).as('getDkim');
-      cy.visit(`/domains/${DOMAIN_ID}`);
-      cy.wait('@getDkim');
-      cy.contains(/dkim/i).should('be.visible');
-      cy.contains(/default/i).should('be.visible');
-    });
+  it('advances through all 5 wizard steps and calls each API endpoint', () => {
+    cy.intercept('POST', `${API}/domains/${DOMAIN_NAME}/dkim/rotate`, {
+      statusCode: 201,
+      body: newPendingKey,
+    }).as('rotateKey');
 
-    it('should show the Rotate button when a key exists', () => {
-      cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/dkim`, { body: [activeKey] }).as('getDkim');
-      cy.visit(`/domains/${DOMAIN_ID}`);
-      cy.wait('@getDkim');
-      cy.contains('button', /rotate/i).should('be.visible');
-    });
+    cy.intercept('GET', `${API}/domains/${DOMAIN_NAME}/dkim/keys/${NEW_KEY_ID}/verify-dns`, {
+      statusCode: 200,
+      body: {
+        recordName: `${newPendingKey.selector}._domainkey.${DOMAIN_NAME}`,
+        published: true,
+        matches: true,
+        revoked: false,
+        answers: ['v=DKIM1; k=rsa; p=abc123'],
+      },
+    }).as('verifyDns');
+
+    cy.intercept('POST', `${API}/domains/${DOMAIN_NAME}/dkim/keys/${NEW_KEY_ID}/confirm-published`, {
+      statusCode: 200,
+      body: newPendingKey,
+    }).as('confirmPublished');
+
+    cy.intercept('POST', `${API}/domains/${DOMAIN_NAME}/dkim/keys/${NEW_KEY_ID}/activate`, {
+      statusCode: 200,
+      body: newActiveKey,
+    }).as('activateKey');
+
+    cy.intercept('POST', `${API}/domains/${DOMAIN_NAME}/dkim/keys/${OLD_KEY_ID}/retire`, {
+      statusCode: 200,
+      body: oldRetiredKey,
+    }).as('retireOldKey');
+
+    cy.visit(`/domains/${DOMAIN_ID}`);
+    cy.wait('@getDomain');
+    cy.contains('button', /^DKIM$/).click();
+    cy.wait('@getDkimKeys');
+    cy.wait('@getDkimDnsRecords');
+
+    cy.contains('button', /rotation wizard/i).click();
+    cy.get('[data-testid="rotation-stage-prepublish"]').should('be.visible');
+    cy.get('[data-testid="rotation-start-btn"]').click();
+    cy.wait('@rotateKey');
+
+    cy.get('[data-testid="rotation-stage-publish"]').should('be.visible');
+    cy.get('[data-testid="rotation-verify-btn"]').click();
+    cy.wait('@verifyDns');
+    cy.get('[data-testid="rotation-verify-result"]').should('contain.text', 'DNS matches');
+    cy.get('[data-testid="rotation-confirm-btn"]').click();
+    cy.wait('@confirmPublished');
+
+    cy.get('[data-testid="rotation-stage-observe"]').should('be.visible');
+    cy.get('[data-testid="rotation-observe-countdown"]').contains('0s', { timeout: 10000 });
+    cy.get('[data-testid="rotation-observe-next-btn"]').click();
+
+    cy.get('[data-testid="rotation-stage-activate"]').should('be.visible');
+    cy.get('[data-testid="rotation-activate-btn"]').click();
+    cy.wait('@activateKey');
+
+    cy.get('[data-testid="rotation-stage-cleanup"]').should('be.visible');
+    cy.get('[data-testid="rotation-cleanup-btn"]').click();
+    cy.wait('@getDkimKeys');
+    cy.wait('@retireOldKey');
+    cy.wait('@getDkimKeys');
+
+    cy.get('[data-testid="rotation-stage-done"]').should('be.visible');
+    cy.get('[data-testid="rotation-close-btn"]').click();
+    cy.get('[data-testid="rotation-stage-done"]').should('not.exist');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DKIM-012: DNS record copy
+// ---------------------------------------------------------------------------
+
+describe('Domain Management – DKIM DNS Record Copy', () => {
+  beforeEach(() => {
+    cy.clearAuth();
+    cy.loginAsAdmin();
+
+    cy.intercept('GET', `${API}/domains/${DOMAIN_ID}`, { body: domainResponse }).as('getDomain');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/health`, { body: [] }).as('getHealth');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/mta-sts`, { statusCode: 404, body: {} }).as('getMtaSts');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/dns`, { body: [] }).as('getDnsRecords');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_NAME}/dkim/keys`, {
+      body: [activeKeyWithDnsRecord],
+    }).as('getDkimKeys');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_NAME}/dkim/dns-records`, {
+      body: [activeKeyWithDnsRecord.dnsRecord],
+    }).as('getDkimDnsRecords');
   });
 
-  describe('Generate new DKIM key', () => {
-    it('should open generate modal', () => {
-      cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/dkim`, { body: [] }).as('getDkimEmpty');
-      cy.visit(`/domains/${DOMAIN_ID}`);
-      cy.wait('@getDkimEmpty');
-      cy.contains('button', /generate|add key/i).click();
-      cy.get('[data-testid="generate-dkim-modal"], .modal, dialog').should('be.visible');
+  it('copies the DNS record name to the clipboard', () => {
+    cy.window().then(win => {
+      cy.stub(win.navigator.clipboard, 'writeText').as('clipboardWrite').resolves();
     });
 
-    it('should generate a DKIM key and display it', () => {
-      cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/dkim`, { body: [] }).as('getDkimEmpty');
-      cy.intercept('POST', `${API}/domains/${DOMAIN_ID}/dkim`, { statusCode: 201, body: activeKey }).as('generateKey');
-      cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/dkim`, { body: [activeKey] }).as('getDkimAfter');
+    cy.visit(`/domains/${DOMAIN_ID}`);
+    cy.wait('@getDomain');
+    cy.contains('button', /^DKIM$/).click();
+    cy.wait('@getDkimKeys');
+    cy.wait('@getDkimDnsRecords');
 
-      cy.visit(`/domains/${DOMAIN_ID}`);
-      cy.wait('@getDkimEmpty');
+    cy.contains('button', 'DNS Record').first().click();
 
-      cy.contains('button', /generate|add key/i).click();
-      cy.get('input[name="selector"], [data-testid="dkim-selector"]').first().clear().type('default');
-      cy.contains('button', /save|generate|create/i).click();
-      cy.wait('@generateKey');
-
-      cy.contains(/default/i).should('be.visible');
-      cy.contains(/active/i, { timeout: 5000 }).should('be.visible');
-    });
+    cy.get('@clipboardWrite').should(
+      'have.been.calledWith',
+      `default._domainkey.${DOMAIN_NAME}`,
+    );
   });
 
-  describe('DKIM rotation flow', () => {
-    it('should rotate key and show new key as rotating', () => {
-      cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/dkim`, { body: [activeKey] }).as('getDkim');
-      cy.intercept('POST', `${API}/domains/${DOMAIN_ID}/dkim/rotate`, { statusCode: 200, body: rotatedKey }).as('rotateKey');
-      cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/dkim`, { body: [activeKey, rotatedKey] }).as('getDkimAfterRotate');
-
-      cy.visit(`/domains/${DOMAIN_ID}`);
-      cy.wait('@getDkim');
-
-      cy.contains('button', /rotate/i).click();
-      cy.wait('@rotateKey');
-
-      cy.contains(/rotating|active/i, { timeout: 5000 }).should('be.visible');
+  it('copies the DNS record value to the clipboard', () => {
+    cy.window().then(win => {
+      cy.stub(win.navigator.clipboard, 'writeText').as('clipboardWrite').resolves();
     });
 
-    it('should retire old key', () => {
-      cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/dkim`, { body: [retiredKey, rotatedKey] }).as('getDkim');
-      cy.intercept('POST', `${API}/domains/${DOMAIN_ID}/dkim/${retiredKey.id}/retire`, {
-        statusCode: 200, body: {},
-      }).as('retireKey');
+    cy.visit(`/domains/${DOMAIN_ID}`);
+    cy.wait('@getDomain');
+    cy.contains('button', /^DKIM$/).click();
+    cy.wait('@getDkimKeys');
+    cy.wait('@getDkimDnsRecords');
 
-      cy.visit(`/domains/${DOMAIN_ID}`);
-      cy.wait('@getDkim');
+    cy.contains('button', 'DNS Record').first().click();
 
-      // There should be a retire button for the old/retired-eligible key
-      cy.contains('button', /retire/i).first().click();
-      cy.wait('@retireKey');
-    });
+    cy.get('@clipboardWrite').should(
+      'have.been.calledWith',
+      'v=DKIM1; k=rsa; p=MIGfMA0G',
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DKIM-012: Verify DNS flow
+// ---------------------------------------------------------------------------
+
+describe('Domain Management – DKIM Verify DNS Flow', () => {
+  const verifyResult = {
+    recordName: `default._domainkey.${DOMAIN_NAME}`,
+    published: true,
+    matches: true,
+    revoked: false,
+    answers: ['v=DKIM1; k=rsa; p=MIGfMA0G'],
+  };
+
+  beforeEach(() => {
+    cy.clearAuth();
+    cy.loginAsAdmin();
+
+    cy.intercept('GET', `${API}/domains/${DOMAIN_ID}`, { body: domainResponse }).as('getDomain');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/health`, { body: [] }).as('getHealth');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/mta-sts`, { statusCode: 404, body: {} }).as('getMtaSts');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/dns`, { body: [] }).as('getDnsRecords');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_NAME}/dkim/keys`, {
+      body: [oldActiveKey],
+    }).as('getDkimKeys');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_NAME}/dkim/dns-records`, { body: [] }).as('getDkimDnsRecords');
   });
 
-  describe('Error handling', () => {
-    it('should show error when rotation fails', () => {
-      cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/dkim`, { body: [activeKey] }).as('getDkim');
-      cy.intercept('POST', `${API}/domains/${DOMAIN_ID}/dkim/rotate`, {
-        statusCode: 500, body: { error: 'Rotation failed' },
-      }).as('rotateKeyFail');
+  it('shows "DNS verified" inline after a successful Verify DNS call', () => {
+    cy.intercept(
+      'GET',
+      `${API}/domains/${DOMAIN_NAME}/dkim/keys/${OLD_KEY_ID}/verify-dns`,
+      { statusCode: 200, body: verifyResult },
+    ).as('verifyDns');
 
-      cy.visit(`/domains/${DOMAIN_ID}`);
-      cy.wait('@getDkim');
+    cy.visit(`/domains/${DOMAIN_ID}`);
+    cy.wait('@getDomain');
+    cy.contains('button', /^DKIM$/).click();
+    cy.wait('@getDkimKeys');
+    cy.wait('@getDkimDnsRecords');
 
-      cy.contains('button', /rotate/i).click();
-      cy.wait('@rotateKeyFail');
-      cy.contains(/error|failed/i, { timeout: 5000 }).should('be.visible');
-    });
+    cy.contains('button', 'Verify DNS').first().click();
+    cy.wait('@verifyDns');
+
+    cy.contains('DNS verified').should('be.visible');
+    cy.contains(verifyResult.recordName).should('be.visible');
+  });
+
+  it('shows "DNS mismatch" inline when the record does not match', () => {
+    cy.intercept(
+      'GET',
+      `${API}/domains/${DOMAIN_NAME}/dkim/keys/${OLD_KEY_ID}/verify-dns`,
+      { statusCode: 200, body: { ...verifyResult, matches: false } },
+    ).as('verifyDnsMismatch');
+
+    cy.visit(`/domains/${DOMAIN_ID}`);
+    cy.wait('@getDomain');
+    cy.contains('button', /^DKIM$/).click();
+    cy.wait('@getDkimKeys');
+    cy.wait('@getDkimDnsRecords');
+
+    cy.contains('button', 'Verify DNS').first().click();
+    cy.wait('@verifyDnsMismatch');
+
+    cy.contains('DNS mismatch').should('be.visible');
+  });
+
+  it('shows verification result inside the DNS record drawer', () => {
+    cy.intercept('GET', `${API}/domains/${DOMAIN_NAME}/dkim/keys`, {
+      body: [activeKeyWithDnsRecord],
+    }).as('getDkimKeysWithRecord');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_NAME}/dkim/dns-records`, {
+      body: [activeKeyWithDnsRecord.dnsRecord],
+    }).as('getDkimDnsRecordsWithRecord');
+    cy.intercept(
+      'GET',
+      `${API}/domains/${DOMAIN_NAME}/dkim/keys/${OLD_KEY_ID}/verify-dns`,
+      { statusCode: 200, body: verifyResult },
+    ).as('verifyDnsDrawer');
+
+    cy.visit(`/domains/${DOMAIN_ID}`);
+    cy.wait('@getDomain');
+    cy.contains('button', /^DKIM$/).click();
+    cy.wait('@getDkimKeysWithRecord');
+    cy.wait('@getDkimDnsRecordsWithRecord');
+
+    cy.contains('button', 'DNS Record').first().click();
+    cy.contains('button', 'Verify DNS').click();
+    cy.wait('@verifyDnsDrawer');
+
+    cy.contains('Published').should('be.visible');
+    cy.contains(verifyResult.answers[0]).should('be.visible');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DKIM-012: Revoke confirmation
+// ---------------------------------------------------------------------------
+
+describe('Domain Management – DKIM Revoke Confirmation', () => {
+  beforeEach(() => {
+    cy.clearAuth();
+    cy.loginAsAdmin();
+
+    cy.intercept('GET', `${API}/domains/${DOMAIN_ID}`, { body: domainResponse }).as('getDomain');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/health`, { body: [] }).as('getHealth');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/mta-sts`, { statusCode: 404, body: {} }).as('getMtaSts');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_ID}/dns`, { body: [] }).as('getDnsRecords');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_NAME}/dkim/keys`, {
+      body: [oldActiveKey],
+    }).as('getDkimKeys');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_NAME}/dkim/dns-records`, { body: [] }).as('getDkimDnsRecords');
+  });
+
+  it('calls the revoke API when the user confirms the dialog', () => {
+    const revokedKey = { ...oldActiveKey, status: 'REVOKED' };
+    cy.intercept('POST', `${API}/domains/${DOMAIN_NAME}/dkim/keys/${OLD_KEY_ID}/revoke`, {
+      statusCode: 200,
+      body: revokedKey,
+    }).as('revokeKey');
+    cy.intercept('GET', `${API}/domains/${DOMAIN_NAME}/dkim/keys`, {
+      body: [revokedKey],
+    }).as('getDkimKeysAfterRevoke');
+
+    cy.visit(`/domains/${DOMAIN_ID}`);
+    cy.wait('@getDomain');
+    cy.contains('button', /^DKIM$/).click();
+    cy.wait('@getDkimKeys');
+    cy.wait('@getDkimDnsRecords');
+
+    cy.on('window:confirm', () => true);
+    cy.contains('button', 'Revoke').first().click();
+    cy.wait('@revokeKey');
+
+    cy.wait('@getDkimKeysAfterRevoke');
+    cy.contains('REVOKED').should('be.visible');
+  });
+
+  it('does NOT call the revoke API when the user cancels the dialog', () => {
+    cy.intercept('POST', `${API}/domains/${DOMAIN_NAME}/dkim/keys/${OLD_KEY_ID}/revoke`).as(
+      'revokeKey',
+    );
+
+    cy.visit(`/domains/${DOMAIN_ID}`);
+    cy.wait('@getDomain');
+    cy.contains('button', /^DKIM$/).click();
+    cy.wait('@getDkimKeys');
+    cy.wait('@getDkimDnsRecords');
+
+    cy.on('window:confirm', () => false);
+    cy.contains('button', 'Revoke').first().click();
+
+    // The intercept alias should never have been called.
+    cy.get('@revokeKey.all').should('have.length', 0);
+    cy.contains('ACTIVE').should('be.visible');
   });
 });

@@ -73,4 +73,23 @@ public class DomainLookupResult {
      * hostnames and types, used for display in the UI table.
      */
     private List<DnsRecordEntry> allRecords;
+
+    /**
+     * List of DKIM selectors detected in DNS during lookup.
+     */
+    private List<DetectedDkimSelector> detectedDkimSelectors;
+
+    /** Detailed information about a detected DKIM selector. */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DetectedDkimSelector {
+        private String selector;
+        private String algorithm;
+        private String publicKeyPreview;
+        private Boolean testMode;
+        private boolean revoked;
+        private String detectedAt;
+    }
 }

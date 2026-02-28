@@ -82,6 +82,12 @@ textarea.input:focus {
   border-radius: var(--radius-badge) !important;
 }
 
+.dkim-badge-rotating {
+  border-color: hsl(var(--primary) / 0.45) !important;
+  background: hsl(var(--primary) / 0.12) !important;
+  color: hsl(var(--primary)) !important;
+}
+
 // ─── Buttons ─────────────────────────────────────────────────────────────────
 
 .btn-primary {

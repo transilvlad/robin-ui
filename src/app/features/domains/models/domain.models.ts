@@ -103,17 +103,37 @@ export const DomainDnsRecordSchema = z.object({
   updatedAt: TimestampStringSchema.optional(),
 });
 
+export const DkimDnsRecordSchema = z.object({
+  keyId: z.number().nullable().optional(),
+  name: z.string().min(1),
+  type: z.string().min(1),
+  value: z.string().nullable().optional(),
+  chunks: z.array(z.string()).optional(),
+  status: z.string().nullable().optional(),
+});
+
 export const DkimKeySchema = z.object({
   id: z.number(),
   domainId: z.number(),
   selector: z.string().min(1),
   algorithm: z.nativeEnum(DkimAlgorithm),
-  privateKey: z.string(),
-  publicKey: z.string(),
+  privateKey: z.string().nullable().optional(),
+  publicKey: z.string().nullable().optional(),
   cnameSelector: z.string().nullable().optional(),
   status: z.nativeEnum(DkimKeyStatus),
-  createdAt: TimestampStringSchema.optional(),
+  createdAt: TimestampStringSchema.nullable().optional(),
   retiredAt: TimestampStringSchema.nullable().optional(),
+});
+
+export const DetectedDkimSelectorSchema = z.object({
+  id: z.number().nullable().optional(),
+  domain: z.string().min(1),
+  selector: z.string().min(1),
+  publicKeyDns: z.string().nullable().optional(),
+  algorithm: z.string().nullable().optional(),
+  testMode: z.boolean().nullable().optional(),
+  revoked: z.boolean(),
+  detectedAt: TimestampStringSchema.nullable().optional(),
 });
 
 export const DomainHealthSchema = z.object({
@@ -141,7 +161,9 @@ export type DnsProvider = z.infer<typeof DnsProviderSchema>;
 export type DnsTemplateRecord = z.infer<typeof DnsTemplateRecordSchema>;
 export type DnsTemplate = z.infer<typeof DnsTemplateSchema>;
 export type DomainDnsRecord = z.infer<typeof DomainDnsRecordSchema>;
+export type DkimDnsRecord = z.infer<typeof DkimDnsRecordSchema>;
 export type DkimKey = z.infer<typeof DkimKeySchema>;
+export type DetectedDkimSelector = z.infer<typeof DetectedDkimSelectorSchema>;
 export type DomainHealth = z.infer<typeof DomainHealthSchema>;
 export type MtaStsWorker = z.infer<typeof MtaStsWorkerSchema>;
 
@@ -166,6 +188,8 @@ export const DnsProviderListSchema = z.array(DnsProviderSchema);
 export const DnsTemplateListSchema = z.array(DnsTemplateSchema);
 export const DomainDnsRecordListSchema = z.array(DomainDnsRecordSchema);
 export const DkimKeyListSchema = z.array(DkimKeySchema);
+export const DkimDnsRecordListSchema = z.array(DkimDnsRecordSchema);
+export const DetectedDkimSelectorListSchema = z.array(DetectedDkimSelectorSchema);
 export const DomainHealthListSchema = z.array(DomainHealthSchema);
 
 export interface DnsRecordEntry {
@@ -190,4 +214,6 @@ export interface DomainLookupResult {
   availableProviders: DnsProvider[];
   /** Flat list of all discovered records for display */
   allRecords: DnsRecordEntry[];
+  /** DKIM selectors detected via DNS probing */
+  detectedDkimSelectors: DetectedDkimSelector[];
 }

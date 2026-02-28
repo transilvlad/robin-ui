@@ -112,17 +112,17 @@
                 <button
                   (click)="testConnection(provider)"
                   [disabled]="testing === provider.id"
-                  class="btn-ghost btn-sm text-robin-green">
+                  class="btn-outline btn-sm text-robin-green">
                   {{ testing === provider.id ? 'Testing...' : 'Test' }}
                 </button>
                 <button
                   (click)="editProvider(provider)"
-                  class="btn-ghost btn-sm text-primary">
+                  class="btn-outline btn-sm text-primary">
                   Edit
                 </button>
                 <button
                   (click)="deleteProvider(provider)"
-                  class="btn-ghost btn-sm text-destructive hover:text-destructive/90">
+                  class="btn-outline btn-sm text-destructive hover:text-destructive/90">
                   Delete
                 </button>
               </div>

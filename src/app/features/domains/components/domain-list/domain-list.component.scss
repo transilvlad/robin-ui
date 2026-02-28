@@ -129,64 +129,77 @@ textarea.input:focus {
 // Angular's emulated encapsulation adds one [_ngcontent] attr, making both
 // selectors (0,3,0). Source order then decides — .card.delete-card wins
 // because it appears later in this file.
+.delete-modal-backdrop {
+  background-color: rgba(127, 29, 29, 0.35) !important;
+}
+
 .card.delete-card {
-  border-color: hsl(var(--destructive) / 0.55) !important;
-  box-shadow: 0 0 0 1px hsl(var(--destructive) / 0.25),
-              0 20px 40px hsl(var(--destructive) / 0.18) !important;
+  border: 1px solid rgba(239, 68, 68, 0.55) !important;
+  box-shadow:
+    0 0 0 1px rgba(239, 68, 68, 0.28),
+    0 20px 44px rgba(127, 29, 29, 0.42) !important;
+}
 
-  .card-header {
-    background: hsl(var(--destructive) / 0.08) !important;
-    border-bottom-color: hsl(var(--destructive) / 0.3) !important;
+.delete-card-header {
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.07)) !important;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.34) !important;
+}
+
+.delete-card .card-footer {
+  border-top-color: rgba(239, 68, 68, 0.28) !important;
+}
+
+.delete-icon-ring {
+  background: rgba(239, 68, 68, 0.14);
+  border: 1.5px solid rgba(239, 68, 68, 0.45);
+  color: #ef4444;
+}
+
+.delete-title {
+  color: #ef4444;
+}
+
+.delete-subtitle {
+  color: rgba(252, 165, 165, 0.95);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.delete-domain-pill {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0.15rem;
+  background: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.42);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+}
+
+.btn-delete-domain {
+  background: #dc2626 !important;
+  color: #fff !important;
+  border: 1px solid #dc2626 !important;
+  font-weight: 700;
+
+  &:hover:not(:disabled) {
+    background: #b91c1c !important;
+    border-color: #b91c1c !important;
   }
 
-  .card-footer {
-    border-top-color: hsl(var(--destructive) / 0.25) !important;
+  &:disabled {
+    background: rgba(220, 38, 38, 0.45) !important;
+    border-color: rgba(220, 38, 38, 0.45) !important;
   }
+}
 
-  .delete-icon-ring {
-    background: hsl(var(--destructive) / 0.15);
-    border: 1.5px solid hsl(var(--destructive) / 0.45);
-    color: hsl(var(--destructive));
-  }
-
-  .delete-title {
-    color: hsl(var(--destructive));
-  }
-
-  .delete-subtitle {
-    color: hsl(var(--destructive) / 0.65);
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-  }
-
-  .delete-domain-pill {
-    background: hsl(var(--destructive) / 0.1);
-    color: hsl(var(--destructive));
-    border: 1px solid hsl(var(--destructive) / 0.3);
-    font-family: monospace;
-    font-size: 0.8rem;
-    font-weight: 600;
-    padding: 0.1rem 0.45rem;
-    border-radius: 4px;
-  }
-
-  .btn-delete {
-    background: hsl(var(--destructive)) !important;
-    color: #fff !important;
-    border-color: hsl(var(--destructive)) !important;
-    font-weight: 600;
-
-    &:hover:not(:disabled) {
-      background: hsl(var(--destructive) / 0.85) !important;
-      border-color: hsl(var(--destructive)) !important;
-    }
-  }
-
-  .delete-error {
-    background: hsl(var(--destructive) / 0.1);
-    color: hsl(var(--destructive));
-    border: 1px solid hsl(var(--destructive) / 0.3);
-  }
+.delete-error {
+  background: rgba(239, 68, 68, 0.14);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.35);
 }

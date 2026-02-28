@@ -43,8 +43,6 @@ const mockDkimKey: DkimKey = {
   domainId: 1,
   selector: 'default',
   algorithm: DkimAlgorithm.RSA_2048,
-  privateKey: '----',
-  publicKey: '----',
   status: DkimKeyStatus.ACTIVE,
 };
 
@@ -160,15 +158,21 @@ describe('DkimManagementComponent', () => {
     dkimService.rotateKey.and.returnValue(of(Ok({ ...mockDkimKey, id: 2 })));
     dkimService.retireKey.and.returnValue(of(Ok(undefined as void)));
 
+    const domainServiceStub = jasmine.createSpyObj('DomainService', ['createDnsRecord']);
+
     await TestBed.configureTestingModule({
       declarations: [DkimManagementComponent],
-      providers: [{ provide: DkimService, useValue: dkimService }],
+      providers: [
+        { provide: DkimService, useValue: dkimService },
+        { provide: DomainService, useValue: domainServiceStub },
+      ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DkimManagementComponent);
     component = fixture.componentInstance;
     component.domainId = 1;
+    component.domain = 'example.com';
     fixture.detectChanges();
   });
 

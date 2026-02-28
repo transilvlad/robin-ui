@@ -4,9 +4,9 @@
     <h2 class="text-lg font-semibold">DKIM Keys</h2>
     <div class="flex gap-2">
       <button
-        (click)="rotateKey()"
+        (click)="openRotationWizard()"
         class="btn-outline btn-md">
-        Rotate Key
+        Rotation Wizard
       </button>
       <button
         (click)="openGenerateModal()"
@@ -38,7 +38,6 @@
             <th class="table-head">Selector</th>
             <th class="table-head">Algorithm</th>
             <th class="table-head">Status</th>
-            <th class="table-head">CNAME Selector</th>
             <th class="table-head">Created</th>
             <th class="table-head text-right">Actions</th>
           </tr>
@@ -49,24 +48,31 @@
             <td class="table-cell">{{ key.algorithm }}</td>
             <td class="table-cell">
               <span class="badge" [ngClass]="getStatusClass(key.status)">
-                {{ key.status }}
+                {{ getStatusLabel(key.status) }}
               </span>
             </td>
-            <td class="table-cell font-mono text-muted-foreground">{{ key.cnameSelector ?? '—' }}</td>
             <td class="table-cell text-muted-foreground">
               {{ key.createdAt ? (key.createdAt | date:'mediumDate') : '—' }}
             </td>
             <td class="table-cell text-right">
-              <button
-                *ngIf="key.status !== 'RETIRED'"
-                (click)="retireKey(key)"
-                class="btn-ghost text-destructive hover:text-destructive/90">
-                Retire
-              </button>
+              <div class="flex flex-wrap justify-end gap-2">
+                <button
+                  (click)="openDnsRecordDrawer(key)"
+                  class="btn-outline btn-sm">
+                  DNS Record
+                </button>
+                <button
+                  *ngIf="canRetire(key.status)"
+                  (click)="retireKey(key)"
+                  [disabled]="isActionInProgress(key.id, 'retiring')"
+                  class="btn-outline btn-sm text-destructive hover:text-destructive/90">
+                  {{ isActionInProgress(key.id, 'retiring') ? 'Retiring...' : 'Retire' }}
+                </button>
+              </div>
             </td>
           </tr>
           <tr *ngIf="keys.length === 0" class="table-row hover:bg-transparent">
-            <td colspan="6" class="table-cell text-center py-12 text-muted-foreground">
+            <td colspan="5" class="table-cell text-center py-12 text-muted-foreground">
               No DKIM keys configured. Generate a key to enable DKIM signing.
             </td>
           </tr>
@@ -89,7 +95,7 @@
           <input
             type="text"
             [(ngModel)]="generateRequest.selector"
-            placeholder="default"
+            placeholder="auto-generated if left blank"
             class="input" />
           <p class="text-xs text-muted-foreground">Used in the DNS TXT record name (e.g., default._domainkey)</p>
         </div>
@@ -111,10 +117,33 @@
       </button>
       <button
         (click)="generateKey()"
-        [disabled]="generating || !generateRequest.selector"
+        [disabled]="generating"
         class="btn-primary btn-md">
         {{ generating ? 'Generating...' : 'Generate Key' }}
       </button>
     </div>
   </div>
 </div>
+
+<app-dkim-dns-record
+  *ngIf="showDnsDrawer && drawerRecord && drawerKey"
+  [record]="drawerRecord"
+  [domain]="domain"
+  [verifying]="false"
+  [verifyResult]="null"
+  [pushing]="isActionInProgress(drawerKey.id, 'pushing')"
+  [pushSuccess]="dnsPushSuccess"
+  [pushError]="dnsPushError"
+  (closeDrawer)="closeDnsRecordDrawer()"
+  (verifyRecord)="closeDnsRecordDrawer()"
+  (pushRecord)="pushDnsRecord($event)">
+</app-dkim-dns-record>
+
+<app-dkim-rotation-wizard
+  *ngIf="showRotationWizard"
+  [domainId]="domainId"
+  [domain]="domain"
+  [keys]="keys"
+  (closeWizard)="closeRotationWizard()"
+  (completed)="onRotationCompleted()">
+</app-dkim-rotation-wizard>

@@ -49,8 +49,6 @@ const mockDkimKey: DkimKey = {
   domainId: 1,
   selector: 'default',
   algorithm: DkimAlgorithm.RSA_2048,
-  privateKey: '----PRIVATE----',
-  publicKey: '----PUBLIC----',
   status: DkimKeyStatus.ACTIVE,
 };
 
@@ -205,7 +203,7 @@ describe('DkimService', () => {
   it('getKeys returns Ok', fakeAsync(() => {
     let result: any;
     service.getKeys(1).subscribe(r => (result = r));
-    http.expectOne(`${BASE_URL}/domains/1/dkim`).flush([mockDkimKey]);
+    http.expectOne(`${BASE_URL}/domains/1/dkim/keys`).flush([mockDkimKey]);
     tick();
     expect(result.ok).toBeTrue();
     expect(result.value).toHaveSize(1);
@@ -213,8 +211,8 @@ describe('DkimService', () => {
 
   it('generateKey sends POST', fakeAsync(() => {
     let result: any;
-    service.generateKey(1, { selector: 'default', algorithm: 'RSA_2048' }).subscribe(r => (result = r));
-    const req = http.expectOne(`${BASE_URL}/domains/1/dkim`);
+    service.generateKey(1, { algorithm: 'RSA_2048' }).subscribe(r => (result = r));
+    const req = http.expectOne(`${BASE_URL}/domains/1/dkim/generate`);
     expect(req.request.method).toBe('POST');
     req.flush(mockDkimKey);
     tick();
@@ -231,11 +229,11 @@ describe('DkimService', () => {
     expect(result.ok).toBeTrue();
   }));
 
-  it('retireKey sends POST to /{id}/retire', fakeAsync(() => {
+  it('retireKey sends DELETE to /dkim/keys/{id}', fakeAsync(() => {
     let result: any;
     service.retireKey(1, 1).subscribe(r => (result = r));
-    const req = http.expectOne(`${BASE_URL}/domains/1/dkim/1/retire`);
-    expect(req.request.method).toBe('POST');
+    const req = http.expectOne(`${BASE_URL}/domains/1/dkim/keys/1`);
+    expect(req.request.method).toBe('DELETE');
     req.flush(null);
     tick();
     expect(result.ok).toBeTrue();

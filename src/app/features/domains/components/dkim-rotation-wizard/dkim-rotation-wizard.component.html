@@ -1,0 +1,128 @@
+<div class="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+  <div class="card wizard-card w-full shadow-lg border-border">
+    <div class="card-header border-b border-border">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h3 class="card-title text-lg">DKIM Rotation Wizard</h3>
+          <p class="text-sm text-muted-foreground mt-2">Domain: <span class="font-mono">{{ domain }}</span></p>
+        </div>
+        <button class="btn-outline btn-sm" (click)="close()">Close</button>
+      </div>
+    </div>
+
+    <div class="card-content pt-6 space-y-5">
+      <ol class="wizard-steps" data-testid="dkim-rotation-steps">
+        <li [class.active]="isStep('prepublish')" data-testid="rotation-step-prepublish">1. Pre-publish</li>
+        <li [class.active]="isStep('publish')" data-testid="rotation-step-publish">2. Publish</li>
+        <li [class.active]="isStep('observe')" data-testid="rotation-step-observe">3. Observation</li>
+        <li [class.active]="isStep('activate')" data-testid="rotation-step-activate">4. Activate</li>
+        <li [class.active]="isStep('cleanup')" data-testid="rotation-step-cleanup">5. Cleanup</li>
+      </ol>
+
+      <div *ngIf="error" class="alert alert-destructive">
+        <div>{{ error }}</div>
+      </div>
+
+      <section *ngIf="isStep('prepublish')" class="space-y-4" data-testid="rotation-stage-prepublish">
+        <h4 class="text-base font-semibold">Step {{ stepNumber('prepublish') }}: Pre-publish new key</h4>
+        <p class="text-sm text-muted-foreground">Generate a new DKIM key and keep the current active key serving traffic.</p>
+        <div class="flex justify-end">
+          <button
+            class="btn-primary btn-md"
+            [disabled]="rotating"
+            (click)="startRotation()"
+            data-testid="rotation-start-btn">
+            {{ rotating ? 'Creating Key...' : 'Start Rotation' }}
+          </button>
+        </div>
+      </section>
+
+      <section *ngIf="isStep('publish')" class="space-y-4" data-testid="rotation-stage-publish">
+        <h4 class="text-base font-semibold">Step {{ stepNumber('publish') }}: Confirm DNS publication</h4>
+        <p class="text-sm text-muted-foreground">Publish the new selector in DNS, then verify and confirm publication.</p>
+        <div class="rounded-lg border border-border p-4 space-y-2 bg-layer-1" *ngIf="rotatedKey">
+          <div class="text-xs uppercase tracking-wide text-muted-foreground">Rotation selector</div>
+          <div class="font-mono text-sm">{{ rotatedKey.selector }}</div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button class="btn-outline btn-md" (click)="verifyDns()" [disabled]="verifying" data-testid="rotation-verify-btn">
+            {{ verifying ? 'Verifying...' : 'Verify DNS' }}
+          </button>
+          <button
+            class="btn-primary btn-md"
+            (click)="confirmPublished()"
+            [disabled]="confirming || !canConfirmPublish()"
+            data-testid="rotation-confirm-btn">
+            {{ confirming ? 'Confirming...' : 'Confirm Published' }}
+          </button>
+        </div>
+        <div *ngIf="verifyResult" class="rounded-lg border border-border p-3 bg-layer-1 text-sm" data-testid="rotation-verify-result">
+          <span class="badge" [ngClass]="verifyResult.matches ? 'badge-success' : 'badge-error'">
+            {{ verifyResult.matches ? 'DNS matches' : 'DNS mismatch' }}
+          </span>
+          <div class="mt-2 font-mono text-xs text-muted-foreground">{{ verifyResult.recordName }}</div>
+        </div>
+      </section>
+
+      <section *ngIf="isStep('observe')" class="space-y-4" data-testid="rotation-stage-observe">
+        <h4 class="text-base font-semibold">Step {{ stepNumber('observe') }}: Observation window</h4>
+        <p class="text-sm text-muted-foreground">Observe for DNS propagation and signing continuity before cutover.</p>
+        <div class="rounded-lg border border-border p-4 bg-layer-1">
+          <div class="text-xs uppercase tracking-wide text-muted-foreground">Countdown</div>
+          <div class="text-2xl font-semibold mt-2" data-testid="rotation-observe-countdown">
+            {{ observationSecondsRemaining }}s
+          </div>
+        </div>
+        <div class="flex justify-end">
+          <button
+            class="btn-primary btn-md"
+            (click)="proceedObservation()"
+            [disabled]="!canProceedObservation()"
+            data-testid="rotation-observe-next-btn">
+            Continue to Activate
+          </button>
+        </div>
+      </section>
+
+      <section *ngIf="isStep('activate')" class="space-y-4" data-testid="rotation-stage-activate">
+        <h4 class="text-base font-semibold">Step {{ stepNumber('activate') }}: Activate new signing key</h4>
+        <p class="text-sm text-muted-foreground">Cut over signing to the new key.</p>
+        <div class="flex justify-end">
+          <button
+            class="btn-primary btn-md"
+            (click)="activate()"
+            [disabled]="activating"
+            data-testid="rotation-activate-btn">
+            {{ activating ? 'Activating...' : 'Activate Signing' }}
+          </button>
+        </div>
+      </section>
+
+      <section *ngIf="isStep('cleanup')" class="space-y-4" data-testid="rotation-stage-cleanup">
+        <h4 class="text-base font-semibold">Step {{ stepNumber('cleanup') }}: Cleanup old keys</h4>
+        <p class="text-sm text-muted-foreground">Retire keys that are rotating out after cutover.</p>
+        <div class="flex justify-between items-center rounded-lg border border-border p-3 bg-layer-1">
+          <span class="text-sm text-muted-foreground">Retired during cleanup</span>
+          <span class="badge badge-secondary" data-testid="rotation-cleaned-count">{{ cleanedCount }}</span>
+        </div>
+        <div class="flex justify-end">
+          <button
+            class="btn-primary btn-md"
+            (click)="cleanup()"
+            [disabled]="cleaning"
+            data-testid="rotation-cleanup-btn">
+            {{ cleaning ? 'Cleaning...' : 'Run Cleanup' }}
+          </button>
+        </div>
+      </section>
+
+      <section *ngIf="isStep('done')" class="space-y-4" data-testid="rotation-stage-done">
+        <h4 class="text-base font-semibold">Rotation Complete</h4>
+        <p class="text-sm text-muted-foreground">DKIM rotation completed successfully.</p>
+        <div class="flex justify-end">
+          <button class="btn-primary btn-md" (click)="close()" data-testid="rotation-close-btn">Close</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
