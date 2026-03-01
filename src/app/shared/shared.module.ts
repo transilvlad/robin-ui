@@ -26,6 +26,7 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 import { HeaderComponent } from './components/header/header.component';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
 import { StatusBadgeComponent } from './components/status-badge/status-badge.component';
+import { ThemePickerComponent } from './components/theme-picker/theme-picker.component';
 
 // Pipes
 import { BytesPipe } from './pipes/bytes.pipe';
@@ -62,6 +63,7 @@ const materialModules = [
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
+    ThemePickerComponent,
     ...materialModules,
   ],
   exports: [

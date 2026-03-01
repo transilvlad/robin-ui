@@ -124,6 +124,7 @@ services:
     container_name: robin-mta
     restart: unless-stopped
     platform: linux/amd64
+    working_dir: /usr/local/robin
     build:
       context: ../transilvlad-robin
       dockerfile: Dockerfile
@@ -186,6 +187,7 @@ services:
       - ROBIN_SERVICE_URL=http://robin-mta:8080
       - ROBIN_CLIENT_URL=http://robin-mta:8090
       - JWT_SECRET=${JWT_SECRET:-change-this-to-a-very-long-and-secure-random-secret-key-in-production}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-EdaJgXg3B0YmcYXKuwk3RKS24Sfkl/lwZUBpal7nrPA=}
     volumes:
       - ./cfg:/app/cfg
     depends_on:

@@ -75,6 +75,7 @@ services:
       - ROBIN_SERVICE_URL=${ROBIN_SERVICE_URL:-http://host.docker.internal:8080}
       - ROBIN_CLIENT_URL=${ROBIN_CLIENT_URL:-http://host.docker.internal:8090}
       - JWT_SECRET=${JWT_SECRET:-dev-secret-key-not-for-production}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-EdaJgXg3B0YmcYXKuwk3RKS24Sfkl/lwZUBpal7nrPA=}
     volumes:
       - ./cfg:/app/cfg
       - ./robin-gateway/src/main/resources/application.yml:/app/config/application.yml

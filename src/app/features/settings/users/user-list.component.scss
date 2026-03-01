@@ -1,14 +1,8 @@
+// ===== Phase 4: Glassmorphic Overrides — User List =====
 :host {
   display: block;
 }
 
-.chart-container {
-  position: relative;
-  height: 350px;
-  width: 100%;
-}
-
-// ===== Phase 4: Glassmorphic Overrides — Metrics Dashboard =====
 .page-root {
   background: transparent;
   min-height: 100vh;
@@ -22,6 +16,39 @@
   border: 1px solid var(--border-dim) !important;
   border-radius: var(--radius-panel) !important;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+.table {
+  color: var(--text-main);
+}
+
+thead tr {
+  background: var(--bg-layer-1) !important;
+  border-color: var(--border-dim) !important;
+}
+
+th {
+  color: var(--text-dim) !important;
+}
+
+tbody tr {
+  border-color: var(--border-dim) !important;
+  &:hover { background: var(--accent-dim) !important; }
+}
+
+td { color: var(--text-main); }
+
+.input {
+  background: var(--bg-layer-1) !important;
+  border-color: var(--border-mid) !important;
+  color: var(--text-main) !important;
+  border-radius: var(--radius-button) !important;
+  &::placeholder { color: var(--text-muted) !important; }
+  &:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 2px var(--accent-dim) !important;
+    outline: none;
+  }
 }
 
 .btn-primary {
@@ -40,4 +67,3 @@
     color: var(--accent) !important;
   }
 }
-

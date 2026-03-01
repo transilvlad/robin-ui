@@ -14,6 +14,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   serverStatus: 'UP' | 'DOWN' | 'UNKNOWN' = 'UNKNOWN';
   uptime = '';
   showUserMenu = false;
+  pageTitle = 'Dashboard';
   private healthSubscription?: Subscription;
   protected authStore = inject(AuthStore);
   private elementRef = inject(ElementRef);
