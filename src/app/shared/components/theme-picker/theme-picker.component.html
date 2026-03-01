@@ -1,0 +1,63 @@
+<div class="theme-picker-wrapper">
+  <!-- Trigger button -->
+  <button class="picker-btn" (click)="toggle()" [class.active]="open()" title="Switch theme">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+    </svg>
+  </button>
+
+  <!-- Dropdown panel -->
+  @if (open()) {
+    <div class="picker-panel" role="dialog" aria-label="Theme switcher">
+      <div class="panel-header">
+        <span>Choose Theme</span>
+        <button class="close-btn" (click)="close()">✕</button>
+      </div>
+
+      <!-- Bundled themes -->
+      <div class="themes-list">
+        @for (theme of bundledThemes; track theme.id) {
+          <button
+            class="theme-item"
+            [class.active]="currentTheme?.meta?.id === theme.id"
+            (click)="selectTheme(theme.id)"
+            [disabled]="loading()">
+            <span class="theme-swatch" [style.background]="theme.preview_color"></span>
+            <div class="theme-info">
+              <span class="theme-name">{{ theme.name }}</span>
+              <span class="theme-desc">{{ theme.description }}</span>
+            </div>
+            @if (currentTheme?.meta?.id === theme.id) {
+              <svg class="check" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            }
+          </button>
+        }
+      </div>
+
+      <!-- Remote URL loader -->
+      <div class="url-loader">
+        <span class="url-label">Load from URL</span>
+        <div class="url-row">
+          <input
+            type="url"
+            class="url-input"
+            placeholder="https://example.com/theme.json5"
+            [ngModel]="remoteUrl()"
+            (ngModelChange)="remoteUrl.set($event)"
+            (keydown.enter)="loadFromUrl()" />
+          <button class="url-btn" (click)="loadFromUrl()" [disabled]="loading() || !remoteUrl()">
+            @if (loading()) { … } @else { Load }
+          </button>
+        </div>
+        @if (error()) {
+          <span class="error-msg">{{ error() }}</span>
+        }
+      </div>
+    </div>
+  }
+</div>

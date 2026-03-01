@@ -4,6 +4,7 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { ErrorInterceptor } from './interceptors/error.interceptor';
 import { AuthStore } from './state/auth.store';
+import { ThemeService } from './services/theme.service';
 
 /**
  * Auth Initializer Factory
@@ -15,6 +16,11 @@ export function initializeAuth(authStore: InstanceType<typeof AuthStore>): () =>
   return () => authStore.autoLogin();
 }
 
+/** Theme Initializer Factory — loads and applies saved/default theme before first render. */
+export function initializeTheme(themeService: ThemeService): () => Promise<void> {
+  return () => themeService.loadSavedTheme();
+}
+
 @NgModule({
   declarations: [],
   imports: [CommonModule, HttpClientModule],
@@ -23,6 +29,12 @@ export function initializeAuth(authStore: InstanceType<typeof AuthStore>): () =>
       provide: APP_INITIALIZER,
       useFactory: initializeAuth,
       deps: [AuthStore],
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeTheme,
+      deps: [ThemeService],
       multi: true,
     },
     {

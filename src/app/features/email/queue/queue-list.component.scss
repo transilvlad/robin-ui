@@ -1,1 +1,85 @@
-// Component-specific styles (if needed)
+// ===== Phase 4: Glassmorphic Overrides — Queue List =====
+:host {
+  display: block;
+}
+
+.page-root {
+  background: transparent;
+  min-height: 100vh;
+  color: var(--text-main);
+}
+
+.card {
+  background: var(--bg-panel) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-dim) !important;
+  border-radius: var(--radius-panel) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+.table-header {
+  background: var(--bg-layer-1) !important;
+}
+
+.table-head {
+  color: var(--text-dim) !important;
+  border-color: var(--border-dim) !important;
+}
+
+.table-row {
+  border-color: var(--border-dim) !important;
+  &:hover {
+    background: var(--accent-dim) !important;
+  }
+}
+
+.table-cell {
+  color: var(--text-main) !important;
+  border-color: var(--border-dim) !important;
+}
+
+.progress {
+  background: var(--border-mid) !important;
+}
+
+.progress-indicator {
+  background: var(--accent) !important;
+}
+
+.badge-secondary {
+  background: var(--bg-layer-1) !important;
+  color: var(--text-dim) !important;
+  border: 1px solid var(--border-dim) !important;
+  border-radius: var(--radius-badge) !important;
+}
+
+.btn-primary {
+  background: var(--accent) !important;
+  color: #1a1a1a !important;
+  border-radius: var(--radius-button) !important;
+}
+
+.btn-outline {
+  border-color: var(--border-mid) !important;
+  color: var(--text-dim) !important;
+  border-radius: var(--radius-button) !important;
+  background: transparent !important;
+  &:hover:not(:disabled) {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+  }
+  &:disabled {
+    opacity: 0.4;
+  }
+}
+
+.btn-ghost {
+  color: var(--text-dim) !important;
+  background: transparent !important;
+  border-radius: var(--radius-button) !important;
+  &:hover {
+    background: var(--accent-dim) !important;
+    color: var(--accent) !important;
+  }
+}

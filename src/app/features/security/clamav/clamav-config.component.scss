@@ -1,7 +1,7 @@
 :host {
   display: block;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: transparent;
 }
 
 mat-card {
@@ -48,5 +48,65 @@ code {
   .error-snackbar {
     background-color: #ef4444 !important;
     color: white !important;
+  }
+}
+
+// ===== Phase 4: Glassmorphic Overrides — ClamAV =====
+.page-root {
+  background: transparent;
+  min-height: 100vh;
+  color: var(--text-main);
+}
+
+.card {
+  background: var(--bg-panel) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-dim) !important;
+  border-radius: var(--radius-panel) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+.card-header { border-color: var(--border-dim) !important; }
+
+.input {
+  background: var(--bg-layer-1) !important;
+  border-color: var(--border-mid) !important;
+  color: var(--text-main) !important;
+  border-radius: var(--radius-button) !important;
+  &::placeholder { color: var(--text-muted) !important; }
+  &:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 2px var(--accent-dim) !important;
+    outline: none;
+  }
+}
+
+// Status badge
+.bg-card.border.border-border {
+  background: var(--bg-panel) !important;
+  border-color: var(--border-dim) !important;
+}
+
+// Toggle row
+.bg-muted\/30.rounded-lg {
+  background: var(--bg-layer-1) !important;
+  border-color: var(--border-dim) !important;
+}
+
+.btn-primary {
+  background: var(--accent) !important;
+  color: #1a1a1a !important;
+  border-radius: var(--radius-button) !important;
+}
+
+.btn-outline {
+  border-color: var(--border-mid) !important;
+  color: var(--text-dim) !important;
+  background: transparent !important;
+  border-radius: var(--radius-button) !important;
+  &:hover:not(:disabled) {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
   }
 }

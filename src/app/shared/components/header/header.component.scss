@@ -1,1 +1,184 @@
-/* Header uses global shadcn styles - minimal custom styles needed */
+:host {
+  grid-area: header;
+  display: block;
+}
+
+.top-bar {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  background: var(--bg-layer-1, rgba(20, 20, 22, 0.6));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-dim, rgba(255,255,255,0.05));
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.top-bar-left,
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+// ── Breadcrumb ────────────────────────────────────────────────────────────────
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumb-item {
+  font-size: 13px;
+  color: var(--text-dim, #8e8e93);
+
+  &.active {
+    color: var(--text-main, #f0f0f0);
+    font-weight: 600;
+  }
+}
+
+.breadcrumb-sep {
+  color: var(--border-bright, rgba(255,255,255,0.2));
+  font-size: 13px;
+}
+
+// ── Status pill ───────────────────────────────────────────────────────────────
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-panel, rgba(28,28,30,0.75));
+  border: 1px solid var(--border-dim, rgba(255,255,255,0.05));
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--status-success, #32d74b);
+  box-shadow: 0 0 6px var(--status-success, #32d74b);
+}
+
+.status-label {
+  color: var(--text-dim, #8e8e93);
+}
+
+// ── Icon buttons ──────────────────────────────────────────────────────────────
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border-dim, rgba(255,255,255,0.05));
+  color: var(--text-dim, #8e8e93);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  svg { width: 16px; height: 16px; }
+
+  &:hover {
+    background: var(--bg-panel, rgba(28,28,30,0.75));
+    color: var(--text-main, #f0f0f0);
+    border-color: var(--border-mid, #333336);
+  }
+}
+
+// ── Avatar / User menu ────────────────────────────────────────────────────────
+.user-menu-wrap { position: relative; }
+
+.avatar-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  transition: background 0.15s;
+
+  &:hover { background: var(--bg-panel, rgba(28,28,30,0.75)); }
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--accent-dim, rgba(255,159,10,0.15));
+  border: 1px solid var(--accent, #ff9f0a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent, #ff9f0a);
+}
+
+.username {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-main, #f0f0f0);
+}
+
+.user-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 220px;
+  background: var(--bg-panel, rgba(28,28,30,0.95));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-mid, #333336);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  overflow: hidden;
+  z-index: 200;
+}
+
+.dropdown-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-dim, rgba(255,255,255,0.05));
+}
+
+.dropdown-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main, #f0f0f0);
+  margin: 0;
+}
+
+.dropdown-email {
+  font-size: 11px;
+  color: var(--text-dim, #8e8e93);
+  margin: 2px 0 0;
+}
+
+.dropdown-body { padding: 6px; }
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-main, #f0f0f0);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover { background: var(--accent-dim, rgba(255,159,10,0.1)); }
+}

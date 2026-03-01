@@ -1,4 +1,4 @@
-<div class="p-10 min-h-screen bg-background">
+<div class="page-root p-10">
   <div class="max-w-[1400px] mx-auto space-y-8">
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -110,8 +110,8 @@
     </div>
 
     <!-- Logs Container -->
-    <div class="card border-none shadow-xl overflow-hidden bg-[#0D1117] ring-1 ring-white/5">
-      <div class="card-header bg-[#161B22] border-b border-white/5 py-3 px-6 flex items-center justify-between">
+    <div class="card border-none shadow-xl overflow-hidden terminal-bg ring-1 ring-white/5">
+      <div class="card-header terminal-header border-b border-white/5 py-3 px-6 flex items-center justify-between">
         <div class="flex items-center gap-2">
           <div class="h-2 w-2 rounded-full bg-accent animate-pulse"></div>
           <span class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Streaming Output</span>
@@ -208,7 +208,7 @@
 
       <!-- Footer / Load More -->
       @if (hasMore || (loading && logs.length > 0)) {
-        <div class="p-6 border-t border-white/5 bg-[#161B22]/50 text-center">
+        <div class="p-6 border-t border-white/5 terminal-footer text-center">
           @if (hasMore && !loading) {
             <button (click)="loadMoreLogs()" class="btn-outline btn-sm border-white/10 text-white/60 hover:bg-white/5 hover:text-white px-8">
               Load Previous Records

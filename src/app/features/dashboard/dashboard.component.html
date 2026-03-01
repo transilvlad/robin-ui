@@ -1,7 +1,20 @@
-<div class="p-10 min-h-screen bg-background">
-  <div class="max-w-[1400px] mx-auto">
-    <!-- Loading State -->
-    @if (loading) {
+<div>
+  <!-- Hero Banner -->
+  <div class="dashboard-hero">
+    <div>
+      <h1>System Dashboard</h1>
+      <p>Robin MTA — real-time server health and queue overview</p>
+    </div>
+    <span class="hero-badge">
+      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+        <circle cx="12" cy="12" r="8"/>
+      </svg>
+      Live
+    </span>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading) {
     <div class="stats-grid">
       @for (item of [1,2,3]; track item) {
         <div class="stat-card">
@@ -12,16 +25,15 @@
       }
     </div>
     <div class="metrics-card">
-      <div class="skeleton h-6 w-40 mb-4"></div>
-      <div class="skeleton h-64 w-full"></div>
+      <div class="card-header"><div class="skeleton h-5 w-40"></div></div>
+      <div class="card-content"><div class="skeleton h-48 w-full"></div></div>
     </div>
   }
 
   <!-- Dashboard Content -->
   @if (!loading && health) {
-    <!-- Stats Grid -->
+    <!-- KPI Stats Grid -->
     <div class="stats-grid">
-      <!-- Queue Status -->
       <div class="stat-card">
         <div class="stat-label">Queue Status</div>
         <div class="stat-value">{{ health.queue?.size }}</div>
@@ -34,7 +46,6 @@
         </div>
       </div>
 
-      <!-- Server Uptime -->
       <div class="stat-card">
         <div class="stat-label">Server Uptime</div>
         <div class="stat-value">{{ health.uptime || 'N/A' }}</div>
@@ -43,7 +54,6 @@
         </div>
       </div>
 
-      <!-- SMTP Listeners -->
       <div class="stat-card">
         <div class="stat-label">Active Listeners</div>
         <div class="stat-value">{{ health.listeners?.length || 0 }}</div>
@@ -55,15 +65,13 @@
       </div>
     </div>
 
-    <!-- Main Dashboard Grid -->
+    <!-- Main grid -->
     <div class="dashboard-grid">
-      <!-- Performance Metrics -->
+      <!-- Server Health -->
       <div class="metrics-card">
         <div class="card-header">
           <h3>Server Health</h3>
-          <span class="status-badge status-{{ health.status.toLowerCase() }}">
-            {{ health.status }}
-          </span>
+          <span class="status-badge status-{{ health.status.toLowerCase() }}">{{ health.status }}</span>
         </div>
         <div class="card-content">
           <div class="metrics-list">
@@ -80,11 +88,11 @@
                   </div>
                   <div class="metric-stat">
                     <span class="stat-number">{{ listener.threadPool.size }}</span>
-                    <span class="stat-desc">Pool Size</span>
+                    <span class="stat-desc">Pool</span>
                   </div>
                   <div class="metric-stat">
                     <span class="stat-number">{{ listener.threadPool.completed }}</span>
-                    <span class="stat-desc">Completed</span>
+                    <span class="stat-desc">Done</span>
                   </div>
                 </div>
               </div>
@@ -98,7 +106,7 @@
         <div class="card-header">
           <h3>Queue Details</h3>
           <button (click)="refresh()" class="refresh-btn" title="Refresh">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
             </svg>
           </button>
@@ -127,7 +135,7 @@
             }
             @if (!hasRetries()) {
               <div class="empty-state">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
                 <p>No pending messages</p>
@@ -138,11 +146,9 @@
       </div>
     </div>
 
-    <!-- Scheduler Information -->
+    <!-- Scheduler -->
     <div class="metrics-card">
-      <div class="card-header">
-        <h3>Scheduler Status</h3>
-      </div>
+      <div class="card-header"><h3>Scheduler Status</h3></div>
       <div class="card-content">
         <div class="scheduler-grid">
           @if (health.scheduler) {
@@ -171,7 +177,7 @@
   <!-- Error State -->
   @if (!loading && !health) {
     <div class="error-state">
-      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <circle cx="12" cy="12" r="10"></circle>
         <line x1="12" y1="8" x2="12" y2="12"></line>
         <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -179,7 +185,7 @@
       <h3>Unable to connect to server</h3>
       <p>Make sure Robin MTA is running and the API endpoint is accessible.</p>
       <button (click)="refresh()" class="retry-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
         </svg>
         Retry Connection
@@ -187,5 +193,3 @@
     </div>
   }
 </div>
-</div>
-
