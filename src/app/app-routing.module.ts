@@ -53,6 +53,12 @@ const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'domains',
+    loadChildren: () =>
+      import('./features/domains/domains.module').then((m) => m.DomainsModule),
+    canActivate: [authGuard],
+  },
+  {
     path: '',
     redirectTo: '/dashboard',
     pathMatch: 'full',

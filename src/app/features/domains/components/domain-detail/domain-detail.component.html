@@ -1,0 +1,122 @@
+<div class="page-root">
+  <!-- Back button -->
+  <button
+    (click)="goBack()"
+    class="btn btn-ghost mb-4 pl-0 hover:bg-transparent">
+    &larr; Back to Domains
+  </button>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex justify-center items-center py-16">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="alert alert-destructive mb-4">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+    <div>
+      {{ error }}
+    </div>
+  </div>
+
+  <!-- Domain content -->
+  <div *ngIf="domain && !loading">
+    <!-- Domain header -->
+    <div class="page-header flex justify-between items-start mb-6">
+      <div>
+        <h1>{{ domain.domain }}</h1>
+        <p class="page-subtitle mt-1">ID: {{ domain.id }}</p>
+      </div>
+      <span class="badge" [ngClass]="getStatusClass(domain.status)">
+        {{ domain.status || 'PENDING' }}
+      </span>
+    </div>
+
+    <!-- Tab navigation -->
+    <div class="border-b border-border mb-6">
+      <nav class="flex gap-1 -mb-px">
+        <button
+          *ngFor="let tab of tabs"
+          (click)="setActiveTab(tab.id)"
+          [class.border-primary]="isActiveTab(tab.id)"
+          [class.text-primary]="isActiveTab(tab.id)"
+          [class.border-transparent]="!isActiveTab(tab.id)"
+          [class.text-muted-foreground]="!isActiveTab(tab.id)"
+          class="px-4 py-3 text-sm font-medium border-b-2 transition-colors hover:text-foreground">
+          {{ tab.label }}
+        </button>
+      </nav>
+    </div>
+
+    <!-- Tab panels -->
+
+    <!-- Overview -->
+    <div *ngIf="activeTab === 'overview'">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="card p-6">
+          <h2 class="text-base font-semibold mb-4">Domain Information</h2>
+          <dl class="space-y-3">
+            <div class="flex justify-between">
+              <dt class="text-sm text-muted-foreground">Domain</dt>
+              <dd class="text-sm font-medium">{{ domain.domain }}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-sm text-muted-foreground">Status</dt>
+              <dd>
+                <span class="badge" [ngClass]="getStatusClass(domain.status)">
+                  {{ domain.status || 'PENDING' }}
+                </span>
+              </dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-sm text-muted-foreground">DNS Provider ID</dt>
+              <dd class="text-sm font-medium">{{ domain.dnsProviderId ?? '—' }}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-sm text-muted-foreground">NS Provider ID</dt>
+              <dd class="text-sm font-medium">{{ domain.nsProviderId ?? '—' }}</dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-sm text-muted-foreground">Last Health Check</dt>
+              <dd class="text-sm font-medium">
+                {{ domain.lastHealthCheck ? (domain.lastHealthCheck | date:'medium') : '—' }}
+              </dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-sm text-muted-foreground">Created</dt>
+              <dd class="text-sm font-medium">
+                {{ domain.createdAt ? (domain.createdAt | date:'medium') : '—' }}
+              </dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-sm text-muted-foreground">Updated</dt>
+              <dd class="text-sm font-medium">
+                {{ domain.updatedAt ? (domain.updatedAt | date:'medium') : '—' }}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+    </div>
+
+    <!-- DNS Records -->
+    <div *ngIf="activeTab === 'dns'">
+      <app-dns-records [domainId]="domain.id"></app-dns-records>
+    </div>
+
+    <!-- DKIM -->
+    <div *ngIf="activeTab === 'dkim'">
+      <app-dkim-management [domain]="domain.domain" [domainId]="domain.id"></app-dkim-management>
+    </div>
+
+    <!-- MTA-STS -->
+    <div *ngIf="activeTab === 'mta-sts'">
+      <app-mta-sts-status [domainId]="domain.id"></app-mta-sts-status>
+    </div>
+
+    <!-- Health -->
+    <div *ngIf="activeTab === 'health'">
+      <app-domain-health [domainId]="domain.id"></app-domain-health>
+    </div>
+  </div>
+</div>

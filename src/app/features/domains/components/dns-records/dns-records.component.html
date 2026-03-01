@@ -1,0 +1,141 @@
+<div>
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-lg font-semibold">DNS Records</h2>
+    <button
+      (click)="openAddForm()"
+      class="btn-primary btn-md">
+      + Add Record
+    </button>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="alert alert-destructive mb-4">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+    <div>
+      {{ error }}
+    </div>
+  </div>
+
+  <!-- Add / Edit form -->
+  <div *ngIf="showAddForm" class="mb-4 card p-6 border-primary/20">
+    <h3 class="card-title text-base mb-4">
+      {{ editingRecord ? 'Edit Record' : 'New DNS Record' }}
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="space-y-2">
+        <label class="text-sm font-medium leading-none">Type</label>
+        <select
+          [(ngModel)]="newRecord.recordType"
+          class="input">
+          <option *ngFor="let type of recordTypes" [value]="type">{{ type }}</option>
+        </select>
+      </div>
+      <div class="space-y-2">
+        <label class="text-sm font-medium leading-none">Name</label>
+        <input
+          type="text"
+          [(ngModel)]="newRecord.name"
+          placeholder="@ or subdomain"
+          class="input" />
+      </div>
+      <div class="md:col-span-2 space-y-2">
+        <label class="text-sm font-medium leading-none">Value</label>
+        <input
+          type="text"
+          [(ngModel)]="newRecord.value"
+          placeholder="Record value"
+          class="input" />
+      </div>
+      <div class="space-y-2">
+        <label class="text-sm font-medium leading-none">TTL (seconds)</label>
+        <input
+          type="number"
+          [(ngModel)]="newRecord.ttl"
+          placeholder="3600"
+          class="input" />
+      </div>
+      <div class="space-y-2">
+        <label class="text-sm font-medium leading-none">Priority (MX only)</label>
+        <input
+          type="number"
+          [(ngModel)]="newRecord.priority"
+          placeholder="10"
+          class="input" />
+      </div>
+    </div>
+    <div class="flex gap-3 justify-end mt-6">
+      <button
+        (click)="cancelForm()"
+        class="btn-outline btn-md">
+        Cancel
+      </button>
+      <button
+        (click)="saveRecord()"
+        class="btn-primary btn-md">
+        {{ editingRecord ? 'Update' : 'Create' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex justify-center items-center py-12">
+    <mat-spinner diameter="36"></mat-spinner>
+  </div>
+
+  <!-- Records table -->
+  <div *ngIf="!loading" class="card overflow-hidden">
+    <div class="card-content p-0">
+      <table class="table">
+        <thead class="table-header">
+          <tr>
+            <th class="table-head">Type</th>
+            <th class="table-head">Name</th>
+            <th class="table-head">Value</th>
+            <th class="table-head">TTL</th>
+            <th class="table-head">Managed</th>
+            <th class="table-head text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="table-body">
+          <tr *ngFor="let record of records" class="table-row">
+            <td class="table-cell">
+              <span class="badge badge-secondary">
+                {{ record.recordType }}
+              </span>
+            </td>
+            <td class="table-cell font-mono">{{ record.name }}</td>
+            <td class="table-cell font-mono text-muted-foreground max-w-xs truncate">{{ record.value }}</td>
+            <td class="table-cell text-muted-foreground">{{ record.ttl ?? '—' }}</td>
+            <td class="table-cell">
+              <span *ngIf="record.managed" class="flex items-center text-robin-green">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Yes
+              </span>
+              <span *ngIf="!record.managed" class="text-muted-foreground">No</span>
+            </td>
+            <td class="table-cell text-right">
+              <div class="flex gap-2 justify-end">
+                <button
+                  (click)="editRecord(record)"
+                  class="btn-outline btn-sm text-primary">
+                  Edit
+                </button>
+                <button
+                  (click)="deleteRecord(record)"
+                  class="btn-outline btn-sm text-destructive hover:text-destructive/90">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="records.length === 0" class="table-row hover:bg-transparent">
+            <td colspan="6" class="table-cell text-center py-12 text-muted-foreground">
+              No DNS records configured.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

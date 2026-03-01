@@ -2,8 +2,20 @@ package com.robin.gateway.service;
 
 import com.robin.gateway.model.Alias;
 import com.robin.gateway.model.Domain;
+import com.robin.gateway.model.DnsProvider;
+import com.robin.gateway.model.DnsProviderType;
+import com.robin.gateway.model.DomainDnsRecord;
 import com.robin.gateway.repository.AliasRepository;
+import com.robin.gateway.repository.DnsProviderRepository;
+import com.robin.gateway.repository.DomainDnsRecordRepository;
 import com.robin.gateway.repository.DomainRepository;
+import com.robin.gateway.repository.DkimDetectedSelectorRepository;
+import com.robin.gateway.model.DkimDetectedSelector;
+import com.robin.gateway.model.dto.DomainLookupResult;
+import com.robin.gateway.model.dto.DomainLookupResult.DetectedDkimSelector;
+import com.robin.gateway.model.dto.DomainRequest;
+import com.robin.gateway.model.dto.DomainSummary;
+import com.robin.gateway.repository.DomainHealthRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -13,8 +25,13 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +40,12 @@ public class DomainService {
 
     private final DomainRepository domainRepository;
     private final AliasRepository aliasRepository;
+    private final MtaStsService mtaStsService;
+    private final DomainHealthRepository domainHealthRepository;
+    private final DnsProviderRepository dnsProviderRepository;
+    private final DomainDnsRecordRepository domainDnsRecordRepository;
+    private final DnsResolverService dnsResolverService;
+    private final DkimDetectedSelectorRepository dkimDetectedSelectorRepository;
 
     /**
      * Get all domains with pagination
@@ -48,6 +71,20 @@ public class DomainService {
     }
 
     /**
+     * Get domain summary by ID
+     */
+    public Mono<DomainSummary> getDomainSummary(Long id) {
+        return Mono.fromCallable(() -> {
+            Domain domain = domainRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Domain not found: " + id));
+            return DomainSummary.builder()
+                    .domain(domain)
+                    .healthChecks(domainHealthRepository.findByDomainId(id))
+                    .build();
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    /**
      * Get domain by name
      */
     public Mono<Optional<Domain>> getDomainByName(String domainName) {
@@ -61,8 +98,9 @@ public class DomainService {
      * Create a new domain
      */
     @Transactional
-    public Mono<Domain> createDomain(String domainName) {
+    public Mono<Domain> createDomain(DomainRequest request) {
         return Mono.fromCallable(() -> {
+            String domainName = request.getDomain();
             // Check if domain already exists
             if (domainRepository.existsByDomain(domainName)) {
                 throw new IllegalArgumentException("Domain already exists: " + domainName);
@@ -70,13 +108,46 @@ public class DomainService {
 
             Domain domain = Domain.builder()
                     .domain(domainName)
+                    .dnsProviderId(request.getDnsProviderId())
+                    .nsProviderId(request.getNsProviderId())
+                    .status(request.isExistingDomain() ? "PENDING_VERIFICATION" : "PENDING")
                     .build();
 
-            return domainRepository.save(domain);
+            Domain saved = domainRepository.save(domain);
+
+            // Persist pre-flight DNS records as an unmanaged snapshot
+            if (request.getInitialDnsRecords() != null && !request.getInitialDnsRecords().isEmpty()) {
+                List<DomainDnsRecord> records = request.getInitialDnsRecords().stream()
+                        .map(r -> DomainDnsRecord.builder()
+                                .domainId(saved.getId())
+                                .recordType(r.getRecordType())
+                                .name(r.getName())
+                                .value(r.getValue())
+                                .priority(r.getPriority())
+                                .ttl(r.getTtl())
+                                .managed(false)
+                                .build())
+                        .toList();
+                domainDnsRecordRepository.saveAll(records);
+                log.info("Saved {} initial DNS records for domain {}", records.size(), domainName);
+            }
+
+            return saved;
         })
                 .subscribeOn(Schedulers.boundedElastic())
-                .doOnSuccess(domain -> log.info("Created domain: {}", domain.getDomain()))
-                .doOnError(e -> log.error("Error creating domain: {}", domainName, e));
+                .flatMap(domain -> {
+                    log.info("Created domain: {}", domain.getDomain());
+                    if (domain.getDnsProviderId() != null) {
+                        return mtaStsService.initiateWorkerDeployment(domain.getId())
+                                .thenReturn(domain)
+                                .onErrorResume(e -> {
+                                    log.error("Failed to trigger MTA-STS worker deployment for domain {}", domain.getId(), e);
+                                    return Mono.just(domain);
+                                });
+                    }
+                    return Mono.just(domain);
+                })
+                .doOnError(e -> log.error("Error creating domain: {}", request.getDomain(), e));
     }
 
     /**
@@ -221,5 +292,205 @@ public class DomainService {
                 .subscribeOn(Schedulers.boundedElastic())
                 .then()
                 .doOnError(e -> log.error("Error deleting alias with id: {}", id, e));
+    }
+
+    // ===== DNS Pre-flight Lookup =====
+
+    /**
+     * Look up existing DNS records for a domain and suggest a DNS provider
+     * based on the detected nameserver vendor.
+     */
+    public Mono<DomainLookupResult> lookupDomain(String domain) {
+        return Mono.fromCallable(() -> {
+            log.info("Performing DNS lookup for domain: {}", domain);
+
+            List<DomainLookupResult.DnsRecordEntry> allRecords = new ArrayList<>();
+
+            // NS records (apex)
+            List<String> nsRecords = dnsResolverService.resolveNsRecords(domain);
+            nsRecords.forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("NS", domain, v)));
+
+            // A records (apex and mail subdomain)
+            dnsResolverService.resolveARecords(domain)
+                    .forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("A", domain, v)));
+            dnsResolverService.resolveARecords("mail." + domain)
+                    .forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("A", "mail." + domain, v)));
+
+            // MX records (apex)
+            List<String> mxRecords = dnsResolverService.resolveMxRecords(domain);
+            mxRecords.forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("MX", domain, v)));
+
+            // TXT records – apex (ALL, not just SPF)
+            List<String> allTxt = dnsResolverService.resolveTxtRecords(domain);
+            allTxt.forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", domain, v)));
+
+            // TXT records – well-known email subdomains
+            List<String> dmarcRecords = dnsResolverService.resolveTxtRecords("_dmarc." + domain);
+            dmarcRecords.forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", "_dmarc." + domain, v)));
+
+            List<String> mtaSts = dnsResolverService.resolveTxtRecords("_mta-sts." + domain);
+            mtaSts.forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", "_mta-sts." + domain, v)));
+
+            List<String> smtpTls = dnsResolverService.resolveTxtRecords("_smtp._tls." + domain);
+            smtpTls.forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", "_smtp._tls." + domain, v)));
+
+            // DKIM – Phase 1: probe a broad set of common selectors
+            List<String> dkimBaseSelectors = List.of(
+                "default", "google", "mail", "selector1", "selector2",
+                "k1", "k2", "k3", "dkim", "dkim1", "dkim2",
+                "smtp", "s1", "s2", "key1", "key2",
+                "mta", "mta1", "mta2",
+                "robin", "robin1", "robin2", "robin3", "robin4", "robin5",
+                "email", "outbound", "primary", "main", "a", "b"
+            );
+            Set<String> foundDkimPrefixes = new java.util.HashSet<>();
+            List<DetectedDkimSelector> detectedDkimSelectors = new ArrayList<>();
+            List<DkimDetectedSelector> entitiesToSave = new ArrayList<>();
+
+            for (String selector : dkimBaseSelectors) {
+                String dkimHost = selector + "._domainkey." + domain;
+                List<String> vals = dnsResolverService.resolveTxtRecords(dkimHost);
+                vals.forEach(v -> {
+                    allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", dkimHost, v));
+                    processDkimRecord(domain, selector, v, detectedDkimSelectors, entitiesToSave);
+                });
+                if (!vals.isEmpty()) {
+                    // Record non-numeric prefix so we can probe further in phase 2
+                    foundDkimPrefixes.add(selector.replaceAll("\\d+$", ""));
+                }
+            }
+            // DKIM – Phase 2: for every found prefix, probe up to index 20
+            for (String prefix : foundDkimPrefixes) {
+                for (int i = 1; i <= 20; i++) {
+                    String selector = prefix + i;
+                    if (dkimBaseSelectors.contains(selector)) continue; // already checked
+                    String dkimHost = selector + "._domainkey." + domain;
+                    List<String> vals = dnsResolverService.resolveTxtRecords(dkimHost);
+                    if (vals.isEmpty()) break; // stop probing this prefix once gap found
+                    vals.forEach(v -> {
+                        allRecords.add(new DomainLookupResult.DnsRecordEntry("TXT", dkimHost, v));
+                        processDkimRecord(domain, selector, v, detectedDkimSelectors, entitiesToSave);
+                    });
+                }
+            }
+            
+            // Save DKIM detected selectors into the repository
+            if (!entitiesToSave.isEmpty()) {
+                // Upsert logic
+                for (DkimDetectedSelector entity : entitiesToSave) {
+                    try {
+                        Optional<DkimDetectedSelector> existingOpt = dkimDetectedSelectorRepository.findByDomainOrderBySelectorAsc(domain).stream().filter(e -> e.getSelector().equals(entity.getSelector())).findFirst();
+                        if (existingOpt.isPresent()) {
+                            DkimDetectedSelector existing = existingOpt.get();
+                            existing.setPublicKeyDns(entity.getPublicKeyDns());
+                            existing.setAlgorithm(entity.getAlgorithm());
+                            existing.setTestMode(entity.getTestMode());
+                            existing.setRevoked(entity.isRevoked());
+                            existing.setDetectedAt(LocalDateTime.now());
+                            dkimDetectedSelectorRepository.save(existing);
+                        } else {
+                            dkimDetectedSelectorRepository.save(entity);
+                        }
+                    } catch (Exception e) {
+                        log.warn("Failed to save detected DKIM selector for {}: {}", domain, e.getMessage());
+                    }
+                }
+            }
+
+            // CNAME – common email-related subdomains
+            for (String sub : List.of("autoconfig", "autodiscover", "_mta-sts", "mail", "smtp", "imap", "pop", "webmail")) {
+                String host = sub + "." + domain;
+                dnsResolverService.resolveCnameRecords(host)
+                        .forEach(v -> allRecords.add(new DomainLookupResult.DnsRecordEntry("CNAME", host, v)));
+            }
+
+            // Derive SPF/DMARC sub-lists (still used for provider detection)
+            List<String> spfRecords = allTxt.stream().filter(v -> v.startsWith("v=spf1")).toList();
+
+            String detectedType = detectNsProviderType(nsRecords);
+
+            List<DnsProvider> allProviders = dnsProviderRepository.findAll();
+            allProviders.forEach(p -> p.setCredentials(null));
+
+            DnsProvider suggested = null;
+            if (!"UNKNOWN".equals(detectedType)) {
+                try {
+                    DnsProviderType provType = DnsProviderType.valueOf(detectedType);
+                    suggested = allProviders.stream()
+                            .filter(p -> p.getType() == provType)
+                            .findFirst()
+                            .orElse(null);
+                } catch (IllegalArgumentException ignored) {}
+            }
+
+            return DomainLookupResult.builder()
+                    .domain(domain)
+                    .nsRecords(nsRecords)
+                    .mxRecords(mxRecords)
+                    .spfRecords(spfRecords)
+                    .dmarcRecords(dmarcRecords)
+                    .mtaStsRecords(mtaSts)
+                    .smtpTlsRecords(smtpTls)
+                    .detectedNsProviderType(detectedType)
+                    .suggestedProvider(suggested)
+                    .availableProviders(allProviders)
+                    .allRecords(allRecords)
+                    .detectedDkimSelectors(detectedDkimSelectors)
+                    .build();
+        }).subscribeOn(Schedulers.boundedElastic())
+          .doOnError(e -> log.error("DNS lookup failed for domain: {}", domain, e));
+    }
+
+    private void processDkimRecord(String domain, String selector, String rdata, List<DetectedDkimSelector> dtoList, List<DkimDetectedSelector> entities) {
+        Map<String, String> tags = new HashMap<>();
+        for (String part : rdata.split(";")) {
+            int eq = part.indexOf('=');
+            if (eq > 0) {
+                tags.put(part.substring(0, eq).trim().toLowerCase(), part.substring(eq + 1).trim());
+            }
+        }
+        
+        if (!tags.containsKey("p")) {
+            return;
+        }
+        
+        String p = tags.get("p");
+        String algorithm = tags.getOrDefault("k", "rsa");
+        boolean testMode = tags.containsKey("t") && tags.get("t").contains("y");
+        boolean revoked = p.isEmpty();
+        
+        // Add to DTO
+        String preview = p.length() > 20 ? p.substring(0, 20) + "..." : p;
+        dtoList.add(DetectedDkimSelector.builder()
+                .selector(selector)
+                .algorithm(algorithm)
+                .publicKeyPreview(preview)
+                .testMode(testMode)
+                .revoked(revoked)
+                .detectedAt(LocalDateTime.now().toString())
+                .build());
+                
+        // Add to Entity
+        entities.add(DkimDetectedSelector.builder()
+                .domain(domain)
+                .selector(selector)
+                .publicKeyDns(p)
+                .algorithm(algorithm)
+                .testMode(testMode)
+                .revoked(revoked)
+                .build());
+    }
+
+    private String detectNsProviderType(List<String> nsRecords) {
+        for (String ns : nsRecords) {
+            String lower = ns.toLowerCase();
+            if (lower.contains(".ns.cloudflare.com")) {
+                return "CLOUDFLARE";
+            }
+            if (lower.contains(".awsdns-")) {
+                return "AWS_ROUTE53";
+            }
+        }
+        return "UNKNOWN";
     }
 }

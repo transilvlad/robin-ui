@@ -122,6 +122,9 @@ robin:
   config-path: ${ROBIN_CONFIG_PATH:cfg/}
   service-url: ${ROBIN_SERVICE_URL:http://localhost:8080}
 
+scheduling:
+  enabled: true
+
 # JWT Configuration
 jwt:
   secret: ${JWT_SECRET:change-this-to-a-very-long-and-secure-random-secret-key-that-is-at-least-64-bytes-long}

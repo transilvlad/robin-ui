@@ -1,0 +1,140 @@
+<div class="page-root">
+  <!-- Header -->
+  <div class="page-header flex justify-between items-center mb-6">
+    <div>
+      <h1>DNS Providers</h1>
+      <p class="page-subtitle">Configure provider profiles for Cloudflare and AWS Route53.</p>
+    </div>
+    <button
+      (click)="openAddForm()"
+      class="btn-primary btn-md">
+      + Add Provider
+    </button>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="alert alert-destructive mb-4">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+    <div>
+      {{ error }}
+    </div>
+  </div>
+
+  <!-- Success -->
+  <div *ngIf="successMessage" class="alert mb-4 border-success/20 bg-success/5 text-success">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+    <div>
+      {{ successMessage }}
+    </div>
+  </div>
+
+  <!-- Add / Edit form -->
+  <div *ngIf="showForm" class="mb-8 card p-6 border-primary/20 shadow-lg">
+    <h2 class="card-title text-lg mb-6">
+      {{ editingProvider ? 'Edit Provider' : 'New DNS Provider' }}
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="space-y-2">
+        <label class="text-sm font-medium leading-none">Name</label>
+        <input
+          type="text"
+          [(ngModel)]="formData.name"
+          placeholder="My Cloudflare Account"
+          class="input" />
+      </div>
+      <div class="space-y-2">
+        <label class="text-sm font-medium leading-none">Type</label>
+        <select
+          [(ngModel)]="formData.type"
+          class="input">
+          <option *ngFor="let pt of providerTypes" [value]="pt.value">{{ pt.label }}</option>
+        </select>
+      </div>
+      <div class="md:col-span-2 space-y-2">
+        <label class="text-sm font-medium leading-none">
+          {{ getCredentialsLabel(formData.type) }}
+          <span *ngIf="editingProvider" class="ml-1 text-muted-foreground font-normal">(leave empty to keep existing)</span>
+        </label>
+        <textarea
+          [(ngModel)]="formData.credentials"
+          [placeholder]="getCredentialsPlaceholder(formData.type)"
+          rows="4"
+          class="input font-mono resize-none min-h-[100px]"></textarea>
+      </div>
+    </div>
+    <div class="flex gap-3 justify-end mt-8 pt-6 border-t border-border/50">
+      <button
+        (click)="cancelForm()"
+        class="btn-outline btn-md">
+        Cancel
+      </button>
+      <button
+        (click)="saveProvider()"
+        [disabled]="!formData.name"
+        class="btn-primary btn-md">
+        {{ editingProvider ? 'Update Provider' : 'Create Provider' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex justify-center items-center py-16">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <!-- Providers table -->
+  <div *ngIf="!loading" class="card overflow-hidden">
+    <div class="card-content p-0">
+      <table class="table">
+        <thead class="table-header">
+          <tr>
+            <th class="table-head">Name</th>
+            <th class="table-head">Type</th>
+            <th class="table-head">Credentials</th>
+            <th class="table-head">Created</th>
+            <th class="table-head text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="table-body">
+          <tr *ngFor="let provider of providers" class="table-row">
+            <td class="table-cell font-medium">{{ provider.name }}</td>
+            <td class="table-cell">
+              <span class="badge badge-secondary">
+                {{ getProviderLabel(provider.type) }}
+              </span>
+            </td>
+            <td class="table-cell font-mono text-muted-foreground">{{ provider.credentials }}</td>
+            <td class="table-cell text-muted-foreground">
+              {{ provider.createdAt ? (provider.createdAt | date:'mediumDate') : '—' }}
+            </td>
+            <td class="table-cell text-right">
+              <div class="flex gap-2 justify-end">
+                <button
+                  (click)="testConnection(provider)"
+                  [disabled]="testing === provider.id"
+                  class="btn-outline btn-sm text-robin-green">
+                  {{ testing === provider.id ? 'Testing...' : 'Test' }}
+                </button>
+                <button
+                  (click)="editProvider(provider)"
+                  class="btn-outline btn-sm text-primary">
+                  Edit
+                </button>
+                <button
+                  (click)="deleteProvider(provider)"
+                  class="btn-outline btn-sm text-destructive hover:text-destructive/90">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="providers.length === 0" class="table-row hover:bg-transparent">
+            <td colspan="5" class="table-cell text-center py-12 text-muted-foreground">
+              No DNS providers configured.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

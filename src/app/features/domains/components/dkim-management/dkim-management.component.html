@@ -1,0 +1,149 @@
+<div>
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-lg font-semibold">DKIM Keys</h2>
+    <div class="flex gap-2">
+      <button
+        (click)="openRotationWizard()"
+        class="btn-outline btn-md">
+        Rotation Wizard
+      </button>
+      <button
+        (click)="openGenerateModal()"
+        class="btn-primary btn-md">
+        + Generate Key
+      </button>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="alert alert-destructive mb-4">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+    <div>
+      {{ error }}
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex justify-center items-center py-12">
+    <mat-spinner diameter="36"></mat-spinner>
+  </div>
+
+  <!-- Keys table -->
+  <div *ngIf="!loading" class="card overflow-hidden">
+    <div class="card-content p-0">
+      <table class="table">
+        <thead class="table-header">
+          <tr>
+            <th class="table-head">Selector</th>
+            <th class="table-head">Algorithm</th>
+            <th class="table-head">Status</th>
+            <th class="table-head">Created</th>
+            <th class="table-head text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="table-body">
+          <tr *ngFor="let key of keys" class="table-row">
+            <td class="table-cell font-mono font-medium">{{ key.selector }}</td>
+            <td class="table-cell">{{ key.algorithm }}</td>
+            <td class="table-cell">
+              <span class="badge" [ngClass]="getStatusClass(key.status)">
+                {{ getStatusLabel(key.status) }}
+              </span>
+            </td>
+            <td class="table-cell text-muted-foreground">
+              {{ key.createdAt ? (key.createdAt | date:'mediumDate') : '—' }}
+            </td>
+            <td class="table-cell text-right">
+              <div class="flex flex-wrap justify-end gap-2">
+                <button
+                  (click)="openDnsRecordDrawer(key)"
+                  class="btn-outline btn-sm">
+                  DNS Record
+                </button>
+                <button
+                  *ngIf="canRetire(key.status)"
+                  (click)="retireKey(key)"
+                  [disabled]="isActionInProgress(key.id, 'retiring')"
+                  class="btn-outline btn-sm text-destructive hover:text-destructive/90">
+                  {{ isActionInProgress(key.id, 'retiring') ? 'Retiring...' : 'Retire' }}
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="keys.length === 0" class="table-row hover:bg-transparent">
+            <td colspan="5" class="table-cell text-center py-12 text-muted-foreground">
+              No DKIM keys configured. Generate a key to enable DKIM signing.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Generate Key Modal -->
+<div *ngIf="showGenerateModal" class="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
+  <div class="card w-full max-w-md shadow-lg border-border">
+    <div class="card-header border-b border-border">
+      <h3 class="card-title text-lg">Generate DKIM Key</h3>
+    </div>
+    <div class="card-content pt-6">
+      <div class="space-y-4">
+        <div class="space-y-2">
+          <label class="text-sm font-medium leading-none">Selector</label>
+          <input
+            type="text"
+            [(ngModel)]="generateRequest.selector"
+            placeholder="auto-generated if left blank"
+            class="input" />
+          <p class="text-xs text-muted-foreground">Used in the DNS TXT record name (e.g., default._domainkey)</p>
+        </div>
+        <div class="space-y-2">
+          <label class="text-sm font-medium leading-none">Algorithm</label>
+          <select
+            [(ngModel)]="generateRequest.algorithm"
+            class="input">
+            <option *ngFor="let alg of algorithms" [value]="alg.value">{{ alg.label }}</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer justify-end space-x-2 border-t border-border pt-6 mt-6">
+      <button
+        (click)="closeGenerateModal()"
+        class="btn-outline btn-md">
+        Cancel
+      </button>
+      <button
+        (click)="generateKey()"
+        [disabled]="generating"
+        class="btn-primary btn-md">
+        {{ generating ? 'Generating...' : 'Generate Key' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<app-dkim-dns-record
+  *ngIf="showDnsDrawer && drawerRecord && drawerKey"
+  [record]="drawerRecord"
+  [domain]="domain"
+  [verifying]="false"
+  [verifyResult]="null"
+  [pushing]="isActionInProgress(drawerKey.id, 'pushing')"
+  [pushSuccess]="dnsPushSuccess"
+  [pushError]="dnsPushError"
+  (closeDrawer)="closeDnsRecordDrawer()"
+  (verifyRecord)="closeDnsRecordDrawer()"
+  (pushRecord)="pushDnsRecord($event)">
+</app-dkim-dns-record>
+
+<app-dkim-rotation-wizard
+  *ngIf="showRotationWizard"
+  [domainId]="domainId"
+  [domain]="domain"
+  [keys]="keys"
+  (closeWizard)="closeRotationWizard()"
+  (completed)="onRotationCompleted()">
+</app-dkim-rotation-wizard>

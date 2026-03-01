@@ -1,0 +1,140 @@
+<div class="page-root">
+  <!-- Header -->
+  <div class="page-header flex justify-between items-center mb-6">
+    <div>
+      <h1>DNS Templates</h1>
+      <p class="page-subtitle">Define reusable sets of DNS records to quickly configure new domains.</p>
+    </div>
+    <button
+      (click)="openAddForm()"
+      class="btn-primary btn-md">
+      + New Template
+    </button>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="alert alert-destructive mb-4">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+    <div>
+      {{ error }}
+    </div>
+  </div>
+
+  <!-- Add / Edit form -->
+  <div *ngIf="showForm" class="mb-8 card p-6 border-primary/20 shadow-lg">
+    <h2 class="card-title text-lg mb-6">
+      {{ editingTemplate ? 'Edit Template' : 'New DNS Template' }}
+    </h2>
+    <div class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-2">
+          <label class="text-sm font-medium leading-none">Name</label>
+          <input
+            type="text"
+            [(ngModel)]="formData.name"
+            placeholder="Standard Mail Setup"
+            class="input" />
+        </div>
+        <div class="space-y-2">
+          <label class="text-sm font-medium leading-none">Description</label>
+          <input
+            type="text"
+            [(ngModel)]="formData.description"
+            placeholder="Optional description"
+            class="input" />
+        </div>
+      </div>
+      <div class="space-y-2">
+        <div class="flex justify-between items-center mb-2">
+          <label class="text-sm font-medium leading-none">Records (JSON)</label>
+          <button
+            (click)="useExample()"
+            class="btn btn-link btn-sm h-auto p-0 text-primary">
+            Use example
+          </button>
+        </div>
+        <textarea
+          [(ngModel)]="formData.records"
+          rows="20"
+          class="input font-mono resize-y min-h-[200px]"
+          [class.border-destructive]="formData.records && !isValidJson(formData.records)"></textarea>
+        <div class="flex justify-between items-start">
+          <p class="text-xs text-muted-foreground max-w-md">
+            Array of DNS record objects. Fields: <code class="font-mono">type</code>, <code class="font-mono">name</code>, <code class="font-mono">value</code>, <code class="font-mono">ttl</code>, <code class="font-mono">priority</code> (MX only), <code class="font-mono">_comment</code> (ignored at apply time).
+          </p>
+          <p *ngIf="formData.records && !isValidJson(formData.records)" class="text-xs text-destructive font-semibold">
+            Invalid JSON format
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-3 justify-end mt-8 pt-6 border-t border-border/50">
+      <button
+        (click)="cancelForm()"
+        class="btn-outline btn-md">
+        Cancel
+      </button>
+      <button
+        (click)="saveTemplate()"
+        [disabled]="!formData.name || !isValidJson(formData.records)"
+        class="btn-primary btn-md">
+        {{ editingTemplate ? 'Update Template' : 'Create Template' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex justify-center items-center py-16">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <!-- Templates list -->
+  <div *ngIf="!loading" class="card overflow-hidden">
+    <div class="card-content p-0">
+      <table class="table">
+        <thead class="table-header">
+          <tr>
+            <th class="table-head">Name</th>
+            <th class="table-head">Description</th>
+            <th class="table-head">Records</th>
+            <th class="table-head">Created</th>
+            <th class="table-head text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="table-body">
+          <tr *ngFor="let template of templates" class="table-row">
+            <td class="table-cell font-medium">{{ template.name }}</td>
+            <td class="table-cell text-muted-foreground">{{ template.description || '—' }}</td>
+            <td class="table-cell">
+              <span class="badge badge-secondary">
+                {{ getRecordCount(template.records) }} records
+              </span>
+            </td>
+            <td class="table-cell text-muted-foreground">
+              {{ template.createdAt ? (template.createdAt | date:'mediumDate') : '—' }}
+            </td>
+            <td class="table-cell text-right">
+              <div class="flex gap-2 justify-end">
+                <button
+                  (click)="editTemplate(template)"
+                  class="btn-outline btn-sm text-primary">
+                  Edit
+                </button>
+                <button
+                  (click)="deleteTemplate(template)"
+                  class="btn-outline btn-sm text-destructive hover:text-destructive/90">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="templates.length === 0" class="table-row hover:bg-transparent">
+            <td colspan="5" class="table-cell text-center py-12 text-muted-foreground">
+              No DNS templates defined. Create a template to apply reusable record sets to domains.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
