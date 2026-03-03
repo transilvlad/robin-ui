@@ -46,6 +46,11 @@ export class SidebarComponent implements OnInit {
       label: 'DMARC',
       icon: 'dmarc',
       route: '/dmarc',
+      children: [
+        { label: 'Dashboard', icon: 'analytics', route: '/dmarc/dashboard' },
+        { label: 'Reports',   icon: 'template',  route: '/dmarc/reports'   },
+        { label: 'Sources',   icon: 'globe',     route: '/dmarc/sources'   },
+      ],
     },
     {
       label: 'Security',

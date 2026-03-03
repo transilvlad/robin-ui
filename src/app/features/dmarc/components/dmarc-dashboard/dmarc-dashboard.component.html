@@ -1,0 +1,184 @@
+<div class="page-root p-10">
+  <div class="max-w-[1400px] mx-auto space-y-8">
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-foreground">DMARC Dashboard</h1>
+        <p class="text-muted-foreground mt-1">
+          30-day compliance overview
+          @if (domain) { <span class="font-semibold text-foreground">— {{ domain }}</span> }
+        </p>
+      </div>
+
+      <!-- Quick-nav links -->
+      <div class="flex items-center gap-3">
+        <a
+          [routerLink]="['/dmarc/reports']"
+          [queryParams]="{ domain: domain }"
+          class="btn-outline btn-sm flex items-center gap-2"
+        >
+          Reports
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+        <a
+          [routerLink]="['/dmarc/sources']"
+          [queryParams]="{ domain: domain }"
+          class="btn-outline btn-sm flex items-center gap-2"
+        >
+          Sources
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      @if (loading) {
+        @for (i of [1,2,3,4]; track i) {
+          <div class="card p-6 h-32 flex flex-col space-y-4">
+            <div class="skeleton h-4 w-24"></div>
+            <div class="skeleton h-10 w-32"></div>
+            <div class="skeleton h-3 w-40"></div>
+          </div>
+        }
+      } @else if (summary) {
+
+        <!-- Compliance % -->
+        <div class="card p-6 flex flex-col space-y-2 border-l-4 border-l-green-500">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Compliance</span>
+            <div class="p-1.5 rounded bg-green-500/10 text-green-600">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>
+              </svg>
+            </div>
+          </div>
+          <div [class]="'text-3xl font-extrabold ' + complianceColor">
+            {{ summary.compliancePercent.toFixed(1) }}%
+          </div>
+          <div class="text-[10px] font-bold text-muted-foreground uppercase">30-day average</div>
+        </div>
+
+        <!-- Total Messages -->
+        <div class="card p-6 flex flex-col space-y-2 border-l-4 border-l-primary">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Messages</span>
+            <div class="p-1.5 rounded bg-primary/10 text-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="m22 6-10 7L2 6"/>
+              </svg>
+            </div>
+          </div>
+          <div class="text-3xl font-extrabold text-foreground">{{ summary.totalMessages.toLocaleString() }}</div>
+          <div class="text-[10px] font-bold text-muted-foreground uppercase">Evaluated last 30 days</div>
+        </div>
+
+        <!-- DMARC Pass -->
+        <div class="card p-6 flex flex-col space-y-2 border-l-4 border-l-green-500">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">DMARC Pass</span>
+            <div class="p-1.5 rounded bg-green-500/10 text-green-600">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m22 4-10 10.01-3-3"/>
+              </svg>
+            </div>
+          </div>
+          <div class="text-3xl font-extrabold text-green-600">{{ summary.dmarcPass.toLocaleString() }}</div>
+          <div class="text-[10px] font-bold text-muted-foreground uppercase">Aligned messages</div>
+        </div>
+
+        <!-- DMARC Fail -->
+        <div class="card p-6 flex flex-col space-y-2 border-l-4 border-l-destructive">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">DMARC Fail</span>
+            <div class="p-1.5 rounded bg-destructive/10 text-destructive">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/>
+              </svg>
+            </div>
+          </div>
+          <div class="text-3xl font-extrabold text-destructive">{{ summary.dmarcFail.toLocaleString() }}</div>
+          <div class="text-[10px] font-bold text-muted-foreground uppercase">Failed messages</div>
+        </div>
+
+      } @else if (!loading) {
+        <!-- Empty / Error State -->
+        <div class="col-span-full flex flex-col items-center justify-center py-24 text-center">
+          <div class="p-6 rounded-full bg-muted/50 text-muted-foreground/30 mb-6 border border-border">
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M8 11h8M8 14h5"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-bold text-foreground">No DMARC data</h3>
+          <p class="text-muted-foreground text-sm max-w-sm mt-2">
+            @if (error) { {{ error }} } @else { No data available for the selected domain. }
+          </p>
+        </div>
+      }
+    </div>
+
+    <!-- Secondary stats row -->
+    @if (!loading && summary) {
+      <div class="space-y-4">
+        <div class="flex items-center gap-3">
+          <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Alignment Breakdown</h3>
+          <div class="h-[1px] flex-1 bg-border/60"></div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div class="card p-4 bg-muted/20 border-none shadow-none">
+            <div class="text-[10px] font-bold text-muted-foreground uppercase mb-1">DKIM Aligned</div>
+            <div class="text-2xl font-extrabold text-foreground">{{ summary.dkimAligned.toLocaleString() }}</div>
+          </div>
+          <div class="card p-4 bg-muted/20 border-none shadow-none">
+            <div class="text-[10px] font-bold text-muted-foreground uppercase mb-1">SPF Aligned</div>
+            <div class="text-2xl font-extrabold text-foreground">{{ summary.spfAligned.toLocaleString() }}</div>
+          </div>
+          <div class="card p-4 bg-muted/20 border-none shadow-none">
+            <div class="text-[10px] font-bold text-muted-foreground uppercase mb-1">Unique Source IPs</div>
+            <div class="text-2xl font-extrabold text-foreground">{{ summary.uniqueSourceIps }}</div>
+          </div>
+          <div class="card p-4 bg-muted/20 border-none shadow-none">
+            <div class="text-[10px] font-bold text-muted-foreground uppercase mb-1">Unique Reporters</div>
+            <div class="text-2xl font-extrabold text-foreground">{{ summary.uniqueReporters }}</div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- 30-Day Trend Chart -->
+    <div class="space-y-4">
+      <div class="flex items-center gap-3">
+        <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">30-Day Trend</h3>
+        <div class="h-[1px] flex-1 bg-border/60"></div>
+      </div>
+
+      @if (loading) {
+        <div class="card p-6 h-72 flex items-center justify-center">
+          <svg class="animate-spin h-10 w-10 text-primary opacity-20" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </div>
+      } @else if (dailyStats?.points?.length) {
+        <div class="card p-6 shadow-xl shadow-green-500/[0.03]">
+          <div class="h-72">
+            <canvas #trendChart></canvas>
+          </div>
+        </div>
+      } @else {
+        <div class="card p-6 h-48 flex flex-col items-center justify-center text-center text-muted-foreground">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="mb-3 opacity-30">
+            <path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/>
+          </svg>
+          <p class="text-sm font-bold uppercase tracking-widest">No trend data available</p>
+        </div>
+      }
+    </div>
+
+  </div>
+</div>
