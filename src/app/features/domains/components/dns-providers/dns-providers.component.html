@@ -105,7 +105,7 @@
             </td>
             <td class="table-cell font-mono text-muted-foreground">{{ provider.credentials }}</td>
             <td class="table-cell text-muted-foreground">
-              {{ provider.createdAt ? (provider.createdAt | date:'mediumDate') : '—' }}
+              {{ provider.createdAt ? (provider.createdAt | appDate:'date') : '—' }}
             </td>
             <td class="table-cell text-right">
               <div class="flex gap-2 justify-end">

@@ -37,6 +37,9 @@ public class MtaStsWorker {
     @Column(name = "policy_version", length = 50)
     private String policyVersion;
 
+    @Column(name = "policy_content", columnDefinition = "TEXT")
+    private String policyContent;
+
     @Column(name = "deployed_at")
     private LocalDateTime deployedAt;
 

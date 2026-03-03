@@ -53,13 +53,13 @@
               </span>
             </td>
             <td class="table-cell text-muted-foreground">
-              {{ domain.dnsProviderId ? 'Provider #' + domain.dnsProviderId : '—' }}
+              {{ getProviderName(domain.dnsProviderId) }}
             </td>
             <td class="table-cell text-muted-foreground">
-              {{ domain.lastHealthCheck ? (domain.lastHealthCheck | date:'short') : '—' }}
+              {{ domain.lastHealthCheck | appDate }}
             </td>
             <td class="table-cell text-muted-foreground">
-              {{ domain.createdAt ? (domain.createdAt | date:'mediumDate') : '—' }}
+              {{ domain.createdAt | appDate:'date' }}
             </td>
             <td class="table-cell text-right">
               <button

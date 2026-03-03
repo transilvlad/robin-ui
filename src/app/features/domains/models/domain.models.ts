@@ -152,6 +152,7 @@ export const MtaStsWorkerSchema = z.object({
   workerId: z.string().nullable().optional(),
   policyMode: z.nativeEnum(MtaStsPolicyMode),
   policyVersion: z.string().nullable().optional(),
+  policyContent: z.string().nullable().optional(),
   deployedAt: TimestampStringSchema.nullable().optional(),
   status: z.nativeEnum(MtaStsWorkerStatus),
 });

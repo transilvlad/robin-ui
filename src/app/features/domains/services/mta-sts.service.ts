@@ -30,7 +30,14 @@ export class MtaStsService {
   }
 
   updatePolicy(domainId: number, policyMode: 'testing' | 'enforce' | 'none'): Observable<Result<MtaStsWorker, Error>> {
-    return this.http.put<MtaStsWorker>(`${this.base}/${domainId}/mta-sts`, { policyMode }).pipe(
+    return this.http.put<MtaStsWorker>(`${this.base}/${domainId}/mta-sts/policy-mode`, { policyMode }).pipe(
+      map(r => Ok(r)),
+      catchError(e => of(Err(e)))
+    );
+  }
+
+  updatePolicyContent(domainId: number, content: string): Observable<Result<MtaStsWorker, Error>> {
+    return this.http.put<MtaStsWorker>(`${this.base}/${domainId}/mta-sts/policy-content`, { content }).pipe(
       map(r => Ok(r)),
       catchError(e => of(Err(e)))
     );

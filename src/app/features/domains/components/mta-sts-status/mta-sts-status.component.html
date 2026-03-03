@@ -51,7 +51,7 @@
           <div class="flex justify-between items-center">
             <dt class="text-sm text-muted-foreground">Deployed At</dt>
             <dd class="text-sm font-medium">
-              {{ worker.deployedAt ? (worker.deployedAt | date:'medium') : '—' }}
+              {{ worker.deployedAt ? (worker.deployedAt | appDate) : '—' }}
             </dd>
           </div>
         </dl>
@@ -67,24 +67,81 @@
       </ng-template>
     </div>
 
+    <!-- Worker configuration (policy content) -->
+    <div *ngIf="worker" class="card p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-base font-semibold">Worker Configuration</h3>
+        <div class="flex gap-2">
+          <button
+            *ngIf="!editingContent"
+            (click)="startEditContent()"
+            class="btn-outline btn-sm">
+            Edit
+          </button>
+          <ng-container *ngIf="editingContent">
+            <button (click)="cancelEditContent()" class="btn-outline btn-sm">Cancel</button>
+            <button
+              (click)="saveContent()"
+              [disabled]="savingContent"
+              class="btn-primary btn-sm">
+              {{ savingContent ? 'Saving…' : 'Save' }}
+            </button>
+          </ng-container>
+        </div>
+      </div>
+
+      <p class="text-xs text-muted-foreground mb-3">
+        This is the MTA-STS policy served by the Cloudflare Worker
+        <span class="font-mono">{{ worker.workerName }}</span> at
+        <span class="font-mono">/.well-known/mta-sts.txt</span>.
+        Saving will update the Cloudflare KV store immediately.
+      </p>
+
+      <div *ngIf="contentError" class="alert alert-destructive mb-3 text-sm">
+        {{ contentError }}
+      </div>
+
+      <textarea
+        *ngIf="editingContent"
+        [(ngModel)]="editedContent"
+        rows="10"
+        class="input font-mono text-xs w-full resize-y"
+        spellcheck="false"></textarea>
+
+      <pre *ngIf="!editingContent"
+        class="bg-muted/40 border border-border/50 rounded-md p-4 text-xs font-mono whitespace-pre overflow-x-auto max-h-64">{{ worker.policyContent || '(policy content not yet available — re-deploy to generate)' }}</pre>
+    </div>
+
     <!-- Policy mode configuration -->
     <div class="card p-6">
-      <h3 class="text-base font-semibold mb-6">Policy Configuration</h3>
+      <h3 class="text-base font-semibold mb-4">Policy Configuration</h3>
+
+      <!-- Cloudflare API token requirements notice -->
+      <div class="flex gap-3 p-4 mb-6 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-800">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+        <div class="text-sm text-amber-800 dark:text-amber-300 space-y-1">
+          <p class="font-semibold">Cloudflare API token requirements</p>
+          <p>Deploying MTA-STS requires an API token with the following permissions — Zone Edit alone is not sufficient:</p>
+          <ul class="list-disc list-inside mt-1 space-y-0.5 text-amber-700 dark:text-amber-400">
+            <li><span class="font-medium">Account &rsaquo; Workers KV Storage:</span> Edit</li>
+            <li><span class="font-medium">Account &rsaquo; Workers Scripts:</span> Edit</li>
+            <li><span class="font-medium">Zone &rsaquo; DNS:</span> Edit</li>
+            <li><span class="font-medium">Zone &rsaquo; Workers Routes:</span> Edit</li>
+          </ul>
+          <p class="mt-1">Configure the token under <span class="font-medium">Cloudflare &rsaquo; My Profile &rsaquo; API Tokens</span> and update your DNS provider credentials in Robin.</p>
+        </div>
+      </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div
           *ngFor="let mode of policyModes"
           (click)="selectedPolicyMode = mode.value"
           class="flex flex-col gap-2 p-4 rounded-lg border cursor-pointer transition-all"
-          [class.border-primary]="selectedPolicyMode === mode.value"
-          [class.bg-primary/5]="selectedPolicyMode === mode.value"
-          [class.border-border]="selectedPolicyMode !== mode.value"
-          [class.hover:border-border/80]="selectedPolicyMode !== mode.value">
+          [class.policy-card--active]="selectedPolicyMode === mode.value">
           <div class="flex justify-between items-start">
             <p class="text-sm font-bold uppercase tracking-tight">{{ mode.label }}</p>
             <div class="w-4 h-4 rounded-full border-2"
-                 [class.border-primary]="selectedPolicyMode === mode.value"
-                 [class.bg-primary]="selectedPolicyMode === mode.value"
-                 [class.border-muted]="selectedPolicyMode !== mode.value"></div>
+                 [class.policy-dot--active]="selectedPolicyMode === mode.value"
+                 [class.policy-dot--inactive]="selectedPolicyMode !== mode.value"></div>
           </div>
           <p class="text-xs text-muted-foreground leading-relaxed">{{ mode.description }}</p>
         </div>

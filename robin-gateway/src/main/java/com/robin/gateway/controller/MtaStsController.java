@@ -1,6 +1,7 @@
 package com.robin.gateway.controller;
 
 import com.robin.gateway.model.MtaStsWorker;
+import com.robin.gateway.model.dto.MtaStsPolicyContentRequest;
 import com.robin.gateway.model.dto.MtaStsPolicyModeRequest;
 import com.robin.gateway.service.MtaStsService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,12 +46,32 @@ public class MtaStsController {
     @PostMapping("/deploy")
     @PreAuthorize("hasAuthority('MANAGE_DOMAINS') or hasRole('ADMIN')")
     @Operation(summary = "Deploy MTA-STS worker", description = "Initiate the deployment of a Cloudflare Worker for MTA-STS")
-    public Mono<ResponseEntity<MtaStsWorker>> deployWorker(@PathVariable Long domainId) {
-        log.info("Deploying MTA-STS worker for domain id: {}", domainId);
-        return mtaStsService.initiateWorkerDeployment(domainId)
+    public Mono<ResponseEntity<MtaStsWorker>> deployWorker(
+            @PathVariable Long domainId,
+            @Valid @RequestBody MtaStsPolicyModeRequest request) {
+        log.info("Deploying MTA-STS worker for domain id: {} with policy mode: {}", domainId, request.getPolicyMode());
+        return mtaStsService.initiateWorkerDeployment(domainId, request.getPolicyMode())
                 .map(worker -> ResponseEntity.status(HttpStatus.CREATED).body(worker))
                 .onErrorResume(e -> {
                     log.error("Error deploying MTA-STS worker for domain id: {}", domainId, e);
+                    if (e.getMessage().contains("not found")) {
+                        return Mono.just(ResponseEntity.notFound().build());
+                    }
+                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+                });
+    }
+
+    @PutMapping("/policy-content")
+    @PreAuthorize("hasAuthority('MANAGE_DOMAINS') or hasRole('ADMIN')")
+    @Operation(summary = "Update MTA-STS policy content", description = "Replace the policy content stored in Cloudflare KV and in the local database")
+    public Mono<ResponseEntity<MtaStsWorker>> updatePolicyContent(
+            @PathVariable Long domainId,
+            @Valid @RequestBody MtaStsPolicyContentRequest request) {
+        log.info("Updating MTA-STS policy content for domain id: {}", domainId);
+        return mtaStsService.updatePolicyContent(domainId, request.getContent())
+                .map(ResponseEntity::ok)
+                .onErrorResume(e -> {
+                    log.error("Error updating MTA-STS policy content for domain id: {}", domainId, e);
                     if (e.getMessage().contains("not found")) {
                         return Mono.just(ResponseEntity.notFound().build());
                     }

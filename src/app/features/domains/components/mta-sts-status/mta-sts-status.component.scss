@@ -3,6 +3,23 @@
   color: var(--text-main);
 }
 
+// ─── Policy mode selection cards ─────────────────────────────────────────────
+
+.policy-card--active {
+  border-color: var(--accent) !important;
+  background: var(--accent-dim);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.policy-dot--active {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.policy-dot--inactive {
+  border-color: var(--border-mid, hsl(var(--border)));
+}
+
 .page-root {
   background: transparent;
   min-height: 100vh;

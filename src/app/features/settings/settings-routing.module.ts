@@ -3,11 +3,13 @@ import { RouterModule, Routes } from '@angular/router';
 import { ServerConfigComponent } from './server/server-config.component';
 import { UserListComponent } from './users/user-list.component';
 import { DovecotConfigComponent } from './dovecot/dovecot-config.component';
+import { PreferencesSettingsComponent } from './preferences/preferences-settings.component';
 
 const routes: Routes = [
   { path: 'server', component: ServerConfigComponent },
   { path: 'users', component: UserListComponent },
   { path: 'dovecot', component: DovecotConfigComponent },
+  { path: 'preferences', component: PreferencesSettingsComponent },
   { path: '', redirectTo: 'server', pathMatch: 'full' },
 ];
 

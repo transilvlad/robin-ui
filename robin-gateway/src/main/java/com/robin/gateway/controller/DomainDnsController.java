@@ -3,6 +3,7 @@ package com.robin.gateway.controller;
 import com.robin.gateway.model.DomainDnsRecord;
 import com.robin.gateway.model.dto.DomainDnsRecordRequest;
 import com.robin.gateway.repository.DomainDnsRecordRepository;
+import com.robin.gateway.service.DomainSyncService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +29,7 @@ import java.util.Map;
 public class DomainDnsController {
 
     private final DomainDnsRecordRepository domainDnsRecordRepository;
+    private final DomainSyncService domainSyncService;
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('VIEW_DOMAINS', 'MANAGE_DNS_RECORDS') or hasRole('ADMIN')")
@@ -102,21 +104,44 @@ public class DomainDnsController {
                 });
     }
 
+    @PostMapping("/sync/managed")
+    @PreAuthorize("hasAuthority('MANAGE_DNS_RECORDS') or hasRole('ADMIN')")
+    @Operation(summary = "Sync managed DNS records", description = "Push all managed non-NS records to the domain's configured Cloudflare DNS provider")
+    public Mono<ResponseEntity<Map<String, Object>>> syncManagedRecords(@PathVariable Long domainId) {
+        log.info("Syncing managed DNS records for domain {}", domainId);
+        return domainSyncService.syncManagedRecords(domainId)
+                .map(ResponseEntity::ok)
+                .onErrorResume(e -> {
+                    log.error("Managed DNS sync failed for domain {}: {}", domainId, e.getMessage());
+                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(Map.of("error", e.getMessage())));
+                });
+    }
+
+    @PostMapping("/sync/ns")
+    @PreAuthorize("hasAuthority('MANAGE_DNS_RECORDS') or hasRole('ADMIN')")
+    @Operation(summary = "Sync NS records", description = "Push NS records to a Cloudflare provider, updating the domain's NS provider assignment if needed")
+    public Mono<ResponseEntity<Map<String, Object>>> syncNsRecords(
+            @PathVariable Long domainId,
+            @RequestParam Long nsProviderId) {
+        log.info("Syncing NS records for domain {} using provider {}", domainId, nsProviderId);
+        return domainSyncService.syncNsRecords(domainId, nsProviderId)
+                .map(ResponseEntity::ok)
+                .onErrorResume(e -> {
+                    log.error("NS sync failed for domain {}: {}", domainId, e.getMessage());
+                    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(Map.of("error", e.getMessage())));
+                });
+    }
+
     @DeleteMapping("/{recordId}")
     @PreAuthorize("hasAuthority('MANAGE_DNS_RECORDS') or hasRole('ADMIN')")
-    @Operation(summary = "Delete DNS record", description = "Remove a DNS record from a domain")
+    @Operation(summary = "Delete DNS record", description = "Remove a DNS record from a domain, including from Cloudflare if it is a managed synced record")
     public Mono<ResponseEntity<Map<String, String>>> deleteRecord(
             @PathVariable Long domainId,
             @PathVariable Long recordId) {
         log.info("Deleting DNS record {} for domain id: {}", recordId, domainId);
-        return Mono.fromCallable(() -> {
-            DomainDnsRecord record = domainDnsRecordRepository.findById(recordId)
-                    .filter(r -> r.getDomainId().equals(domainId))
-                    .orElseThrow(() -> new RuntimeException("DNS record not found: " + recordId));
-            domainDnsRecordRepository.delete(record);
-            return null;
-        })
-                .subscribeOn(Schedulers.boundedElastic())
+        return domainSyncService.deleteDnsRecord(domainId, recordId)
                 .then(Mono.just(ResponseEntity.ok(Map.of("message", "DNS record deleted successfully"))))
                 .onErrorResume(e -> {
                     log.error("Error deleting DNS record {} for domain id: {}", recordId, domainId, e);

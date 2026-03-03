@@ -79,19 +79,19 @@
             <div class="flex justify-between">
               <dt class="text-sm text-muted-foreground">Last Health Check</dt>
               <dd class="text-sm font-medium">
-                {{ domain.lastHealthCheck ? (domain.lastHealthCheck | date:'medium') : '—' }}
+                {{ domain.lastHealthCheck ? (domain.lastHealthCheck | appDate) : '—' }}
               </dd>
             </div>
             <div class="flex justify-between">
               <dt class="text-sm text-muted-foreground">Created</dt>
               <dd class="text-sm font-medium">
-                {{ domain.createdAt ? (domain.createdAt | date:'medium') : '—' }}
+                {{ domain.createdAt ? (domain.createdAt | appDate) : '—' }}
               </dd>
             </div>
             <div class="flex justify-between">
               <dt class="text-sm text-muted-foreground">Updated</dt>
               <dd class="text-sm font-medium">
-                {{ domain.updatedAt ? (domain.updatedAt | date:'medium') : '—' }}
+                {{ domain.updatedAt ? (domain.updatedAt | appDate) : '—' }}
               </dd>
             </div>
           </dl>

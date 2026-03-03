@@ -18,6 +18,12 @@ export class MtaStsStatusComponent implements OnInit, OnChanges {
 
   selectedPolicyMode: 'testing' | 'enforce' | 'none' = 'testing';
 
+  // Policy content editing
+  editingContent = false;
+  editedContent = '';
+  savingContent = false;
+  contentError: string | null = null;
+
   policyModes: Array<{ value: 'testing' | 'enforce' | 'none'; label: string; description: string }> = [
     { value: 'testing', label: 'Testing',  description: 'Report-only mode. No enforcement.' },
     { value: 'enforce', label: 'Enforce',  description: 'Reject non-conforming connections.' },
@@ -45,6 +51,7 @@ export class MtaStsStatusComponent implements OnInit, OnChanges {
       if (result.ok) {
         this.worker = result.value;
         this.selectedPolicyMode = result.value.policyMode;
+        this.editedContent = result.value.policyContent ?? '';
       } else {
         // Worker may not exist yet; treat 404-like cases gracefully
         this.worker = null;
@@ -70,6 +77,32 @@ export class MtaStsStatusComponent implements OnInit, OnChanges {
         this.worker = result.value;
       } else {
         this.error = 'Failed to update policy mode';
+      }
+    });
+  }
+
+  startEditContent(): void {
+    this.editedContent = this.worker?.policyContent ?? '';
+    this.editingContent = true;
+    this.contentError = null;
+  }
+
+  cancelEditContent(): void {
+    this.editingContent = false;
+    this.contentError = null;
+  }
+
+  saveContent(): void {
+    if (!this.editedContent.trim()) return;
+    this.savingContent = true;
+    this.contentError = null;
+    this.mtaStsService.updatePolicyContent(this.domainId, this.editedContent).subscribe(result => {
+      this.savingContent = false;
+      if (result.ok) {
+        this.worker = result.value;
+        this.editingContent = false;
+      } else {
+        this.contentError = 'Failed to save policy content';
       }
     });
   }

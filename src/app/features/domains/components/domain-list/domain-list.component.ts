@@ -63,6 +63,7 @@ export class DomainListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDomains();
+    this.loadProviders();
   }
 
   loadDomains(): void {
@@ -76,6 +77,20 @@ export class DomainListComponent implements OnInit {
         this.error = 'Failed to load domains';
       }
     });
+  }
+
+  loadProviders(): void {
+    this.dnsProviderService.getProviders().subscribe(result => {
+      if (result.ok) {
+        this.availableProviders = result.value;
+      }
+    });
+  }
+
+  getProviderName(id: number | null | undefined): string {
+    if (id == null) return '—';
+    const provider = this.availableProviders.find(p => p.id === id);
+    return provider ? provider.name : '—';
   }
 
   viewDomain(domain: Domain): void {
@@ -133,9 +148,6 @@ export class DomainListComponent implements OnInit {
       detectedNsProviderType: 'UNKNOWN', suggestedProvider: null, availableProviders: [],
       allRecords: [], detectedDkimSelectors: [],
     };
-    this.dnsProviderService.getProviders().subscribe(r => {
-      if (r.ok) this.availableProviders = r.value;
-    });
   }
 
   resetDetection(): void {

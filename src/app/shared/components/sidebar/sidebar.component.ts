@@ -43,6 +43,11 @@ export class SidebarComponent implements OnInit {
       ],
     },
     {
+      label: 'DMARC',
+      icon: 'dmarc',
+      route: '/dmarc',
+    },
+    {
       label: 'Security',
       icon: 'shield',
       route: '/security',
@@ -80,6 +85,7 @@ export class SidebarComponent implements OnInit {
         { label: 'Dovecot',       icon: 'dovecot',  route: '/settings/dovecot' },
         { label: 'DNS Providers', icon: 'server',   route: '/domains/dns-providers' },
         { label: 'DNS Templates', icon: 'template', route: '/domains/dns-templates' },
+        { label: 'Preferences',   icon: 'tune',     route: '/settings/preferences' },
       ],
     },
   ];
@@ -167,6 +173,8 @@ export class SidebarComponent implements OnInit {
         'M22 11.08V12a10 10 0 1 1-5.93-9.14 M22 4L12 14.01l-3-3',
       dkim:
         'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M9 12l2 2 4-4',
+      dmarc:
+        'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M8 11h8 M8 14h5',
     };
     return icons[icon] ?? icons['dashboard'];
   }

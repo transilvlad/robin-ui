@@ -13,6 +13,8 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -126,6 +128,20 @@ public class CloudflareApiClient {
                         return Mono.empty();
                     }
                     return Mono.error(new RuntimeException("Failed to update DNS record: " + node.get("errors").toString()));
+                });
+    }
+
+    public Mono<List<String>> findDnsRecords(String zoneId, String type, String name, String apiToken) {
+        return createGetRequest("/zones/" + zoneId + "/dns_records?type=" + type + "&name=" + name, apiToken)
+                .retrieve()
+                .bodyToMono(JsonNode.class)
+                .map(node -> {
+                    if (!node.get("success").asBoolean()) {
+                        throw new RuntimeException("Failed to list DNS records: " + node.get("errors").toString());
+                    }
+                    List<String> ids = new ArrayList<>();
+                    node.get("result").forEach(r -> ids.add(r.get("id").asText()));
+                    return ids;
                 });
     }
 

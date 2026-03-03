@@ -50,6 +50,10 @@ export enum Permission {
   MANAGE_DNS_RECORDS = 'MANAGE_DNS_RECORDS',
   MANAGE_DNS_PROVIDERS = 'MANAGE_DNS_PROVIDERS',
   MANAGE_DKIM = 'MANAGE_DKIM',
+
+  // DMARC
+  VIEW_DMARC = 'VIEW_DMARC',
+  MANAGE_DMARC = 'MANAGE_DMARC',
 }
 
 // Zod schemas for runtime validation

@@ -113,7 +113,7 @@ class MtaStsIntegrationTest {
     @DisplayName("Update policy mode returns 404 when no worker exists")
     void testUpdatePolicyModeNotDeployed() {
         webTestClient.put()
-                .uri("/api/v1/domains/" + domainId + "/mta-sts/policy")
+                .uri("/api/v1/domains/" + domainId + "/mta-sts/policy-mode")
                 .header("Authorization", "Bearer " + adminToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(Map.of("policyMode", "testing"))

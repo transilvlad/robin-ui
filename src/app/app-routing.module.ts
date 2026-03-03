@@ -59,6 +59,11 @@ const routes: Routes = [
     canActivate: [authGuard],
   },
   {
+    path: 'dmarc',
+    loadChildren: () =>
+      import('./features/dmarc/dmarc.routes').then((m) => m.DMARC_ROUTES),
+  },
+  {
     path: '',
     redirectTo: '/dashboard',
     pathMatch: 'full',

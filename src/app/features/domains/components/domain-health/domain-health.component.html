@@ -48,7 +48,7 @@
           </p>
           <p *ngIf="check.lastChecked" class="text-[10px] text-muted-foreground/60 mt-3 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            Checked {{ check.lastChecked | date:'short' }}
+            Checked {{ check.lastChecked | appDate }}
           </p>
         </div>
       </div>

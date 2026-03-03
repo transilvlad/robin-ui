@@ -243,35 +243,36 @@ public class DkimService {
     private Mono<Void> doPublishToDns(Domain domain, DnsProvider provider, String credentialsJson, String recordName, String recordValue) {
         try {
             JsonNode creds = objectMapper.readTree(credentialsJson);
-            
+            String quotedValue = "\"" + recordValue + "\"";
+
             if (provider.getType() == DnsProviderType.CLOUDFLARE) {
                 String apiToken = creds.get("apiToken").asText();
                 return cloudflareApiClient.getZoneId(domain.getDomain(), apiToken)
-                        .flatMap(zoneId -> cloudflareApiClient.createDnsRecord(zoneId, "TXT", recordName, recordValue, 1, apiToken))
-                        .flatMap(recordId -> saveDnsRecordLocally(domain.getId(), "TXT", recordName, recordValue, recordId))
+                        .flatMap(zoneId -> cloudflareApiClient.createDnsRecord(zoneId, "TXT", recordName, quotedValue, 1, apiToken))
+                        .flatMap(recordId -> saveDnsRecordLocally(domain.getId(), "TXT", recordName, quotedValue, recordId))
                         .then();
             } else if (provider.getType() == DnsProviderType.AWS_ROUTE53) {
                 String accessKey = creds.get("accessKeyId").asText();
                 String secretKey = creds.get("secretAccessKey").asText();
                 String region = creds.has("region") ? creds.get("region").asText() : "us-east-1";
-                
+
                 return Mono.fromFuture(() -> route53ApiClient.getHostedZoneId(domain.getDomain(), accessKey, secretKey, region))
                         .flatMap(zoneId -> {
-                            ResourceRecord record = ResourceRecord.builder().value("\"" + recordValue + "\"").build();
+                            ResourceRecord record = ResourceRecord.builder().value(quotedValue).build();
                             ResourceRecordSet recordSet = ResourceRecordSet.builder()
                                     .name(recordName + "." + domain.getDomain() + ".")
                                     .type(RRType.TXT)
                                     .ttl(3600L)
                                     .resourceRecords(record)
                                     .build();
-                                    
+
                             Change change = Change.builder()
                                     .action(ChangeAction.UPSERT)
                                     .resourceRecordSet(recordSet)
                                     .build();
-                                    
+
                             return Mono.fromFuture(() -> route53ApiClient.changeResourceRecordSets(zoneId, Collections.singletonList(change), accessKey, secretKey, region))
-                                    .flatMap(changeInfo -> saveDnsRecordLocally(domain.getId(), "TXT", recordName, recordValue, changeInfo.id()))
+                                    .flatMap(changeInfo -> saveDnsRecordLocally(domain.getId(), "TXT", recordName, quotedValue, changeInfo.id()))
                                     .then();
                         });
             }

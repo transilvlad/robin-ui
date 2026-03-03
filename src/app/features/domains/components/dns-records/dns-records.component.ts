@@ -1,6 +1,7 @@
 import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
-import { DomainService } from '../../services/domain.service';
-import { DomainDnsRecord } from '../../models/domain.models';
+import { DomainService, SyncResult } from '../../services/domain.service';
+import { DnsProviderService } from '../../services/dns-provider.service';
+import { DomainDnsRecord, DnsProvider, Domain, DnsProviderType } from '../../models/domain.models';
 
 @Component({
   selector: 'app-dns-records',
@@ -12,6 +13,8 @@ export class DnsRecordsComponent implements OnInit, OnChanges {
   @Input() domainId!: number;
 
   records: DomainDnsRecord[] = [];
+  domain: Domain | null = null;
+  providers: DnsProvider[] = [];
   loading = false;
   error: string | null = null;
 
@@ -27,7 +30,46 @@ export class DnsRecordsComponent implements OnInit, OnChanges {
 
   recordTypes = ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS', 'SPF', 'DKIM', 'DMARC', 'SRV'];
 
-  constructor(private domainService: DomainService) {}
+  // Delete record state
+  recordToDelete: DomainDnsRecord | null = null;
+  deleteRecordLoading = false;
+  deleteRecordError: string | null = null;
+
+  // Sync state
+  syncingManaged = false;
+  syncingNs = false;
+  syncResult: SyncResult | null = null;
+  syncError: string | null = null;
+  showNsProviderPicker = false;
+  selectedNsProviderId: number | null = null;
+
+  get mainRecords(): DomainDnsRecord[] {
+    return this.records.filter(r => r.recordType !== 'NS');
+  }
+
+  get nsRecords(): DomainDnsRecord[] {
+    return this.records.filter(r => r.recordType === 'NS');
+  }
+
+  get cloudflareProviders(): DnsProvider[] {
+    return this.providers.filter(p => p.type === DnsProviderType.CLOUDFLARE);
+  }
+
+  get canSyncManaged(): boolean {
+    return this.domain?.dnsProviderId != null;
+  }
+
+  /** True when the domain has no nsProviderId or the assigned provider is not Cloudflare. */
+  get needsNsProviderSelection(): boolean {
+    if (!this.domain?.nsProviderId) return true;
+    const current = this.providers.find(p => p.id === this.domain!.nsProviderId);
+    return !current || current.type !== DnsProviderType.CLOUDFLARE;
+  }
+
+  constructor(
+    private domainService: DomainService,
+    private dnsProviderService: DnsProviderService,
+  ) {}
 
   ngOnInit(): void {
     this.loadRecords();
@@ -49,6 +91,17 @@ export class DnsRecordsComponent implements OnInit, OnChanges {
         this.records = result.value;
       } else {
         this.error = 'Failed to load DNS records';
+      }
+    });
+    this.domainService.getDomain(this.domainId).subscribe(result => {
+      if (result.ok) this.domain = result.value;
+    });
+    this.dnsProviderService.getProviders().subscribe(result => {
+      if (result.ok) {
+        this.providers = result.value;
+        if (!this.selectedNsProviderId) {
+          this.selectedNsProviderId = this.cloudflareProviders[0]?.id ?? null;
+        }
       }
     });
   }
@@ -94,13 +147,79 @@ export class DnsRecordsComponent implements OnInit, OnChanges {
     this.showAddForm = true;
   }
 
-  deleteRecord(record: DomainDnsRecord): void {
-    if (!confirm(`Delete ${record.recordType} record "${record.name}"?`)) return;
-    this.domainService.deleteDnsRecord(this.domainId, record.id).subscribe(result => {
+  confirmDeleteRecord(record: DomainDnsRecord): void {
+    this.recordToDelete = record;
+    this.deleteRecordError = null;
+  }
+
+  cancelDeleteRecord(): void {
+    this.recordToDelete = null;
+    this.deleteRecordError = null;
+    this.deleteRecordLoading = false;
+  }
+
+  executeDeleteRecord(): void {
+    if (!this.recordToDelete) return;
+    this.deleteRecordLoading = true;
+    this.deleteRecordError = null;
+    this.domainService.deleteDnsRecord(this.domainId, this.recordToDelete.id).subscribe(result => {
+      this.deleteRecordLoading = false;
       if (result.ok) {
-        this.records = this.records.filter(r => r.id !== record.id);
+        this.records = this.records.filter(r => r.id !== this.recordToDelete!.id);
+        this.cancelDeleteRecord();
       } else {
-        this.error = 'Failed to delete DNS record';
+        this.deleteRecordError = 'Failed to delete DNS record. Please try again.';
+      }
+    });
+  }
+
+  // ─── Sync ────────────────────────────────────────────────────────────────────
+
+  syncManagedRecords(): void {
+    this.syncingManaged = true;
+    this.syncResult = null;
+    this.syncError = null;
+    this.domainService.syncManagedRecords(this.domainId).subscribe(result => {
+      this.syncingManaged = false;
+      if (result.ok) {
+        this.syncResult = result.value;
+      } else {
+        this.syncError = result.error?.message ?? 'Sync failed';
+      }
+    });
+  }
+
+  openNsSync(): void {
+    this.syncResult = null;
+    this.syncError = null;
+    if (this.needsNsProviderSelection) {
+      this.showNsProviderPicker = true;
+    } else {
+      this.doSyncNs(this.domain!.nsProviderId!);
+    }
+  }
+
+  confirmNsSync(): void {
+    if (!this.selectedNsProviderId) return;
+    this.doSyncNs(this.selectedNsProviderId);
+  }
+
+  cancelNsProviderPicker(): void {
+    this.showNsProviderPicker = false;
+  }
+
+  private doSyncNs(nsProviderId: number): void {
+    this.syncingNs = true;
+    this.showNsProviderPicker = false;
+    this.domainService.syncNsRecords(this.domainId, nsProviderId).subscribe(result => {
+      this.syncingNs = false;
+      if (result.ok) {
+        this.syncResult = result.value;
+        if (this.domain) {
+          this.domain = { ...this.domain, nsProviderId };
+        }
+      } else {
+        this.syncError = result.error?.message ?? 'NS sync failed';
       }
     });
   }

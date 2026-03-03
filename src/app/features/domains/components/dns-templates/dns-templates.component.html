@@ -111,7 +111,7 @@
               </span>
             </td>
             <td class="table-cell text-muted-foreground">
-              {{ template.createdAt ? (template.createdAt | date:'mediumDate') : '—' }}
+              {{ template.createdAt ? (template.createdAt | appDate:'date') : '—' }}
             </td>
             <td class="table-cell text-right">
               <div class="flex gap-2 justify-end">

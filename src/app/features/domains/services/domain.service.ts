@@ -5,6 +5,12 @@ import { environment } from '@environments/environment';
 import { Domain, DomainDnsRecord, DnsRecordEntry, DomainLookupResult, PageResponse } from '../models/domain.models';
 import { Ok, Err, Result } from '@core/models/auth.model';
 
+export interface SyncResult {
+  synced: number;
+  failed: number;
+  errors: string[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class DomainService {
   private readonly base = environment.apiUrl + environment.endpoints.domains;
@@ -76,6 +82,21 @@ export class DomainService {
   deleteDnsRecord(domainId: number, recordId: number): Observable<Result<void, Error>> {
     return this.http.delete<void>(`${this.base}/${domainId}/dns/${recordId}`).pipe(
       map(() => Ok(undefined as void)),
+      catchError(e => of(Err(e)))
+    );
+  }
+
+  syncManagedRecords(domainId: number): Observable<Result<SyncResult, Error>> {
+    return this.http.post<SyncResult>(`${this.base}/${domainId}/dns/sync/managed`, {}).pipe(
+      map(r => Ok(r)),
+      catchError(e => of(Err(e)))
+    );
+  }
+
+  syncNsRecords(domainId: number, nsProviderId: number): Observable<Result<SyncResult, Error>> {
+    const params = new HttpParams().set('nsProviderId', nsProviderId);
+    return this.http.post<SyncResult>(`${this.base}/${domainId}/dns/sync/ns`, null, { params }).pipe(
+      map(r => Ok(r)),
       catchError(e => of(Err(e)))
     );
   }
