@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
@@ -40,6 +42,21 @@ public class CloudflareApiClient {
         return webClient.delete().uri(path).header(HttpHeaders.AUTHORIZATION, "Bearer " + token);
     }
 
+    public Mono<String> getAccountId(String apiToken) {
+        return createGetRequest("/accounts", apiToken)
+                .retrieve()
+                .bodyToMono(JsonNode.class)
+                .map(node -> {
+                    if (node.get("success").asBoolean()
+                            && node.get("result").isArray()
+                            && node.get("result").size() > 0) {
+                        return node.get("result").get(0).get("id").asText();
+                    }
+                    throw new RuntimeException("No Cloudflare accounts found for the provided API token. "
+                            + "Ensure the token has 'Account' read permissions.");
+                });
+    }
+
     public Mono<String> getZoneId(String domain, String apiToken) {
         return createGetRequest("/zones?name=" + domain, apiToken)
                 .retrieve()
@@ -56,7 +73,7 @@ public class CloudflareApiClient {
         Map<String, Object> body = Map.of(
                 "type", type,
                 "name", name,
-                "content", content,
+                "content", "TXT".equals(type) ? quoteTxtValue(content) : content,
                 "ttl", ttl != null ? ttl : 1 // 1 is 'automatic' in Cloudflare
         );
 
@@ -71,6 +88,22 @@ public class CloudflareApiClient {
                         return node.get("result").get("id").asText();
                     }
                     throw new RuntimeException("Failed to create DNS record: " + node.get("errors").toString());
+                })
+                .onErrorResume(WebClientResponseException.BadRequest.class,
+                        e -> findAndUpdateDnsRecord(zoneId, type, name, content, ttl, apiToken));
+    }
+
+    private Mono<String> findAndUpdateDnsRecord(String zoneId, String type, String name, String content, Integer ttl, String apiToken) {
+        return createGetRequest("/zones/" + zoneId + "/dns_records?type=" + type + "&name=" + name, apiToken)
+                .retrieve()
+                .bodyToMono(JsonNode.class)
+                .flatMap(node -> {
+                    if (node.get("success").asBoolean() && node.get("result").size() > 0) {
+                        String recordId = node.get("result").get(0).get("id").asText();
+                        return updateDnsRecord(zoneId, recordId, type, name, content, ttl, apiToken)
+                                .thenReturn(recordId);
+                    }
+                    throw new RuntimeException("DNS record '" + name + "' already exists but could not be found for update");
                 });
     }
 
@@ -78,7 +111,7 @@ public class CloudflareApiClient {
         Map<String, Object> body = Map.of(
                 "type", type,
                 "name", name,
-                "content", content,
+                "content", "TXT".equals(type) ? quoteTxtValue(content) : content,
                 "ttl", ttl != null ? ttl : 1
         );
 
@@ -124,12 +157,23 @@ public class CloudflareApiClient {
                 });
     }
 
-    public Mono<String> createWorkerScript(String accountId, String scriptName, String jsCode, String apiToken) {
+    public Mono<String> createWorkerScript(String accountId, String scriptName, String jsCode, String kvNamespaceId, String apiToken) {
+        // ES module workers require multipart/form-data upload with metadata declaring bindings.
+        // Uploading with application/javascript causes Cloudflare to reject the ES module syntax.
+        String metadata = String.format(
+                "{\"main_module\":\"worker.js\",\"bindings\":[{\"type\":\"kv_namespace\",\"name\":\"POLICY_KV\",\"namespace_id\":\"%s\"}]}",
+                kvNamespaceId
+        );
+        MultipartBodyBuilder builder = new MultipartBodyBuilder();
+        builder.part("metadata", metadata, MediaType.APPLICATION_JSON);
+        builder.part("worker.js", jsCode, MediaType.parseMediaType("application/javascript+module"))
+                .filename("worker.js");
+
         return webClient.put()
                 .uri("/accounts/{accountId}/workers/scripts/{scriptName}", accountId, scriptName)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken)
-                .contentType(MediaType.parseMediaType("application/javascript"))
-                .bodyValue(jsCode)
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(builder.build()))
                 .retrieve()
                 .bodyToMono(JsonNode.class)
                 .map(node -> {
@@ -140,23 +184,53 @@ public class CloudflareApiClient {
                 });
     }
 
-    public Mono<Void> createWorkerRoute(String zoneId, String pattern, String scriptName, String apiToken) {
+    public Mono<String> getWorkerScriptId(String accountId, String scriptName, String apiToken) {
+        return createGetRequest("/accounts/" + accountId + "/workers/scripts/" + scriptName, apiToken)
+                .retrieve()
+                .bodyToMono(JsonNode.class)
+                .flatMap(node -> {
+                    if (!node.get("success").asBoolean()) {
+                        return Mono.error(new RuntimeException("Failed to get worker script: " + node.get("errors")));
+                    }
+
+                    JsonNode result = node.get("result");
+                    if (result == null || result.isNull()) {
+                        return Mono.just(scriptName);
+                    }
+
+                    JsonNode idNode = result.get("id");
+                    if (idNode != null && !idNode.isNull() && !idNode.asText().isBlank()) {
+                        return Mono.just(idNode.asText());
+                    }
+
+                    return Mono.just(scriptName);
+                })
+                .onErrorResume(WebClientResponseException.NotFound.class, e -> Mono.empty());
+    }
+
+    public Mono<Void> addWorkerCustomDomain(String accountId, String hostname, String zoneId, String workerName, String apiToken) {
         Map<String, Object> body = Map.of(
-                "pattern", pattern,
-                "script", scriptName
+                "hostname", hostname,
+                "zone_id", zoneId,
+                "service", workerName,
+                "environment", "production"
         );
 
-        return webClient.post()
-                .uri("/zones/{zoneId}/workers/routes", zoneId)
+        return webClient.put()
+                .uri("/accounts/{accountId}/workers/domains", accountId)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + apiToken)
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(JsonNode.class)
                 .flatMap(node -> {
                     if (node.get("success").asBoolean()) {
-                        return Mono.empty();
+                        return Mono.<Void>empty();
                     }
-                    return Mono.error(new RuntimeException("Failed to create worker route: " + node.get("errors").toString()));
+                    return Mono.<Void>error(new RuntimeException("Failed to add custom domain to worker: " + node.get("errors").toString()));
+                })
+                .onErrorResume(WebClientResponseException.Conflict.class, e -> {
+                    log.info("Custom domain already attached to worker, continuing");
+                    return Mono.<Void>empty();
                 });
     }
 
@@ -174,7 +248,34 @@ public class CloudflareApiClient {
                         return node.get("result").get("id").asText();
                     }
                     throw new RuntimeException("Failed to create KV namespace: " + node.get("errors").toString());
+                })
+                .onErrorResume(WebClientResponseException.BadRequest.class,
+                        e -> findKvNamespaceByTitle(accountId, title, apiToken));
+    }
+
+    private Mono<String> findKvNamespaceByTitle(String accountId, String title, String apiToken) {
+        return createGetRequest("/accounts/" + accountId + "/storage/kv/namespaces", apiToken)
+                .retrieve()
+                .bodyToMono(JsonNode.class)
+                .map(node -> {
+                    if (node.get("success").asBoolean()) {
+                        for (JsonNode ns : node.get("result")) {
+                            if (title.equals(ns.get("title").asText())) {
+                                return ns.get("id").asText();
+                            }
+                        }
+                    }
+                    throw new RuntimeException("KV namespace '" + title + "' already exists but could not be found in account");
                 });
+    }
+
+    /** Wraps a TXT record value in double quotes if not already quoted. */
+    private String quoteTxtValue(String value) {
+        String trimmed = value.trim();
+        if (trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
+            return trimmed;
+        }
+        return "\"" + trimmed + "\"";
     }
 
     public Mono<Void> updateWorkerKv(String accountId, String namespaceId, String key, String value, String apiToken) {

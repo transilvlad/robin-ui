@@ -4,6 +4,7 @@ import com.robin.gateway.model.Alias;
 import com.robin.gateway.model.Domain;
 import com.robin.gateway.model.DnsProvider;
 import com.robin.gateway.model.DnsProviderType;
+import com.robin.gateway.model.MtaStsPolicyMode;
 import com.robin.gateway.model.DomainDnsRecord;
 import com.robin.gateway.repository.AliasRepository;
 import com.robin.gateway.repository.DnsProviderRepository;
@@ -138,7 +139,7 @@ public class DomainService {
                 .flatMap(domain -> {
                     log.info("Created domain: {}", domain.getDomain());
                     if (domain.getDnsProviderId() != null) {
-                        return mtaStsService.initiateWorkerDeployment(domain.getId())
+                        return mtaStsService.ensureWorkerForDomain(domain.getId(), MtaStsPolicyMode.testing)
                                 .thenReturn(domain)
                                 .onErrorResume(e -> {
                                     log.error("Failed to trigger MTA-STS worker deployment for domain {}", domain.getId(), e);
