@@ -46,13 +46,14 @@ export class DmarcLicenseComponent implements OnInit {
     return map[this.license?.status ?? 'missing'] ?? map['missing'];
   }
 
-  featureLabel(key: string): string {
+  featureLabel(key: PropertyKey): string {
+    const normalized = String(key);
     const labels: Record<string, string> = {
       max_domains:      'Max Domains',
       forensic_reports: 'Forensic Reports',
       api_access:       'API Access',
       threat_detection: 'Threat Detection',
     };
-    return labels[key] ?? key;
+    return labels[normalized] ?? normalized;
   }
 }
