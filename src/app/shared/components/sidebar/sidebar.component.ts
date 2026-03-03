@@ -50,6 +50,9 @@ export class SidebarComponent implements OnInit {
         { label: 'Dashboard', icon: 'analytics', route: '/dmarc/dashboard' },
         { label: 'Reports',   icon: 'template',  route: '/dmarc/reports'   },
         { label: 'Sources',   icon: 'globe',     route: '/dmarc/sources'   },
+        { label: 'Analytics', icon: 'analytics', route: '/dmarc/analytics' },
+        { label: 'Forensic',  icon: 'list',      route: '/dmarc/forensic'  },
+        { label: 'Advisor',   icon: 'shield',    route: '/dmarc/advisor'   },
       ],
     },
     {

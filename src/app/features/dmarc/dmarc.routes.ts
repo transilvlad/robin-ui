@@ -44,4 +44,31 @@ export const DMARC_ROUTES: Routes = [
       ),
     title: 'DMARC Sources - Robin MTA',
   },
+  {
+    path: 'analytics',
+    canActivate: [authGuard, dmarcLicenseGuard],
+    loadComponent: () =>
+      import('./components/dmarc-analytics/dmarc-analytics.component').then(
+        m => m.DmarcAnalyticsComponent
+      ),
+    title: 'DMARC Analytics - Robin MTA',
+  },
+  {
+    path: 'forensic',
+    canActivate: [authGuard, dmarcLicenseGuard],
+    loadComponent: () =>
+      import('./components/dmarc-forensic/dmarc-forensic.component').then(
+        m => m.DmarcForensicComponent
+      ),
+    title: 'DMARC Forensic Reports - Robin MTA',
+  },
+  {
+    path: 'advisor',
+    canActivate: [authGuard, dmarcLicenseGuard],
+    loadComponent: () =>
+      import('./components/dmarc-policy-advisor/dmarc-policy-advisor.component').then(
+        m => m.DmarcPolicyAdvisorComponent
+      ),
+    title: 'DMARC Policy Advisor - Robin MTA',
+  },
 ];
