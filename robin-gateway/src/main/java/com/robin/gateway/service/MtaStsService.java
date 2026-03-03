@@ -90,7 +90,7 @@ public class MtaStsService {
                                     .flatMap(tuple -> Mono.fromCallable(() -> {
                                         Optional<String> workerIdOpt = tuple.getT1();
                                         Optional<CloudflareTxtRecord> txtRecordOpt = tuple.getT2();
-                                        if (workerIdOpt.isEmpty() && txtRecordOpt.isEmpty()) {
+                                        if (workerIdOpt.isEmpty()) {
                                             return false;
                                         }
 

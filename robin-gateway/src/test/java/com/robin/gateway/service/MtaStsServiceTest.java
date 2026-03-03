@@ -110,7 +110,7 @@ class MtaStsServiceTest {
     }
 
     @Test
-    @DisplayName("reconcileExistingInfrastructure should return false when no worker or _mta-sts TXT record exists in Cloudflare")
+    @DisplayName("reconcileExistingInfrastructure should return false when worker script is missing, even if TXT exists")
     void reconcileExistingInfrastructureReturnsFalseWhenNoInfraFound() throws Exception {
         Domain domain = Domain.builder()
                 .id(8L)
@@ -123,7 +123,11 @@ class MtaStsServiceTest {
                 .credentials("encrypted-json")
                 .build();
         JsonNode creds = new ObjectMapper().readTree("{\"apiToken\":\"cf-token\",\"accountId\":\"acc-1\"}");
-        JsonNode records = new ObjectMapper().readTree("[]");
+        JsonNode records = new ObjectMapper().readTree("""
+                [
+                  {"id":"txt-rec-2","type":"TXT","name":"_mta-sts.empty.example.com","content":"\\"v=STSv1; id=998877\\""}
+                ]
+                """);
 
         when(domainRepository.findById(8L)).thenReturn(Optional.of(domain));
         when(dnsProviderRepository.findById(21L)).thenReturn(Optional.of(provider));
