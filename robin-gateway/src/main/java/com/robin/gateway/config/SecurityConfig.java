@@ -110,11 +110,22 @@ public class SecurityConfig {
                     
                     @SuppressWarnings("unchecked")
                     List<String> roles = claims.get("roles", List.class);
-                    
-                    List<SimpleGrantedAuthority> authorities = roles.stream()
-                            .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
-                            .map(SimpleGrantedAuthority::new)
-                            .collect(Collectors.toList());
+
+                    List<SimpleGrantedAuthority> authorities = new java.util.ArrayList<>(
+                            roles.stream()
+                                    .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
+                                    .map(SimpleGrantedAuthority::new)
+                                    .collect(Collectors.toList())
+                    );
+
+                    // Map fine-grained permissions as authorities (no prefix)
+                    @SuppressWarnings("unchecked")
+                    List<String> permissions = claims.get("permissions", List.class);
+                    if (permissions != null) {
+                        permissions.stream()
+                                .map(SimpleGrantedAuthority::new)
+                                .forEach(authorities::add);
+                    }
 
                     Authentication auth = new UsernamePasswordAuthenticationToken(username, token, authorities);
 

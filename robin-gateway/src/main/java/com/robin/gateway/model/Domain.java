@@ -23,11 +23,33 @@ public class Domain {
     @Column(nullable = false, unique = true)
     private String domain;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "dns_provider_id")
+    private Long dnsProviderId;
+
+    @Column(name = "ns_provider_id")
+    private Long nsProviderId;
+
+    @Column(length = 50)
+    @Builder.Default
+    private String status = "PENDING"; // PENDING, ACTIVE, ERROR
+
+    @Column(name = "last_health_check")
+    private LocalDateTime lastHealthCheck;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

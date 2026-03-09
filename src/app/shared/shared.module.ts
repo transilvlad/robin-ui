@@ -31,6 +31,7 @@ import { ThemePickerComponent } from './components/theme-picker/theme-picker.com
 // Pipes
 import { BytesPipe } from './pipes/bytes.pipe';
 import { RelativeTimePipe } from './pipes/relative-time.pipe';
+import { AppDatePipe } from './pipes/app-date.pipe';
 
 const components = [HeaderComponent, SidebarComponent, StatusBadgeComponent];
 
@@ -64,6 +65,7 @@ const materialModules = [
     FormsModule,
     ReactiveFormsModule,
     ThemePickerComponent,
+    AppDatePipe,
     ...materialModules,
   ],
   exports: [
@@ -74,6 +76,7 @@ const materialModules = [
     ...materialModules,
     ...components,
     ...pipes,
+    AppDatePipe,
   ],
 })
 export class SharedModule {}

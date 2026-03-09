@@ -1,0 +1,125 @@
+:host {
+  display: block;
+  color: var(--text-main);
+}
+
+.page-root {
+  background: transparent;
+  min-height: 100vh;
+  color: var(--text-main);
+}
+
+.card {
+  background: var(--bg-panel) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: var(--radius-panel) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+.card:not([class*='border-']) {
+  border-color: var(--border-dim) !important;
+}
+
+.card-header,
+.card-footer {
+  border-color: var(--border-dim) !important;
+}
+
+.table-header {
+  background: var(--bg-layer-1) !important;
+}
+
+.table-head {
+  color: var(--text-dim) !important;
+  border-color: var(--border-dim) !important;
+}
+
+.table-row {
+  border-color: var(--border-dim) !important;
+}
+
+.table-row:hover {
+  background: var(--accent-dim) !important;
+}
+
+.table-cell {
+  color: var(--text-main) !important;
+  border-color: var(--border-dim) !important;
+}
+
+.input,
+select.input,
+textarea.input {
+  background: var(--bg-layer-1) !important;
+  border-color: var(--border-mid) !important;
+  color: var(--text-main) !important;
+  border-radius: var(--radius-button) !important;
+}
+
+.input::placeholder,
+textarea.input::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.input:focus,
+select.input:focus,
+textarea.input:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--accent-dim) !important;
+  outline: none;
+}
+
+
+
+
+
+
+.badge-secondary {
+  border-color: var(--border-mid) !important;
+  background: var(--bg-layer-1) !important;
+  color: var(--text-dim) !important;
+  border-radius: var(--radius-badge) !important;
+}
+
+// ─── Buttons ─────────────────────────────────────────────────────────────────
+
+.btn-primary {
+  background: var(--accent) !important;
+  color: #1a1a1a !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--radius-button) !important;
+  &:hover:not(:disabled) {
+    filter: brightness(1.12);
+  }
+}
+
+.btn-outline {
+  background: var(--bg-layer-1) !important;
+  border: 1px solid var(--border-mid) !important;
+  border-radius: var(--radius-button) !important;
+  &:hover:not(:disabled) {
+    background: var(--accent-dim) !important;
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+  }
+
+  // Destructive variant (Delete buttons)
+  &.text-destructive {
+    color: hsl(var(--destructive)) !important;
+    border-color: hsl(var(--destructive) / 0.35) !important;
+    &:hover:not(:disabled) {
+      background: hsl(var(--destructive) / 0.12) !important;
+      border-color: hsl(var(--destructive)) !important;
+      color: hsl(var(--destructive)) !important;
+    }
+  }
+}
+
+.btn-ghost {
+  border-radius: var(--radius-button) !important;
+  &:hover:not(:disabled) {
+    background: var(--accent-dim) !important;
+    color: var(--accent) !important;
+  }
+}

@@ -1,0 +1,205 @@
+:host {
+  display: block;
+  color: var(--text-main);
+}
+
+.page-root {
+  background: transparent;
+  min-height: 100vh;
+  color: var(--text-main);
+}
+
+.card {
+  background: var(--bg-panel) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: var(--radius-panel) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+.card:not([class*='border-']) {
+  border-color: var(--border-dim) !important;
+}
+
+.card-header,
+.card-footer {
+  border-color: var(--border-dim) !important;
+}
+
+.table-header {
+  background: var(--bg-layer-1) !important;
+}
+
+.table-head {
+  color: var(--text-dim) !important;
+  border-color: var(--border-dim) !important;
+}
+
+.table-row {
+  border-color: var(--border-dim) !important;
+}
+
+.table-row:hover {
+  background: var(--accent-dim) !important;
+}
+
+.table-cell {
+  color: var(--text-main) !important;
+  border-color: var(--border-dim) !important;
+}
+
+.input,
+select.input,
+textarea.input {
+  background: var(--bg-layer-1) !important;
+  border-color: var(--border-mid) !important;
+  color: var(--text-main) !important;
+  border-radius: var(--radius-button) !important;
+}
+
+.input::placeholder,
+textarea.input::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.input:focus,
+select.input:focus,
+textarea.input:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--accent-dim) !important;
+  outline: none;
+}
+
+
+
+
+
+
+.badge-secondary {
+  border-color: var(--border-mid) !important;
+  background: var(--bg-layer-1) !important;
+  color: var(--text-dim) !important;
+  border-radius: var(--radius-badge) !important;
+}
+
+// ─── Buttons ─────────────────────────────────────────────────────────────────
+
+.btn-primary {
+  background: var(--accent) !important;
+  color: #1a1a1a !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--radius-button) !important;
+  &:hover:not(:disabled) {
+    filter: brightness(1.12);
+  }
+}
+
+.btn-outline {
+  background: var(--bg-layer-1) !important;
+  border: 1px solid var(--border-mid) !important;
+  border-radius: var(--radius-button) !important;
+  &:hover:not(:disabled) {
+    background: var(--accent-dim) !important;
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+  }
+
+  // Destructive variant (Delete buttons)
+  &.text-destructive {
+    color: hsl(var(--destructive)) !important;
+    border-color: hsl(var(--destructive) / 0.35) !important;
+    &:hover:not(:disabled) {
+      background: hsl(var(--destructive) / 0.12) !important;
+      border-color: hsl(var(--destructive)) !important;
+      color: hsl(var(--destructive)) !important;
+    }
+  }
+}
+
+.btn-ghost {
+  border-radius: var(--radius-button) !important;
+  &:hover:not(:disabled) {
+    background: var(--accent-dim) !important;
+    color: var(--accent) !important;
+  }
+}
+
+// ── Delete confirmation modal ────────────────────────────────────
+// Use .card.delete-card to match specificity of .card:not([class*='border-'])
+// Angular's emulated encapsulation adds one [_ngcontent] attr, making both
+// selectors (0,3,0). Source order then decides — .card.delete-card wins
+// because it appears later in this file.
+.delete-modal-backdrop {
+  background-color: rgba(127, 29, 29, 0.35) !important;
+}
+
+.card.delete-card {
+  border: 1px solid rgba(239, 68, 68, 0.55) !important;
+  box-shadow:
+    0 0 0 1px rgba(239, 68, 68, 0.28),
+    0 20px 44px rgba(127, 29, 29, 0.42) !important;
+}
+
+.delete-card-header {
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.07)) !important;
+  border-bottom: 1px solid rgba(239, 68, 68, 0.34) !important;
+}
+
+.delete-card .card-footer {
+  border-top-color: rgba(239, 68, 68, 0.28) !important;
+}
+
+.delete-icon-ring {
+  background: rgba(239, 68, 68, 0.14);
+  border: 1.5px solid rgba(239, 68, 68, 0.45);
+  color: #ef4444;
+}
+
+.delete-title {
+  color: #ef4444;
+}
+
+.delete-subtitle {
+  color: rgba(252, 165, 165, 0.95);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.delete-domain-pill {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0.15rem;
+  background: rgba(239, 68, 68, 0.16);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.42);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+}
+
+.btn-delete-domain {
+  background: #dc2626 !important;
+  color: #fff !important;
+  border: 1px solid #dc2626 !important;
+  font-weight: 700;
+
+  &:hover:not(:disabled) {
+    background: #b91c1c !important;
+    border-color: #b91c1c !important;
+  }
+
+  &:disabled {
+    background: rgba(220, 38, 38, 0.45) !important;
+    border-color: rgba(220, 38, 38, 0.45) !important;
+  }
+}
+
+.delete-error {
+  background: rgba(239, 68, 68, 0.14);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}

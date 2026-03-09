@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Robin UI — Hybrid Enterprise Palette Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg-blur:    rgba(10, 10, 10, 0.8);
+    --bg-layer-1: rgba(20, 20, 22, 0.6);
+    --bg-panel:   rgba(28, 28, 30, 0.75);
+    --border-dim: rgba(255,255,255,0.05);
+    --border-mid: #333336;
+    --border-bright: rgba(255,255,255,0.2);
+    --text-main:  #f0f0f0;
+    --text-dim:   #8e8e93;
+    --accent:     #FE8502;
+    --accent-dim: rgba(254,133,2,0.15);
+    --success:    #32d74b;
+    --warning:    #ffd60a;
+    --danger:     #ff453a;
+    --font-primary: 'Inter', sans-serif;
+    --font-mono:    'Courier Prime', monospace;
+    --bg-image: url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2070&auto=format&fit=crop');
+  }
+
+  body {
+    font-family: var(--font-primary);
+    font-size: 14px;
+    color: var(--text-main);
+    background-image: var(--bg-image);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: var(--bg-blur);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 0;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    grid-template-rows: 64px 1fr;
+    height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ─── HEADER ─────────────────────────────────── */
+  .header {
+    grid-column: 1 / -1;
+    background: var(--bg-layer-1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-mid);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 20;
+  }
+  .logo {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo svg { width: 28px; height: 28px; }
+  .logo .dot { color: var(--accent); }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    color: var(--text-dim);
+  }
+  .header-icon {
+    cursor: pointer;
+    font-size: 16px;
+    transition: color .15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .header-icon:hover { color: var(--text-main); }
+  .theme-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    border: 1px solid var(--border-mid);
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    color: var(--accent);
+    cursor: pointer;
+    background: var(--accent-dim);
+  }
+  .theme-pill:hover { border-color: var(--accent); }
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid var(--border-mid);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-main);
+    cursor: pointer;
+  }
+
+  /* ─── SIDEBAR ─────────────────────────────────── */
+  .sidebar {
+    background: var(--bg-layer-1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-right: 1px solid var(--border-mid);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .nav-group { padding: 20px 16px 8px; }
+  .nav-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    padding: 0 8px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(240,240,240,0.65);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .15s, color .15s;
+    margin-bottom: 1px;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: var(--text-main); }
+  .nav-item.active {
+    background: var(--accent-dim);
+    color: var(--text-main);
+    border: 1px solid rgba(254,133,2,0.25);
+  }
+  .nav-item.active svg { stroke: var(--accent); }
+  .nav-item svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+  .nav-sub {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px 6px 33px;
+    border-radius: 7px;
+    font-size: 12px;
+    color: rgba(240,240,240,0.5);
+    cursor: pointer;
+    margin-bottom: 1px;
+    transition: color .15s;
+  }
+  .nav-sub:hover { color: var(--text-main); }
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 16px;
+    border-top: 1px solid var(--border-mid);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sidebar-user { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .sidebar-cog { color: var(--text-dim); cursor: pointer; }
+  .sidebar-cog svg { width: 16px; height: 16px; }
+
+  /* ─── MAIN ────────────────────────────────────── */
+  .main {
+    overflow-y: auto;
+    padding: 28px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* Page header */
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .breadcrumb {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+  .btn-primary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(254,133,2,0.4);
+    border-radius: 8px;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-primary:hover { background: rgba(254,133,2,0.25); }
+
+  /* Hero Banner */
+  .hero-banner {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-mid);
+    border-radius: 12px;
+    padding: 28px 32px;
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+  }
+  .hero-banner-copy {}
+  .hero-banner-title {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 8px;
+  }
+  .hero-banner-title .hi { color: var(--accent); }
+  .hero-banner-text {
+    font-size: 13px;
+    color: var(--text-dim);
+    max-width: 480px;
+    line-height: 1.6;
+  }
+  .hero-banner-stats {
+    display: flex;
+    gap: 32px;
+    flex-shrink: 0;
+  }
+  .hero-stat { text-align: center; }
+  .hero-stat-val {
+    font-family: var(--font-mono);
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1;
+  }
+  .hero-stat-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+  }
+  .hero-stat-sep { width: 1px; background: var(--border-mid); align-self: stretch; }
+
+  /* KPI Grid */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .kpi-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-mid);
+    border-radius: 12px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+  }
+  .kpi-header {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .kpi-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .kpi-trend {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .trend-up   { color: var(--success); }
+  .trend-down { color: var(--danger); }
+  .trend-warn { color: var(--warning); }
+  .trend-dim  { color: var(--text-dim); }
+
+  /* Content panels grid */
+  .content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+  }
+
+  /* Panel */
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-mid);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  }
+  .panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-mid);
+    background: rgba(0,0,0,0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .panel-action {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--accent);
+    cursor: pointer;
+    letter-spacing: 0.5px;
+  }
+  .panel-body { padding: 20px; }
+
+  /* Data Table */
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    font-weight: 400;
+    padding: 0 0 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-mid);
+  }
+  .data-table td {
+    padding: 11px 0;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border-dim);
+    color: var(--text-main);
+    vertical-align: middle;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .mono { font-family: var(--font-mono); }
+
+  /* Status badges */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .badge-active  { color: var(--success); background: rgba(50,215,75,0.1);  border: 1px solid rgba(50,215,75,0.25); }
+  .badge-pending { color: var(--warning); background: rgba(255,214,10,0.1); border: 1px solid rgba(255,214,10,0.25); }
+  .badge-failed  { color: var(--danger);  background: rgba(255,69,58,0.1);  border: 1px solid rgba(255,69,58,0.25); }
+  .badge-idle    { color: var(--text-dim); background: rgba(255,255,255,0.05); border: 1px solid var(--border-mid); }
+
+  /* Service health list */
+  .status-list { display: flex; flex-direction: column; gap: 14px; }
+  .status-item { display: flex; align-items: center; gap: 14px; }
+  .status-icon {
+    width: 34px; height: 34px;
+    border: 1px solid var(--border-mid);
+    border-radius: 8px;
+    background: rgba(0,0,0,0.2);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .status-icon svg { width: 15px; height: 15px; stroke: var(--text-dim); fill: none; stroke-width: 2; }
+  .status-info { flex: 1; min-width: 0; }
+  .status-name { font-size: 12px; font-weight: 500; color: var(--text-main); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .status-desc { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); }
+  .status-ok   { font-family: var(--font-mono); font-size: 11px; color: var(--success); flex-shrink: 0; }
+  .status-warn { font-family: var(--font-mono); font-size: 11px; color: var(--warning); flex-shrink: 0; }
+  .status-err  { font-family: var(--font-mono); font-size: 11px; color: var(--danger);  flex-shrink: 0; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="logo">
+      <svg viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#FE8502" d="M525 121c5 3 7 7 9 12v9h-12l-6 6c-4 3-7 5-12 6v1c14 1 14 1 27-3l7-1-2-3-2-5 4 1c8 3 16 5 25 6l-3 3h-2l-2 1-3 1-3 1-15 4v17c0 9 0 17 5 25a100 100 0 0 1 14 40c5 43-11 93-37 126a154 154 0 0 1-118 57h-3l-10 1a3658 3658 0 0 0-22 1 1964753589 1964753589 0 0 1 40 52l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 42 81l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9h8l4 1 3 1a191 191 0 0 0 37 5c12 1 21-2 31-7l3-1a189 189 0 0 0 84-74c15-26 25-62 17-92l-4-9-1-3c-10-20-30-32-49-42-7-4-11-9-14-16l-1-11v-2c0-8 1-14 6-20l2-1 1 3c1 5 2 6 6 8 4 1 8 1 12-1 3-3 4-4 4-8 0-5-3-7-6-10h13l14 1c10 1 18 0 28-2l2-1c3-1 5-2 7-5l1-4v-4Z"/>
+        <path fill="#44A83A" d="M436 93h10a223 223 0 0 1 66 10c5 1 8 3 11 7v3h-9l-24-2h-3a2395 2395 0 0 0-58 2c-3-6-4-11-4-17 4-3 7-3 11-3Z"/>
+      </svg>
+      Robin<span class="dot">.</span>
+    </div>
+    <div class="header-right">
+      <!-- Search -->
+      <span class="header-icon" title="Global Search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </span>
+      <!-- Notifications -->
+      <span class="header-icon" title="Notifications" style="position:relative">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span style="position:absolute;top:-3px;right:-3px;width:7px;height:7px;background:var(--danger);border-radius:50%;border:1.5px solid rgba(10,10,10,0.8)"></span>
+      </span>
+      <!-- Theme Picker -->
+      <div class="theme-pill">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        Hybrid Enterprise
+      </div>
+      <!-- User -->
+      <div class="avatar" title="Admin">A</div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <!-- Overview -->
+    <div class="nav-group">
+      <div class="nav-label">Overview</div>
+      <a class="nav-item active">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>Monitoring</span>
+      </a>
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span>Log Viewer</span>
+      </a>
+    </div>
+
+    <!-- Email Services -->
+    <div class="nav-group">
+      <div class="nav-label">Email Services</div>
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"/></svg>
+        <span>Queue</span>
+      </a>
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <span>Storage</span>
+      </a>
+    </div>
+
+    <!-- Security -->
+    <div class="nav-group">
+      <div class="nav-label">Security</div>
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Security</span>
+      </a>
+      <a class="nav-sub">ClamAV</a>
+      <a class="nav-sub">Rspamd</a>
+      <a class="nav-sub">Blocklist</a>
+    </div>
+
+    <!-- Routing -->
+    <div class="nav-group">
+      <div class="nav-label">Routing</div>
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" y1="21" x2="6" y2="15"/></svg>
+        <span>Relay</span>
+      </a>
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M18 16.98h-5.99c-1.66 0-3.01-1.34-3.01-3s1.35-3 3.01-3h5.99"/><path d="M12 5.02h5.99c1.66 0 3.01 1.34 3.01 3s-1.35 3-3.01 3H12"/></svg>
+        <span>Webhooks</span>
+      </a>
+    </div>
+
+    <!-- Compliance -->
+    <div class="nav-group">
+      <div class="nav-label">Compliance</div>
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span>DMARC</span>
+      </a>
+      <a class="nav-sub">Dashboard</a>
+      <a class="nav-sub">Reports</a>
+      <a class="nav-sub">Validate</a>
+    </div>
+
+    <!-- Administration -->
+    <div class="nav-group">
+      <div class="nav-label">Administration</div>
+      <a class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Settings</span>
+      </a>
+      <a class="nav-sub">Server Config</a>
+      <a class="nav-sub">Users</a>
+      <a class="nav-sub" style="color: var(--accent);">Themes ●</a>
+    </div>
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar">A</div>
+        <span style="font-size:12px;color:var(--text-dim)">admin</span>
+      </div>
+      <span class="sidebar-cog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1.17V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </span>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <div class="breadcrumb">Home / <span>Dashboard</span></div>
+        <h1 class="page-title">System Dashboard</h1>
+      </div>
+      <button class="btn-primary">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Domain
+      </button>
+    </div>
+
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+      <div class="hero-banner-copy">
+        <h2 class="hero-banner-title">Reliable Mail.<br><span class="hi">Zero Compromise.</span></h2>
+        <p class="hero-banner-text">
+          High-performance MTA engineered for deliverability and compliance. Full SMTP pipeline visibility,
+          real-time queue management, and enterprise-grade security — all in one interface.
+        </p>
+      </div>
+      <div class="hero-banner-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-val">99.8%</div>
+          <div class="hero-stat-label">Delivery Rate</div>
+        </div>
+        <div class="hero-stat-sep"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-val">24ms</div>
+          <div class="hero-stat-label">Avg Latency</div>
+        </div>
+        <div class="hero-stat-sep"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-val">14d</div>
+          <div class="hero-stat-label">Uptime</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-header"><span>Queue Size</span></div>
+        <div class="kpi-value">3</div>
+        <div class="kpi-trend trend-up">↑ All delivered</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-header"><span>Messages / 24h</span></div>
+        <div class="kpi-value">4,821</div>
+        <div class="kpi-trend trend-up">↑ 8.2% vs yesterday</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-header"><span>Active Listeners</span></div>
+        <div class="kpi-value">2</div>
+        <div class="kpi-trend trend-dim">:25 · :587</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-header"><span>Thread Pool</span></div>
+        <div class="kpi-value">42%</div>
+        <div class="kpi-trend trend-warn">↑ 3% vs 1h ago</div>
+      </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+      <!-- Queue Table Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <span>Active Queue</span>
+          <span class="panel-action">View All</span>
+        </div>
+        <div class="panel-body">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Message ID</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Status</th>
+                <th>Retries</th>
+                <th>Queued</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono" style="color:var(--text-dim)">1771857489</td>
+                <td>ops@acme.com</td>
+                <td>billing@client.io</td>
+                <td><span class="badge badge-active">Sending</span></td>
+                <td class="mono" style="color:var(--text-dim)">0</td>
+                <td class="mono" style="color:var(--text-dim)">2m ago</td>
+              </tr>
+              <tr>
+                <td class="mono" style="color:var(--text-dim)">1771856923</td>
+                <td>alerts@acme.com</td>
+                <td>team@slack-proxy.io</td>
+                <td><span class="badge badge-pending">Retry #2</span></td>
+                <td class="mono" style="color:var(--text-dim)">2</td>
+                <td class="mono" style="color:var(--text-dim)">18m ago</td>
+              </tr>
+              <tr>
+                <td class="mono" style="color:var(--text-dim)">1771855001</td>
+                <td>noreply@acme.com</td>
+                <td>newsletter@bulk.net</td>
+                <td><span class="badge badge-idle">Scheduled</span></td>
+                <td class="mono" style="color:var(--text-dim)">0</td>
+                <td class="mono" style="color:var(--text-dim)">45m ago</td>
+              </tr>
+              <tr>
+                <td class="mono" style="color:var(--text-dim)">1771852344</td>
+                <td>bounce@acme.com</td>
+                <td>unknown@stale.xyz</td>
+                <td><span class="badge badge-failed">Failed</span></td>
+                <td class="mono" style="color:var(--text-dim)">5</td>
+                <td class="mono" style="color:var(--text-dim)">2h ago</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Service Health Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <span>Service Health</span>
+        </div>
+        <div class="panel-body">
+          <div class="status-list">
+            <div class="status-item">
+              <div class="status-icon">
+                <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+              </div>
+              <div class="status-info">
+                <div class="status-name">SMTP Core (port 25)</div>
+                <div class="status-desc">Thread pool: 4/20 active</div>
+              </div>
+              <span class="status-ok">[OK]</span>
+            </div>
+            <div class="status-item">
+              <div class="status-icon">
+                <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+              </div>
+              <div class="status-info">
+                <div class="status-name">Submission (port 587)</div>
+                <div class="status-desc">Thread pool: 1/20 active</div>
+              </div>
+              <span class="status-ok">[OK]</span>
+            </div>
+            <div class="status-item">
+              <div class="status-icon">
+                <svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+              </div>
+              <div class="status-info">
+                <div class="status-name">Storage Backend</div>
+                <div class="status-desc">Uptime: 14d 2h 11m</div>
+              </div>
+              <span class="status-ok">[OK]</span>
+            </div>
+            <div class="status-item">
+              <div class="status-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div class="status-info">
+                <div class="status-name">Rspamd Filter</div>
+                <div class="status-desc">High classification load</div>
+              </div>
+              <span class="status-warn">[WARN]</span>
+            </div>
+            <div class="status-item">
+              <div class="status-icon">
+                <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <div class="status-info">
+                <div class="status-name">Retry Scheduler</div>
+                <div class="status-desc">Next run in 42s · 3 pending</div>
+              </div>
+              <span class="status-ok">[OK]</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+</body>
+</html>

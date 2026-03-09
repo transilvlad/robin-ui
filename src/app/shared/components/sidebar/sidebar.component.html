@@ -1,89 +1,132 @@
-<aside class="sidebar" [class.collapsed]="isCollapsed">
-  <!-- Logo + collapse toggle -->
-  <div class="sidebar-brand">
+<aside
+  class="flex flex-col h-screen bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300"
+  [class.w-64]="!isCollapsed"
+  [class.w-16]="isCollapsed"
+  >
+  <!-- Sidebar Header -->
+  <div class="flex items-center justify-between h-16 px-4 border-b border-sidebar-border">
     @if (!isCollapsed) {
-      <div class="brand-mark">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" class="brand-logo">
-          <path fill="#FE8502" d="M525 121c5 3 7 7 9 12v9h-12l-6 6c-4 3-7 5-12 6v1c14 1 14 1 27-3l7-1-2-3-2-5 4 1c8 3 16 5 25 6l-3 3h-2l-2 1-3 1-3 1-15 4v17c0 9 0 17 5 25a100 100 0 0 1 14 40c5 43-11 93-37 126a154 154 0 0 1-118 57h-3l-10 1a3658 3658 0 0 0-22 1 1964753589 1964753589 0 0 1 40 52l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 42 81l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9h8l4 1 3 1a191 191 0 0 0 37 5c12 1 21-2 31-7l3-1a189 189 0 0 0 84-74c15-26 25-62 17-92l-4-9-1-3c-10-20-30-32-49-42-7-4-11-9-14-16l-1-11v-2c0-8 1-14 6-20l2-1 1 3c1 5 2 6 6 8 4 1 8 1 12-1 3-3 4-4 4-8 0-5-3-7-6-10h13l14 1c10 1 18 0 28-2l2-1c3-1 5-2 7-5l1-4v-4Z"/>
-          <path fill="#44A83A" d="M436 93h10a223 223 0 0 1 66 10c5 1 8 3 11 7v3h-9l-24-2h-3a2395 2395 0 0 0-58 2c-3-6-4-11-4-17 4-3 7-3 11-3Z"/>
+      <div class="flex items-center gap-2 font-bold text-lg tracking-tight">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" class="h-8 w-8">
+            <path fill="#FE8502" d="M525 121c5 3 7 7 9 12v9h-12l-6 6c-4 3-7 5-12 6v1c14 1 14 1 27-3l7-1-2-3-2-5 4 1c8 3 16 5 25 6l-3 3h-2l-2 1-3 1-3 1-15 4v17c0 9 0 17 5 25a100 100 0 0 1 14 40c5 43-11 93-37 126a154 154 0 0 1-118 57h-3l-10 1a3658 3658 0 0 0-22 1 1964753589 1964753589 0 0 1 40 52l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 42 81l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9h8l4 1 3 1a191 191 0 0 0 37 5c12 1 21-2 31-7l3-1a189 189 0 0 0 84-74c15-26 25-62 17-92l-4-9-1-3c-10-20-30-32-49-42-7-4-11-9-14-16l-1-11v-2c0-8 1-14 6-20l2-1 1 3c1 5 2 6 6 8 4 1 8 1 12-1 3-3 4-4 4-8 0-5-3-7-6-10h13l14 1c10 1 18 0 28-2l2-1c3-1 5-2 7-5l1-4v-4Z"/>
+            <path fill="#44A83A" d="M436 93h10a223 223 0 0 1 66 10c5 1 8 3 11 7v3h-9l-24-2h-3a2395 2395 0 0 0-58 2c-3-6-4-11-4-17 4-3 7-3 11-3Z"/>
         </svg>
-        <span class="brand-name">Robin</span>
-        <span class="brand-mono">MTA</span>
-      </div>
-    } @else {
-      <div class="brand-icon-only">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" class="brand-logo-sm">
-          <path fill="#FE8502" d="M525 121c5 3 7 7 9 12v9h-12l-6 6c-4 3-7 5-12 6v1c14 1 14 1 27-3l7-1-2-3-2-5 4 1c8 3 16 5 25 6l-3 3h-2l-2 1-3 1-3 1-15 4v17c0 9 0 17 5 25a100 100 0 0 1 14 40c5 43-11 93-37 126a154 154 0 0 1-118 57h-3l-10 1a3658 3658 0 0 0-22 1 1964753589 1964753589 0 0 1 40 52l1 2 2 2 2 2 2 4 4 5 15 1c16 0 16 0 23 2v1l-19 1 7 1 18 5 2 1 10 5c-3 2-6 0-9-1-12-3-12-3-25-4l2 1c7 4 12 9 18 15l-1 2-3-2c-19-11-37-17-59-19 2-3 5-4 9-5l3-1 2-1-2-3a886 886 0 0 1-46-54l-9-10a2242 2242 0 0 0 42 81l13 1c8 0 17 5 24 9h-8c-4-2-8-2-12-2l2 1c9 6 17 11 22 21-4-1-8-4-11-6-7-5-14-8-21-11l3 3c4 4 6 9 8 15l-1 2-3-3a80 80 0 0 0-50-26c3-2 7-3 10-3l4-1h9l-20-38-16-30-1-2a2176 2176 0 0 1-7-12l-1-4h-2c-7-2-12-5-18-9h8l4 1 3 1a191 191 0 0 0 37 5c12 1 21-2 31-7l3-1a189 189 0 0 0 84-74c15-26 25-62 17-92l-4-9-1-3c-10-20-30-32-49-42-7-4-11-9-14-16l-1-11v-2c0-8 1-14 6-20l2-1 1 3c1 5 2 6 6 8 4 1 8 1 12-1 3-3 4-4 4-8 0-5-3-7-6-10h13l14 1c10 1 18 0 28-2l2-1c3-1 5-2 7-5l1-4v-4Z"/>
-        </svg>
+        <span>Robin UI</span>
       </div>
     }
     <button
       (click)="toggleCollapse()"
-      class="collapse-btn"
-      [attr.aria-label]="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
-      <svg xmlns="http://www.w3.org/2000/svg" class="collapse-icon" [class.rotated]="isCollapsed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      class="p-2 rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+      [attr.aria-label]="isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+      >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-5 w-5 transition-transform"
+        [class.rotate-180]="isCollapsed"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        >
         <polyline points="15 18 9 12 15 6"></polyline>
       </svg>
     </button>
   </div>
 
-  <!-- Navigation groups -->
-  <nav class="sidebar-nav">
-    @for (group of navGroups; track group.label) {
-      <div class="nav-group">
-        @if (!isCollapsed) {
-          <div class="nav-group-label">{{ group.label }}</div>
-        }
-        @for (item of group.items; track item.label) {
-          <div class="nav-item-wrap">
-            @if (!item.children) {
-              <a
-                [routerLink]="item.route"
-                routerLinkActive="active"
-                class="nav-link"
-                [title]="isCollapsed ? item.label : ''">
-                <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path [attr.d]="getIconPath(item.icon)"></path>
-                </svg>
-                @if (!isCollapsed) {
-                  <span>{{ item.label }}</span>
-                }
-              </a>
-            }
-            @if (item.children) {
+  <!-- Navigation -->
+  <nav class="flex-1 overflow-y-auto py-4 scrollbar-thin">
+    <ul class="space-y-1 px-2">
+      @for (item of menuItems; track item) {
+        <li>
+          <!-- Menu item without children -->
+          @if (!item.children) {
+            <a
+              [routerLink]="item.route"
+              routerLinkActive="bg-sidebar-accent text-sidebar-primary"
+              class="flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+              [title]="isCollapsed ? item.label : ''"
+              >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 flex-shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                >
+                <path [attr.d]="getIconPath(item.icon)"></path>
+              </svg>
+              @if (!isCollapsed) {
+                <span class="truncate">{{ item.label }}</span>
+              }
+            </a>
+          }
+          <!-- Menu item with children -->
+          @if (item.children) {
+            <div>
               <button
                 (click)="toggleExpand(item)"
-                class="nav-link nav-parent"
-                [class.expanded]="isExpanded(item)"
-                [title]="isCollapsed ? item.label : ''">
-                <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+                [title]="isCollapsed ? item.label : ''"
+                >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5 flex-shrink-0"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  >
                   <path [attr.d]="getIconPath(item.icon)"></path>
                 </svg>
                 @if (!isCollapsed) {
-                  <span class="nav-label">{{ item.label }}</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" class="chevron" [class.open]="isExpanded(item)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <span class="flex-1 text-left truncate">{{ item.label }}</span>
+                }
+                @if (!isCollapsed) {
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 transition-transform duration-200"
+                    [class.rotate-90]="isExpanded(item)"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    >
                     <polyline points="9 18 15 12 9 6"></polyline>
                   </svg>
                 }
               </button>
+              <!-- Submenu -->
               @if (isExpanded(item) && !isCollapsed) {
-                <ul class="nav-children">
-                  @for (child of item.children; track child.label) {
+                <ul
+                  class="mt-1 space-y-1 animate-fade-in"
+                  >
+                  @for (child of item.children; track child) {
                     <li>
                       <a
                         [routerLink]="child.route"
-                        routerLinkActive="active"
-                        class="nav-child-link">
+                        routerLinkActive="text-sidebar-primary font-semibold"
+                        [routerLinkActiveOptions]="{ exact: child.exactMatch ?? false }"
+                        class="flex items-center gap-3 pl-11 pr-3 py-2 rounded-md text-sm text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors"
+                        >
                         {{ child.label }}
                       </a>
                     </li>
                   }
                 </ul>
               }
-            }
-          </div>
-        }
-      </div>
-    }
+            </div>
+          }
+        </li>
+      }
+    </ul>
   </nav>
 </aside>

@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,4 +21,15 @@ public class DomainRequest {
             message = "Invalid domain name format"
     )
     private String domain;
+
+    private Long dnsProviderId;
+
+    private Long nsProviderId;
+
+    @Builder.Default
+    private boolean existingDomain = false;
+
+    /** Pre-flight DNS records discovered during domain lookup; saved as unmanaged snapshot. */
+    @Builder.Default
+    private List<DomainDnsRecordRequest> initialDnsRecords = List.of();
 }

@@ -1,0 +1,111 @@
+<div class="page-root p-10">
+  <div class="max-w-[900px] mx-auto space-y-8">
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-foreground">Policy Advisor</h1>
+        <p class="text-muted-foreground mt-1">
+          DMARC deployment readiness for
+          @if (domain) { <span class="font-semibold">{{ domain }}</span> }
+          @else { all domains }
+        </p>
+      </div>
+      <button (click)="load()" class="btn-outline btn-sm flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+        Refresh
+      </button>
+    </div>
+
+    <!-- Loading -->
+    @if (loading) {
+      <div class="card p-10 flex flex-col items-center justify-center gap-4">
+        <svg class="animate-spin h-10 w-10 text-primary opacity-30" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="text-sm font-bold uppercase tracking-widest text-muted-foreground">Evaluating DMARC posture…</p>
+      </div>
+    }
+
+    <!-- Error -->
+    @if (error && !loading) {
+      <div class="card p-8 text-center">
+        <p class="text-destructive font-semibold">{{ error }}</p>
+        <button (click)="load()" class="btn-primary mt-4">Retry</button>
+      </div>
+    }
+
+    <!-- Traffic-light card -->
+    @if (!loading && !error && advice) {
+      <div [class]="'card border-l-8 p-8 space-y-6 ' + trafficLightColor">
+
+        <!-- Signal row -->
+        <div class="flex items-center gap-4">
+          <!-- Traffic-light dots -->
+          <div class="flex flex-col gap-1.5 shrink-0">
+            <div [class]="'h-5 w-5 rounded-full transition-all ' + (recommendation === 'caution'  ? indicatorClass : 'bg-muted/30')"></div>
+            <div [class]="'h-5 w-5 rounded-full transition-all ' + (recommendation === 'stay'     ? indicatorClass : 'bg-muted/30')"></div>
+            <div [class]="'h-5 w-5 rounded-full transition-all ' + (recommendation === 'advance'  ? indicatorClass : 'bg-muted/30')"></div>
+          </div>
+          <div>
+            <p [class]="'text-2xl font-extrabold ' + recommendationTextClass">{{ recommendationLabel }}</p>
+            <p class="text-muted-foreground mt-1 text-sm">{{ advice.reason }}</p>
+          </div>
+        </div>
+
+        <!-- Metrics row -->
+        <div class="grid grid-cols-3 gap-4">
+          <div class="card p-4 bg-background/60 border-none shadow-none">
+            <div class="text-[10px] font-bold uppercase text-muted-foreground mb-1">Compliance</div>
+            <div [class]="'text-3xl font-extrabold ' + recommendationTextClass">{{ advice.compliancePercent | number:'1.1-1' }}%</div>
+          </div>
+          <div class="card p-4 bg-background/60 border-none shadow-none">
+            <div class="text-[10px] font-bold uppercase text-muted-foreground mb-1">Messages (30d)</div>
+            <div class="text-3xl font-extrabold text-foreground">{{ advice.totalMessages | number }}</div>
+          </div>
+          <div class="card p-4 bg-background/60 border-none shadow-none">
+            <div class="text-[10px] font-bold uppercase text-muted-foreground mb-1">Evaluated</div>
+            <div class="text-base font-semibold text-foreground">{{ advice.evaluatedAt.slice(0,10) }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommended actions -->
+      <div class="space-y-4">
+        <div class="flex items-center gap-3">
+          <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Recommended Actions</h3>
+          <div class="h-[1px] flex-1 bg-border/60"></div>
+        </div>
+
+        <div class="space-y-3">
+          @for (step of actionSteps; track $index) {
+            <div class="card p-4 flex items-start gap-4 bg-muted/10 border-none shadow-none">
+              <span class="text-2xl shrink-0 mt-0.5">{{ step.icon }}</span>
+              <p class="text-sm text-foreground">{{ step.text }}</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Navigation links -->
+      <div class="flex gap-3 pt-2">
+        <a [routerLink]="['/dmarc/reports']" [queryParams]="{domain: domain}" class="btn-outline btn-sm">← Reports</a>
+        <a [routerLink]="['/dmarc/sources']" [queryParams]="{domain: domain}" class="btn-outline btn-sm">Sources →</a>
+        <a [routerLink]="['/dmarc/analytics']" [queryParams]="{domain: domain}" class="btn-outline btn-sm">Analytics →</a>
+      </div>
+    }
+
+    <!-- No data -->
+    @if (!loading && !error && !advice) {
+      <div class="flex flex-col items-center justify-center py-24 text-center">
+        <div class="p-6 rounded-full bg-muted/50 text-muted-foreground/30 mb-6 border border-border">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        <h3 class="text-xl font-bold">No data available</h3>
+        <p class="text-muted-foreground text-sm max-w-sm mt-2">Not enough DMARC data to evaluate policy readiness. Ensure reports are being received and processed.</p>
+      </div>
+    }
+
+  </div>
+</div>

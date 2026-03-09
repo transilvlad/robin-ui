@@ -105,7 +105,7 @@ class CircuitBreakerIntegrationTest {
                 .expectBody()
                 .jsonPath("$.robinClientApi.status").isEqualTo("DOWN")
                 .jsonPath("$.robinServiceApi.status").isEqualTo("DOWN")
-                .jsonPath("$.status").isIn("DEGRADED", "DOWN");
+                .jsonPath("$.status").value(status -> assertThat(status).isIn("DEGRADED", "DOWN"));
     }
 
     @Test

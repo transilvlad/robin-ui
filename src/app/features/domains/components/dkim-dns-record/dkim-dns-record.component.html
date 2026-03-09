@@ -1,0 +1,71 @@
+<div class="fixed inset-0 z-50">
+  <button class="drawer-overlay" (click)="close()" aria-label="Close DNS record drawer"></button>
+
+  <aside class="drawer-panel card" role="dialog" aria-modal="true">
+    <div class="card-header border-b border-border flex flex-row items-start justify-between gap-4">
+      <div>
+        <h3 class="card-title text-lg">DKIM DNS Record</h3>
+        <p class="text-sm text-muted-foreground mt-2">Publish this TXT record in your DNS zone for {{ domain }}.</p>
+      </div>
+      <button (click)="close()" class="btn-outline btn-sm">Close</button>
+    </div>
+
+    <div class="card-content pt-6 space-y-6">
+      <div class="space-y-2">
+        <label class="text-xs uppercase tracking-wide text-muted-foreground">Record Name</label>
+        <div class="drawer-value-row">
+          <code class="font-mono text-sm break-all">{{ record?.name }}</code>
+          <button (click)="copyName()" class="btn-outline btn-sm min-w-[86px]">
+            {{ copied === 'name' ? 'Copied' : 'Copy' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-xs uppercase tracking-wide text-muted-foreground">Record Type</label>
+        <div class="drawer-value-row">
+          <span class="badge badge-secondary">TXT</span>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label class="text-xs uppercase tracking-wide text-muted-foreground">Record Value</label>
+        <div class="drawer-value-row align-start">
+          <code class="font-mono text-xs md:text-sm break-all">{{ recordValue }}</code>
+          <button (click)="copyValue()" class="btn-outline btn-sm min-w-[86px]">
+            {{ copied === 'value' ? 'Copied' : 'Copy' }}
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="verifyResult as verification" class="space-y-2">
+        <label class="text-xs uppercase tracking-wide text-muted-foreground">DNS Verification</label>
+        <div class="flex items-center gap-2">
+          <span class="badge" [ngClass]="verifyResultClass">
+            {{ verification.matches ? 'Published' : 'Mismatch' }}
+          </span>
+          <span class="text-xs text-muted-foreground">{{ verification.recordName }}</span>
+        </div>
+        <p class="text-xs text-muted-foreground" *ngIf="verification.answers.length">
+          {{ verification.answers[0] }}
+        </p>
+      </div>
+
+      <div *ngIf="pushSuccess" class="alert alert-default border-primary/30 text-primary">
+        <div>{{ pushSuccess }}</div>
+      </div>
+      <div *ngIf="pushError" class="alert alert-destructive">
+        <div>{{ pushError }}</div>
+      </div>
+    </div>
+
+    <div class="card-footer justify-end gap-2 border-t border-border">
+      <button (click)="verify()" [disabled]="verifying" class="btn-outline btn-md">
+        {{ verifying ? 'Verifying...' : 'Verify DNS' }}
+      </button>
+      <button (click)="push()" [disabled]="pushing" class="btn-primary btn-md">
+        {{ pushing ? 'Pushing...' : 'Push To DNS API' }}
+      </button>
+    </div>
+  </aside>
+</div>

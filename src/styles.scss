@@ -163,7 +163,15 @@ $robin-theme: mat.m2-define-light-theme((
   }
 
   .btn-outline {
-    @apply btn border border-input bg-background hover:bg-accent hover:text-accent-foreground;
+    @apply btn border border-input bg-transparent hover:bg-accent hover:text-accent-foreground transition-all;
+  }
+
+  .btn-outline-primary {
+    @apply btn border border-primary/50 text-primary bg-transparent hover:bg-primary hover:text-primary-foreground transition-all;
+  }
+
+  .btn-outline-secondary {
+    @apply btn border border-border text-foreground bg-transparent hover:bg-muted transition-all;
   }
 
   .btn-ghost {
@@ -264,7 +272,16 @@ $robin-theme: mat.m2-define-light-theme((
   }
 
   .alert-destructive {
-    @apply alert border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    @apply alert backdrop-blur-md [&>svg]:text-error;
+  }
+
+  .dark .alert-destructive {
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid rgba(248, 113, 113, 0.2);
+    color: #f87171;
   }
 
   /* Table component */
